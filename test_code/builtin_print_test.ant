@@ -1,0 +1,7 @@
+let a = "Hello, World - a"
+print(a)
+
+let b = "Hello, World - b";
+print(b);
+
+let c = "Hello, World - c"; print(c);
