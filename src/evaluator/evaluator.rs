@@ -1,5 +1,9 @@
-use std::any::TypeId;
+use std::any::{Any, TypeId};
 use std::ops::Deref;
+
+use colored::Colorize;
+
+use crate::ast::expressions::function_expression::FunctionExpression;
 use crate::environment::environment::Environment;
 use crate::object::object::{IAntObject, ERROR};
 use crate::ast::ast::{Node, Program};
@@ -7,14 +11,23 @@ use crate::object::ant_error::AntError;
 use crate::utils::type_of;
 
 pub struct Info {
-    pub(crate) file: String,
-    pub(crate) line: i64,
+    pub module: Option<String>,
+    pub file: String,
+    pub line: i64,
 }
 
 impl Info {
-    fn new(file: String, line: i64) -> Info {
+    fn new(module: Option<String>, file: String, line: i64) -> Info {
         Info {
-            file, line
+            module, file, line
+        }
+    }
+
+    fn to_string(&self) -> String {
+        if let Some(module) = self.module.clone() {
+            format!("File <{}>, line {}, in <{}>:", self.file, self.line, module)
+        } else {
+            format!("File <{}>, line {}:", self.file, self.line)
         }
     }
 }
@@ -30,24 +43,42 @@ impl Evaluator {
         }
     }
 
-    pub fn eval(&mut self, node: impl Node + Clone + 'static, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    pub fn eval_box(&mut self, node: Box<dyn Node + 'static>, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
         if type_of(&node) == TypeId::of::<Program>() {
             return self.eval_program(node.clone(), env)
         }
 
-        node.clone().eval(env)
+        if let Some(it) = (node.clone() as Box<dyn Any>).downcast_ref::<FunctionExpression>() {
+            self.call_stack.push(Info::new(it.name.clone(), it.token.file.clone(), it.token.line.clone()));
+
+            return node.clone().eval(self, env)
+        }
+
+        node.clone().eval(self, env)
     }
 
-    pub fn eval_program(&mut self, node: impl Node + Clone + 'static, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        let cloned_node = node.clone();
+    pub fn eval(&mut self, node: impl Node + Clone + 'static, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        if type_of(&node) == TypeId::of::<Program>() {
+            return self.eval_program(Box::new(node.clone()), env)
+        }
 
-        let program = Box::new(cloned_node).into_any().downcast_ref::<Program>().unwrap().clone();
+        if let Some(it) = (Box::new(node.clone())).into_any().downcast_ref::<FunctionExpression>() {
+            self.call_stack.push(Info::new(it.name.clone(), it.token.file.clone(), it.token.line.clone()));
+
+            return node.clone().eval(self, env)
+        }
+
+        node.clone().eval(self, env)
+    }
+
+    pub fn eval_program(&mut self, node: Box<dyn Node + 'static>, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        let program = (node.clone() as Box<dyn Any>).downcast_ref::<Program>().unwrap().clone();
 
         let program_token = program.token.clone();
 
-        self.call_stack.push(Info::new(program_token.file.clone(), program_token.line.clone()));
+        self.call_stack.push(Info::new(None, program_token.file.clone(), program_token.line.clone()));
 
-        let result = node.clone().eval(env);
+        let result = node.clone().eval(self, env);
         match result {
             None => {None},
             Some(result) => {
@@ -61,10 +92,12 @@ impl Evaluator {
     }
 
     pub fn print_call_stack(&self, error: AntError) {
+        println!("{}", "Traceback (most recent call last):".to_string().red());
+
         for info in &self.call_stack {
-            println!("at file <{}>, line {}:", info.file, info.line)
+            println!("  {}", info.to_string())
         }
 
-        println!("---> {}", error.inspect())
+        println!("{}", error.inspect().red())
     }
 }
