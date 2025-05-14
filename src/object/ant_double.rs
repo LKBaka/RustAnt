@@ -1,23 +1,27 @@
 use std::any::Any;
-use std::ops::Deref;
 use bigdecimal::BigDecimal;
 use uuid::Uuid;
-use num_bigint::BigInt;
 
+use crate::object::ant_int::AntInt;
 use crate::object::object::GetEnv;
 use crate::constants::{null_obj, uninit_obj};
 use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::environment::utils::create_env;
-use crate::impl_object_get_env_function;
+use crate::impl_object;
 use crate::object::ant_native_function::create_ant_native_function;
 use crate::object::object::{IAntObject, ObjectType, DOUBLE};
+use crate::extract_arg;
+use crate::{impl_minus_func, impl_multiply_func, impl_plus_func};
+use crate::object::utils::create_error;
+use crate::object::ant_native_function::NativeFunction;
+use crate::evaluator::utils::native_boolean_to_boolean_obj;
 
 pub struct AntDouble {
     id: Uuid,
     env: Environment,
-    value: BigDecimal,
+    pub value: BigDecimal,
 }
 
 impl Clone for AntDouble {
@@ -30,77 +34,50 @@ impl Clone for AntDouble {
     }
 }
 
-fn init_env(int_obj: &mut AntDouble) {
+fn init_env(double_obj: &mut AntDouble) {
     fn plus(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        fn plus_int(me: AntDouble, other: AntDouble) -> Option<Box<dyn IAntObject>> {
-            Some(
-                AntDouble::new_with_native_value(Box::new(other.value + me.value))
-            )
-        }
+        impl_plus_func!(plus_double, AntDouble, AntDouble, AntDouble);
+        impl_plus_func!(plus_int, AntDouble, AntInt, AntDouble);
 
-        let me = arg_env.get("me").expect(
-            &format!("what the fuck? arg_env: {}", arg_env.to_string())
-        ).as_any().downcast_ref::<AntDouble>().cloned().unwrap();
+        let me = extract_arg!(arg_env, "me" => AntDouble);
 
-        let value = arg_env.get("value");
-        if value.is_none() {
-            panic!("what the fuck? arg_env: {}", arg_env.to_string())
-        }
-
-        let value = value.unwrap().as_any().downcast_ref::<AntDouble>().cloned();
-
-        if let Some(it) = value {
-            return plus_int(me, it)
+        if me.is_none() {
+            return Some(create_error(format!("type mismatch for \"me\"")))
+        } else if let Some(me) = me {
+            if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return plus_int(me, value)}
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return plus_double(me, value)}
         }
 
         None
     }
 
     fn minus(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        fn minus_int(me: AntDouble, other: AntDouble) -> Option<Box<dyn IAntObject>> {
-            Some(
-                AntDouble::new_with_native_value(Box::new(me.value - other.value))
-            )
-        }
+        impl_minus_func!(minus_double, AntDouble, AntDouble, AntDouble);
+        impl_minus_func!(minus_int, AntDouble, AntInt, AntDouble);
 
-        let me = arg_env.get("me").expect(
-            &format!("what the fuck? arg_env: {}", arg_env.to_string())
-        ).as_any().downcast_ref::<AntDouble>().cloned().unwrap();
+        let me = extract_arg!(arg_env, "me" => AntDouble);
 
-        let value = arg_env.get("value");
-        if value.is_none() {
-            panic!("what the fuck? arg_env: {}", arg_env.to_string())
-        }
-
-        let value = value.unwrap().as_any().downcast_ref::<AntDouble>().cloned();
-
-        if let Some(it) = value {
-            return minus_int(me, it)
+        if me.is_none() {
+            return Some(create_error(format!("type mismatch for \"me\"")))
+        } else if let Some(me) = me {
+            if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return minus_int(me, value)}
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return minus_double(me, value)}
         }
 
         None
     }
 
     fn multiply(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        fn multiply_int(me: AntDouble, other: AntDouble) -> Option<Box<dyn IAntObject>> {
-            Some(
-                AntDouble::new_with_native_value(Box::new(me.value * other.value))
-            )
-        }
+        impl_multiply_func!(multiply_double, AntDouble, AntDouble, AntDouble);
+        impl_multiply_func!(multiply_int, AntDouble, AntInt, AntDouble);
 
-        let me = arg_env.get("me").expect(
-            &format!("what the fuck? arg_env: {}", arg_env.to_string())
-        ).as_any().downcast_ref::<AntDouble>().cloned().unwrap();
+        let me = extract_arg!(arg_env, "me" => AntDouble);
 
-        let value = arg_env.get("value");
-        if value.is_none() {
-            panic!("what the fuck? arg_env: {}", arg_env.to_string())
-        }
-
-        let value = value.unwrap().as_any().downcast_ref::<AntDouble>().cloned();
-
-        if let Some(it) = value {
-            return multiply_int(me, it)
+        if me.is_none() {
+            return Some(create_error(format!("type mismatch for \"me\"")))
+        } else if let Some(me) = me {
+            if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return multiply_int(me, value)}
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return multiply_double(me, value)}
         }
 
         None
@@ -113,19 +90,52 @@ fn init_env(int_obj: &mut AntDouble) {
             )
         }
 
-        let me = arg_env.get("me").expect(
-            &format!("what the fuck? arg_env: {}", arg_env.to_string())
-        ).as_any().downcast_ref::<AntDouble>().cloned().unwrap();
+        let me = extract_arg!(arg_env, "me" => AntDouble);
 
-        let value = arg_env.get("value");
-        if value.is_none() {
-            panic!("what the fuck? arg_env: {}", arg_env.to_string())
+        if me.is_none() {
+            return Some(create_error(format!("type mismatch for \"me\"")))
+        } else if let Some(me) = me {
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return divide_int(me, value)}
         }
 
-        let value = value.unwrap().as_any().downcast_ref::<AntDouble>().cloned();
+        None
+    }
 
-        if let Some(it) = value {
-            return divide_int(me, it)
+    fn greater_than(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        fn greater_than_double(me: AntDouble, other: AntDouble) -> Option<Box<dyn IAntObject>> {
+            Some(
+                native_boolean_to_boolean_obj(me.value > other.value)
+            )
+        }
+
+        let me = extract_arg!(arg_env, "me" => AntDouble);
+
+        if me.is_none() {
+            return Some(create_error(format!("type mismatch for \"me\"")))
+        } else if let Some(me) = me {
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {
+                return greater_than_double(me, value)
+            }
+        }
+
+        None
+    }
+
+    fn less_than(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        fn less_than_double(me: AntDouble, other: AntDouble) -> Option<Box<dyn IAntObject>> {
+            Some(
+                native_boolean_to_boolean_obj(me.value < other.value)
+            )
+        }
+
+        let me = extract_arg!(arg_env, "me" => AntDouble);
+
+        if me.is_none() {
+            return Some(create_error(format!("type mismatch for \"me\"")))
+        } else if let Some(me) = me {
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {
+                return less_than_double(me, value)
+            }
         }
 
         None
@@ -133,23 +143,25 @@ fn init_env(int_obj: &mut AntDouble) {
 
     let func_param_env = create_env(
         vec![
-            ("me".to_string(), Box::new(int_obj.clone())),
+            ("me".to_string(), Box::new(double_obj.clone())),
             ("value".to_string(), uninit_obj.clone())
         ]
     );
 
-    let plus_int_native_func = create_ant_native_function(func_param_env.clone(), plus);
+    let operator_functions = vec![
+        ("plus", plus as NativeFunction),
+        ("minus", minus),
+        ("multiply", multiply),
+        ("divide", divide),
+        ("lt", less_than),
+        ("gt", greater_than),
+    ];
 
-    let minus_int_native_func = create_ant_native_function(func_param_env.clone(), minus);
+    for (op, func) in operator_functions {
+        let native_func_object = create_ant_native_function(func_param_env.clone(), func); 
 
-    let multiply_int_native_func = create_ant_native_function(func_param_env.clone(), multiply);
-
-    let divide_int_native_func = create_ant_native_function(func_param_env.clone(), divide);
-
-    int_obj.env.create("plus", Data::new(plus_int_native_func, DataInfo::new(false)));
-    int_obj.env.create("minus", Data::new(minus_int_native_func, DataInfo::new(false)));
-    int_obj.env.create("multiply", Data::new(multiply_int_native_func, DataInfo::new(false)));
-    int_obj.env.create("divide", Data::new(divide_int_native_func, DataInfo::new(false)));
+        double_obj.env.create(op, Data::new(native_func_object, DataInfo::new(false)));
+    }
 }
 
 impl IAntObject for AntDouble {
@@ -177,13 +189,13 @@ impl IAntObject for AntDouble {
         let mut value = BigDecimal::from(0);
 
         let mut new = |obj: Box<dyn IAntObject>| {
-            let cast_obj =  obj.as_any().downcast_ref::<AntDouble>().cloned();
+            let cast_obj =  obj.as_any().downcast_ref::<AntDouble>();
             match cast_obj {
                 None => {
                     panic!()
                 }
                 Some(double_obj) => {
-                    value = double_obj.value
+                    value = double_obj.value.to_owned()
                 }
             }
         };
@@ -191,9 +203,10 @@ impl IAntObject for AntDouble {
         let mut env = Environment::new();
         env.create("value", Data::new(null_obj.clone(), DataInfo::new(false)));
 
-        env.fusion(arg_env);
+        env = env.fusion(arg_env);
 
-        if env.get("value").unwrap().eq(null_obj.clone().deref()) {
+
+        if env.get("value").unwrap() == null_obj.clone() {
             panic!()
         }
 
@@ -234,7 +247,7 @@ impl IAntObject for AntDouble {
         }
     }
 
-    fn eq(&self, other: &dyn IAntObject) -> bool {
+    fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id || if other.get_type() == DOUBLE {
             other.as_any().downcast_ref::<AntDouble>().unwrap().value == self.value
         } else {false}
@@ -245,4 +258,4 @@ impl IAntObject for AntDouble {
     }
 }
 
-impl_object_get_env_function!(AntDouble);
+impl_object!(AntDouble);
