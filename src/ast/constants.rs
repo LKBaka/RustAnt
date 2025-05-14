@@ -5,4 +5,8 @@ pub static OPERATOR_TO_FUNCTION_NAME_MAP: phf::Map<&str, &str> = phf_map! (
     "-" => "minus",
     "*" => "multiply",
     "/" => "divide",
+    "<" => "lt",
+    ">" => "gt",
+    "==" => "eq",
+    "!=" => "not_eq",
 );
