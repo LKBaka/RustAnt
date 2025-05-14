@@ -4,14 +4,30 @@ use std::ops::Deref;
 use crate::environment::data::Data;
 use crate::map;
 use crate::map::map::Map;
-use crate::object::ant_error::AntError;
 use crate::object::object::{IAntObject, FUNCTION};
+use crate::object::utils::{create_error, create_error_with_name};
+use crate::gc::gc::{inc_ref, dec_ref};
 
 #[derive(Clone)]
 pub struct Environment {
     pub map: Map<String, Data>,
     pub func_map: Map<String, Vec<Data>>,
     pub outer: Option<Box<Environment>>,
+}
+
+impl Drop for Environment {
+    fn drop(&mut self) {
+        // 清理所有变量
+        for pair in &self.map.pairs {
+            dec_ref(&pair.value.data);
+        }
+        // 清理函数变量
+        for pair in &self.func_map.pairs {
+            for data in &pair.value {
+                dec_ref(&data.data);
+            }
+        }
+    }
 }
 
 impl Environment {
@@ -31,7 +47,22 @@ impl Environment {
         }
     }
 
+    pub fn drop_all(&mut self) {
+        self.map.clear();
+        self.func_map.clear();
+    }
+
+    pub fn depth(&self) -> i32 {
+        return if self.outer.is_none() {
+            0
+        } else {
+            1 + self.outer.clone().unwrap().depth()
+        }
+    }
+
     pub fn remove_data(&mut self, value: Data) {
+        dec_ref(&value.data);
+
         self.map.pairs.retain(|pair| pair.value != value);
 
         for func_pair in &mut self.func_map.pairs {
@@ -42,25 +73,27 @@ impl Environment {
     }
 
     pub fn remove_obj(&mut self, value: Box<dyn IAntObject>) {
-        self.map.pairs.retain(|pair| !pair.value.data.eq(&*value));
+        dec_ref(&value);
+
+        self.map.pairs.retain(|pair| !(pair.value.data == value.clone()));
 
         for func_pair in &mut self.func_map.pairs {
-            func_pair.value.retain(|v| !(*v.data).eq(&*value));
+            func_pair.value.retain(|v| !(v.data == value.clone()));
         }
 
         self.func_map.pairs.retain(|pair| !pair.value.is_empty());
     }
 
     pub fn create(&mut self, key: &str, value: Data) -> Option<Box<dyn IAntObject>> {
-        // 标识符已存在
         if self.map.contains_key(key.to_string()) {
-            // 报错 退出
-            return Some(AntError::new_with_native_value(Box::new(format!("variable \"{}\" already exists", key))));
+            return Some(
+                create_error_with_name("NameError", format!("variable \"{}\" already exists", key))
+            );
         }
 
-        // 判断是否为函数
+        inc_ref(&value.data);
+
         if value.data.get_type() != FUNCTION {
-            // 若不是，则创建
             self.map.add(key.to_string(), value);
             return None;
         }
@@ -70,12 +103,32 @@ impl Environment {
         None
     }
 
-    pub fn set(&mut self, key: &str, value: Data) -> Box<dyn IAntObject> {
+    pub fn set(&mut self, key: &str, value: Data) -> Option<Box<dyn IAntObject>> {
         if self.map.contains_key(key.to_string()) {
             self.map.set(key.to_string(), value);
+            return None;
         }
 
-        AntError::new_with_native_value(Box::new(format!("cannot find variable \"{}\"", key)))
+        Some(
+            create_error(format!("cannot find variable \"{}\"", key))
+        )
+    }
+
+    pub fn set_value(&mut self, key: &str, value: Box<dyn IAntObject>) -> Option<Box<dyn IAntObject>> {
+        if self.map.contains_key(key.to_string()) {
+            let data = self.get_data(key);
+            if let Some(mut it) = data {
+                it.data = value;
+
+                self.map.set(key.to_string(), it);
+            }
+
+            return None;
+        }
+
+        Some(
+            create_error(format!("cannot find variable \"{}\"", key))
+        )
     }
 
     pub fn get_data(&mut self, key: &str) -> Option<Data> {
@@ -136,14 +189,24 @@ impl Environment {
         None
     }
 
+    pub fn in_place_fusion(&mut self, other: Environment) {
+        for pair in &other.map.pairs {
+            if self.map.contains_key(pair.key.clone()) {
+                self.set(pair.key.deref(), pair.value.clone());
+            } else {
+                self.create(pair.key.deref(), pair.value.clone());
+            }
+        }
+    }
+
     pub fn fusion(&self, other: Environment) -> Environment {
         let mut env = self.clone();
 
-        for pair in other.map.pairs {
+        for pair in &other.map.pairs {
             if env.map.contains_key(pair.key.clone()) {
-                env.set(pair.key.deref(), pair.value);
+                env.set(pair.key.deref(), pair.value.clone());
             } else {
-                env.create(pair.key.deref(), pair.value);
+                env.create(pair.key.deref(), pair.value.clone());
             }
         }
 
