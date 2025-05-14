@@ -1,10 +1,10 @@
-use crate::char_string::char_string::CharString;
+
 use crate::constants::*;
 use crate::token::token::Token;
 use crate::token::token_type::{TokenType, TOKEN_TYPE_MAP};
 
 pub struct Lexer {
-    code: CharString,
+    code: String,
     file: String,
     errors: Vec<String>,
     cur_char: char,
@@ -16,7 +16,7 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(code: String, file: String) -> Lexer {
         let mut lexer = Lexer {
-            code: CharString::from(code),
+            code,
             file,
             errors: vec![],
             cur_char: NULL_CHAR,
@@ -37,16 +37,20 @@ impl Lexer {
     }
 
     fn peek_char(&self) -> char {
-        self.code.chars().nth(self.next_pos).unwrap_or(NULL_CHAR)
+        self.code_to_vec()[self.next_pos]
     }
 
     fn is_valid_char(&self, c: char) -> bool {
-        c.is_ascii_alphabetic() || c == '_'
+        c.is_alphabetic() || c == '_'
+    }
+
+    fn code_to_vec(&self) -> Vec<char> {
+        self.code.chars().collect::<Vec<char>>()
     }
 
     fn read_char(&mut self) -> char {
-        if self.next_pos < self.code.len() {
-            self.cur_char = self.code.get(self.next_pos).unwrap()
+        if self.next_pos < self.code_to_vec().len() {
+            self.cur_char = self.code_to_vec()[self.next_pos]
         } else {
             self.cur_char = NULL_CHAR;
         }
@@ -72,7 +76,11 @@ impl Lexer {
             self.read_char();
         }
 
-        self.code.slice(start..self.pos)
+        self.code_to_vec()[start..self.pos]
+            .iter()
+            .map(|ch| {ch.to_string()})
+            .collect::<Vec<String>>()
+            .join("")
     }
 
     fn read_number(&mut self) -> String {
@@ -82,7 +90,11 @@ impl Lexer {
             self.read_char();
         }
 
-        self.code.slice(start..self.pos)
+        self.code_to_vec()[start..self.pos]
+            .iter()
+            .map(|ch| {ch.to_string()})
+            .collect::<Vec<String>>()
+            .join("")
     }
 
     fn read_string(&mut self) -> String {
@@ -93,7 +105,11 @@ impl Lexer {
             self.read_char();
 
             if self.cur_char == '"'{
-                let s = self.code.slice(start..self.pos);
+                let s = self.code_to_vec()[start..self.pos]
+                    .iter()
+                    .map(|ch| {ch.to_string()})
+                    .collect::<Vec<String>>()
+                    .join("");
 
                 self.read_char();
                 return s
@@ -116,17 +132,17 @@ impl Lexer {
         if TOKEN_TYPE_MAP.contains_key(&self.cur_char.to_string()) {
             token.token_type = TOKEN_TYPE_MAP[&self.cur_char.to_string()].clone();
             token.value = self.cur_char.to_string();
-
-            self.read_char(); // 处理完符号立即推进指针
-            return token; // 立即返回避免后续处理
         }
 
         match self.cur_char {
             '=' => {
                 let peek_char = self.peek_char();
+
                 if peek_char == '=' {
                     token.token_type = TokenType::Eq;
-                    token.value = format!("{}, {}", self.cur_char, peek_char)
+                    token.value = format!("{}{}", self.cur_char, peek_char);
+                
+                    self.read_char();
                 }
             }
 
@@ -134,7 +150,9 @@ impl Lexer {
                 let peek_char = self.peek_char();
                 if peek_char == '=' {
                     token.token_type = TokenType::Eq;
-                    token.value = format!("{}, {}", self.cur_char, peek_char)
+                    token.value = format!("{}{}", self.cur_char, peek_char);
+
+                    self.read_char();
                 }
             }
 
@@ -149,7 +167,7 @@ impl Lexer {
             }
 
             _ => {
-                if self.cur_char.is_ascii_alphabetic() {
+                if self.is_valid_char(self.cur_char) && !self.cur_char.is_ascii_digit() {
                     let ident = self.read_ident();
                     token.token_type = self.get_ident_token_type(&ident);
                     token.value = ident;
@@ -182,6 +200,7 @@ impl Lexer {
         while !self.eof() {
             tokens.push(self.next_token());
         }
+
         tokens
     }
 
@@ -220,6 +239,36 @@ fn test_lexer() {
         TokenType::Slash,
         TokenType::Integer,
         TokenType::RBrace,
+    ];
+    
+    // 验证词法单元
+    for i in 0 .. tokens.len() - 1 {
+        assert_eq(tokens[i].token_type, expected_token_types[i], on_failure_function);
+    }
+}
+
+#[test]
+fn test_lexer_unicode() {
+    use crate::token::utils::print_tokens;
+    use crate::utils::assert_eq;
+
+    let mut l = Lexer::new(
+        "let ♿ = \"otto\"; let 你好 = \"Hello\"".to_string(), 
+        String::from("__test_lexer_unicode__")
+    );
+    let tokens = l.get_tokens();
+
+    let on_failure_function = || print_tokens(tokens.clone());
+    let expected_token_types = vec![
+        TokenType::Let,
+        TokenType::Ident,
+        TokenType::Assign,
+        TokenType::String,
+        TokenType::Semicolon,
+        TokenType::Let,
+        TokenType::Ident,
+        TokenType::Assign,
+        TokenType::String,
     ];
     
     // 验证词法单元
