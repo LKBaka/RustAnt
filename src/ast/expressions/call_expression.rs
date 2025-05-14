@@ -1,15 +1,19 @@
-use std::ops::Deref;
+use std::any::Any;
 
+use crate::evaluator::utils::eval_expressions;
 use crate::ast::ast::{Expression, Node};
-use crate::constants::null_obj;
-use crate::environment::data::Data;
-use crate::environment::data_info::DataInfo;
+use crate::ast::expressions::assignment_expression::AssignmentExpression;
+use crate::ast::expressions::function_expression::FunctionExpression;
+use crate::ast::expressions::identifier::Identifier;
+use crate::constants::uninit_obj;
 use crate::environment::environment::Environment;
-use crate::function_caller::function_caller::call_native_function_with_arg_env;
+use crate::function_caller::function_caller::{call_function, call_native_function, find_function};
 use crate::object::ant_function::AntFunction;
 use crate::object::ant_native_function::AntNativeFunction;
-use crate::object::object::{IAntObject, NATIVE_FUNCTION};
+use crate::object::object::{GetEnv, IAntObject};
+use crate::object::utils::create_error;
 use crate::token::token::Token;
+use crate::evaluator::evaluator::Evaluator;
 
 impl Clone for CallExpression {
     fn clone(&self) -> Self {
@@ -22,7 +26,7 @@ impl Clone for CallExpression {
 }
 
 pub struct CallExpression {
-    func: Box<dyn Expression>,
+    func: Box<dyn Expression + 'static>,
     args: Vec<Box<dyn Expression>>,
     token: Token,
 }
@@ -42,51 +46,88 @@ impl Node for CallExpression {
         format!("{}({})", self.func.to_string(), args_strings.join(", "))
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<(dyn IAntObject + 'static)>> {
-        let mut arg_env = Environment::new_with_outer((*&env).clone());
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {        // 筛选出所有赋值表达式
+        let assignment_expressions = self.args
+            .iter()
+            .filter(|expr| {((*expr).clone() as Box<dyn Any>).downcast_ref::<AssignmentExpression>().is_some()})
+            .map(|expr| expr.clone())
+            .collect::<Vec<Box<dyn Expression>>>();
 
-        // 处理参数
-        for i in 0..self.args.len() {
-            if self.args.is_empty() {
-                break;
-            }
+        // 筛选出所有不是赋值表达式的表达式，然后求值
+        let arg_expressions = self.args
+            .iter()
+            .filter(|expr| {((*expr).clone() as Box<dyn Any>).downcast_ref::<AssignmentExpression>().is_none()})
+            .map(|expr| expr.clone())
+            .collect::<Vec<Box<dyn Expression>>>();
 
-            let eval_result = self.func.eval(&mut env.clone());
+        let args = eval_expressions(&arg_expressions, evaluator, env);
 
-            match eval_result {
-                None => {}
-                Some(eval_result) => {
-                    let func = eval_result.as_any().downcast_ref::<AntFunction>();
-                    if let Some(it) = func.cloned() {
-                        let value = self.args[i].eval(env);
-                        match value {
-                            None => {},
-                            Some(value) => {
-                                arg_env.create(it.param_env.map.keys()[i].deref(), Data::new(value, DataInfo::new(false)));
-                            }
-                        }
+        let converted_box = self.func.clone() as Box<dyn Any>;
+        let ident = converted_box.downcast_ref::<Identifier>();
+
+        // 如果为标识符
+        if let Some(it) = ident {
+            let func = find_function(it.to_string(), args.clone(), env);
+
+            return match func {
+                Ok(mut func) => {
+                    if let Some(it) = (func.clone() as Box<dyn Any>).downcast_ref::<AntFunction>() {
+                        // 先与形参环境融合，防止指定参数时参数不在环境中
+                        func.get_env_ref().in_place_fusion(it.param_env.to_owned());
+
+                        // 将所有参数指定（赋值）表达式进行求值
+                        eval_expressions(&assignment_expressions, evaluator, func.get_env_ref());
+
+                        // 清除所有没被设置值的参数
+                        func.get_env_ref().remove_obj(uninit_obj.clone());
+
+                        Some(call_function(func, args, evaluator, env))
+                    } else if let Some(it) = (func.clone() as Box<dyn Any>).downcast_ref::<AntNativeFunction>() {
+                        // 先与形参环境融合，防止指定参数时参数不在环境中
+                        func.get_env_ref().in_place_fusion(it.param_env.to_owned());
+
+                        // 将所有参数指定（赋值）表达式进行求值
+                        eval_expressions(&assignment_expressions, evaluator, func.get_env_ref());
+
+                        // 清除所有没被设置值的参数
+                        func.get_env_ref().remove_obj(uninit_obj.clone());
+
+                        call_native_function(func, args, env)
+                    } else {
+                        None
                     }
+                }
 
-                    let native_func = eval_result.as_any().downcast_ref::<AntNativeFunction>();
-                    if let Some(it) = native_func.cloned() {
-                        let value = self.args[i].eval(env);
-                        match value {
-                            None => {},
-                            Some(value) => {
-                                arg_env.create(it.param_env.map.keys()[i].deref(), Data::new(value, DataInfo::new(false)));
-                            }
-                        }
-                    }
+                Err(it) => {
+                    Some(it)
                 }
             }
         }
 
-        let function = self.func.eval(env);
-        if function.clone()?.get_type() == NATIVE_FUNCTION {
-            return Some(call_native_function_with_arg_env(function?, arg_env, env)?);
-        }
+        let func_expr: Option<&FunctionExpression> = converted_box.downcast_ref::<FunctionExpression>();
+        if let Some(mut it) = func_expr.cloned() {
+            // 如果为函数表达式
 
-        Some(null_obj.clone())
+            // 获取函数
+            let obj = it.eval(evaluator, env)?;
+
+            let mut func = (*obj.as_any().downcast_ref::<AntFunction>()?).to_owned();
+            let func: &mut AntFunction = &mut func;
+
+            // 先与形参环境融合，防止指定参数时参数不在环境中
+            func.to_owned().get_env_ref().in_place_fusion(func.param_env.to_owned());
+
+            // 将所有参数指定（赋值）表达式进行求值
+            eval_expressions(&assignment_expressions, evaluator, func.get_env_ref());
+
+            // 清除所有没被设置值的参数
+            func.get_env_ref().remove_obj(uninit_obj.clone());
+
+            // 求值
+            return Some(call_function(Box::new(func.to_owned()), args, evaluator, env));
+        };
+
+        Some(create_error(format!("unsupported function expression: {}", self.func.to_string())))
     }
 }
 
