@@ -8,11 +8,11 @@ pub struct REPLRunner {
 }
 
 impl REPLRunner {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         REPLRunner{}
     }
 
-    pub(crate) fn run(&self) {
+    pub fn run(&self) {
         let mut env = create_top_env();
 
         loop {
@@ -33,8 +33,8 @@ impl REPLRunner {
             }
 
             let result = eval(code, "repl".to_string(), &mut env);
-            if result.is_some() {
-                println!("{}", result.unwrap().inspect())
+            if let Some(it) = result {
+                println!("{}", it.inspect())
             }
         }
     }

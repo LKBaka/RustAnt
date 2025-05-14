@@ -5,7 +5,7 @@ use crate::parser::parser::Parser;
 pub fn parse_ident(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     Some(
         Box::new(
-            create_identifier(parser.cur_token.clone(), parser.cur_token.value.clone())
+            create_identifier(parser.cur_token.to_owned(), parser.cur_token.value.to_owned())
         )
     )
 }

@@ -1,12 +1,11 @@
 use std::any::Any;
-use std::ops::Deref;
 use uuid::Uuid;
 
 use crate::constants::null_obj;
 use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
-use crate::impl_object_get_env_function;
+use crate::impl_object;
 use crate::object::object::{IAntObject, ObjectType, STRING};
 use crate::object::object::GetEnv;
 
@@ -66,9 +65,10 @@ impl IAntObject for AntString {
         let mut env = Environment::new();
         env.create("value", Data::new(null_obj.clone(), DataInfo::new(false)));
 
-        env.fusion(arg_env);
+        env = env.fusion(arg_env);
 
-        if env.get("value").unwrap().eq(null_obj.clone().deref()) {
+
+        if env.get("value").unwrap() == null_obj.clone() {
             panic!()
         }
 
@@ -102,7 +102,7 @@ impl IAntObject for AntString {
 
     }
 
-    fn eq(&self, other: &dyn IAntObject) -> bool {
+    fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id || if other.get_type() == STRING {
             other.as_any().downcast_ref::<AntString>().unwrap().value == self.value
         } else {false}
@@ -113,4 +113,4 @@ impl IAntObject for AntString {
     }
 }
 
-impl_object_get_env_function!(AntString);
+impl_object!(AntString);

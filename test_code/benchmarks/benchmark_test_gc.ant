@@ -1,0 +1,22 @@
+func counter(x) {
+    if x > 100 {
+        x
+    } else {
+        let foobar = 9999
+        return counter(x + 1)
+    };
+};
+
+let start = now();
+
+print("start");
+print(counter(0))
+print("end");
+
+let end = now();
+
+print(end - start)
+
+while 1 {
+    
+}

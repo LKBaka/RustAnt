@@ -12,6 +12,10 @@ pub struct Args {
     #[arg(short, long)]
     pub(crate) file: Option<String>,
 
+    /// GC可容忍最大递归次数（可选）
+    #[arg(short, long, default_value_t = 700)]
+    pub(crate) max_recursion_depth: usize,
+
     /// 启用详细模式
     #[arg(short, long, default_value_t = false)]
     verbose: bool,

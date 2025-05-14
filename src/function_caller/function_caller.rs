@@ -1,49 +1,19 @@
+use std::any::Any;
+
 use crate::ast::ast::Node;
-use crate::constants::{null_obj, uninit_obj};
+use crate::constants::null_obj;
 use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
-use crate::object::ant_error::AntError;
+use crate::evaluator::evaluator::Evaluator;
 use crate::object::ant_function::AntFunction;
 use crate::object::ant_native_function::AntNativeFunction;
 use crate::object::ant_return_value::AntReturnValue;
 use crate::object::object::{IAntObject, RETURN_VALUE, UNINIT};
+use crate::object::utils::create_error;
+use crate::gc::gc::check_recursion_depth;
 
-fn check_function_args_count(param_env: Environment, env: &mut Environment, args: Vec<Box<dyn IAntObject>>) -> Result<i32, Box<dyn IAntObject>>{
-    if args.len() == param_env.map.keys().len() {
-        // 若实参数量与形参数量相同，则按位置陆续传输参数
-        for i in 0..args.len() {
-            let name = param_env.map.keys()[i].clone();
-            let value = args[i].clone();
-
-            env.create(&name, Data::new(value, DataInfo::new(false)));
-        }
-
-        return Ok(0)
-    }
-
-    if args.len() > param_env.map.keys().len() {
-        // 提供实参过多，报错
-        return Err(
-            AntError::new_with_native_value(Box::new(
-                format!("This function requires {} parameter, but is given {} parameters", param_env.map.keys().len(), args.len())
-            ))
-        )
-    }
-
-    // 获取所有必须提供的形参
-    let required_given_params = param_env.map.filter(|_name, data| {data.data.get_type() == UNINIT.to_string() });
-
-    if args.len() < required_given_params.keys().len() {
-        // 提供实参过少，报错
-        return Err(
-            AntError::new_with_native_value(Box::new(
-                format!("This function requires {} parameter, but is given {} parameters", param_env.map.keys().len(), args.len())
-            ))
-        )
-    }
-
-    // 填充参数
+pub fn fill_args(args: Vec<Box<dyn IAntObject>>, param_env: Environment, env: &mut Environment) {
     for (i, pair) in param_env.map.pairs.iter().enumerate() {
         let name = pair.key.clone();
         let default_value = pair.value.data.clone();
@@ -51,159 +21,176 @@ fn check_function_args_count(param_env: Environment, env: &mut Environment, args
         if i < args.len() {
             // 如果有对应的实参，使用实参值
             env.create(&name, Data::new(args[i].clone(), DataInfo::new(false)));
-        } else {
-            // 如果没有对应的实参，使用默认值
-            env.create(&name, Data::new(default_value, DataInfo::new(false)));
+            continue
         }
-    }
 
-    Ok(0)
+        // 如果没有对应的实参，使用默认值
+        env.create(&name, Data::new(default_value, DataInfo::new(false)));
+    }
 }
 
-pub fn call_function_with_name(name: String, args: Vec<Box<dyn IAntObject>>, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-    let try_get_functions = env.get_values(&*name);
+fn not_callable_error(obj_inspected: String) -> Box<dyn IAntObject> {
+    create_error(
+        format!("object {} is not callable", obj_inspected)
+    )
+}
 
-    match try_get_functions {
-        None => {
-            Some(
-                AntError::new_with_native_value(
-                    Box::new(
-                        format!("cannot find function \"{}\"", name)
-                    )
-                )
-            )
-        }
-        Some(functions) => {
-            // 逐个检验函数是否符合要求
-            for function in functions {
-                let converted_function = function.as_any().downcast_ref::<AntFunction>();
-                if converted_function.is_some() {
-                    let mut func: AntFunction = (*converted_function.unwrap()).clone();
+fn check_function_args_count(param_env: Environment, env: &mut Environment, args: Vec<Box<dyn IAntObject>>) -> Result<i32, Box<dyn IAntObject>>{
+    if args.len() == param_env.map.keys().len() {
+        // 若实参数量与形参数量相同，则按位置陆续传输参数
+        for i in 0..args.len() {
+            let name = param_env.map.keys()[i].clone();
+            let value: Box<dyn IAntObject + 'static> = args[i].clone();
 
-                    let check_result = check_function_args_count(
-                        func.param_env, &mut func.env, args.clone()
-                    );
-
-                    return match check_result {
-                        Ok(_) => {
-                            Some(call_function(function, args.clone(), env))
-                        }
-
-                        Err(obj) => {
-                            Some(obj)
-                        }
-                    }
-                }
-
-                let converted_native_function = function.as_any().downcast_ref::<AntNativeFunction>();
-                if converted_native_function.is_some() {
-                    let mut func = (*converted_native_function.unwrap()).clone();
-
-                    let check_result = check_function_args_count(
-                        func.param_env, &mut func.env, args.clone()
-                    );
-
-                    return match check_result {
-                        Ok(_) => {
-                            call_native_function(function, args.clone(), env)
-                        }
-
-                        Err(obj) => {
-                            Some(obj)
-                        }
-                    }
-                }
-
-                return Some(AntError::new_with_native_value(
-                    Box::new(
-                        format!("object {} is not callable", converted_function.unwrap().inspect())
-                    )
-                ))
+            let result = env.create(&name, Data::new(value.to_owned(), DataInfo::new(false)));
+            if result.is_some() {
+                env.set_value(&name, value);
             }
-
-            Some(null_obj.clone())
         }
-    }
-}
 
-pub fn call_native_function_with_arg_env(function: Box<dyn IAntObject>, arg_env: Environment, env: &Environment) -> Option<Box<dyn IAntObject>> {
-    let converted_function = function.as_any().downcast_ref::<AntNativeFunction>();
-    if converted_function.is_none() {
-        return Some(AntError::new_with_native_value(
-            Box::new(
-                format!("object {} is not callable", converted_function.unwrap().inspect())
-            )
-        ))
+        return Ok(0)
     }
 
-    let mut func = (*converted_function.unwrap()).clone();
-    func.env.outer = Some(Box::new(env.clone()));
+    // 获取所有必须提供的形参
+    let required_given_params = param_env.map.filter(|_name, data| {data.data.get_type() == UNINIT.to_string() });
 
-    // 检查参数数量
-    // 待定
-
-    func.env = func.param_env.clone().fusion(arg_env.clone());
-    func.env.remove_obj(uninit_obj.clone());
-
-    func.function.clone()(&mut func.env.clone())
-}
-
-
-pub fn call_native_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAntObject>>, env: &Environment) -> Option<Box<dyn IAntObject>> {
-    let converted_function = function.as_any().downcast_ref::<AntNativeFunction>();
-    if converted_function.is_none() {
-        return Some(AntError::new_with_native_value(
-            Box::new(
-                format!("object {} is not callable", converted_function.unwrap().inspect())
-            )
-        ))
-    }
-
-    let mut func = (*converted_function.unwrap()).clone();
-    func.env.outer = Some(Box::new(env.clone()));
-
-    // 检查参数数量
-    check_function_args_count(func.param_env.clone(), &mut func.env, args);
-
-    func.function.clone()(&mut func.env.clone())
-}
-
-pub fn call_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAntObject>>, env: &Environment) -> Box<dyn IAntObject>{
-    let converted_function = function.as_any().downcast_ref::<AntFunction>();
-    if converted_function.is_none() {
-        return AntError::new_with_native_value(
-            Box::new(
-                format!("object {} is not callable", converted_function.unwrap().inspect())
+    if args.len() > param_env.map.keys().len() {
+        // 提供实参不符合预期，报错
+        return Err(
+            create_error(
+                format!("this function max requires {} parameter, but is given {} parameters", param_env.map.keys().len(), args.len())
             )
         )
     }
 
+    if args.len() < required_given_params.keys().len() {
+        // 提供实参不符合预期，报错
+        return Err(
+            create_error(
+                format!("this function requires {} parameter, but is given {} parameters", required_given_params.keys().len(), args.len())
+            )
+        )
+    }
+
+    // 填充参数
+    fill_args(args, param_env, env);
+
+    Ok(0)
+}
+
+pub fn find_function(name: String, args: Vec<Box<dyn IAntObject>>, env: &mut Environment) -> Result<Box<dyn IAntObject>, Box<dyn IAntObject>> {
+    let try_get_functions = env.get_values(&*name);
+
+    if let Option::None = try_get_functions {
+        return Err(
+            create_error(
+                format!("cannot find function \"{}\"", name)
+            )
+        )
+    }
+
+    let functions = try_get_functions.unwrap();
+
+    for function in functions {
+        let converted_function = function.as_any().downcast_ref::<AntFunction>();
+        if let Some(func) = converted_function {
+            let check_result = check_function_args_count(
+                func.param_env.to_owned(), &mut func.env.to_owned(), args.clone()
+            );
+
+            if let Ok(_) = check_result {return Ok(function)}
+        }
+
+        let converted_native_function = function.as_any().downcast_ref::<AntNativeFunction>();
+        if let Some(func) = converted_native_function {
+            let check_result = check_function_args_count(
+                func.param_env.to_owned(), &mut func.env.to_owned(), args.clone()
+            );
+
+            if let Ok(_) = check_result {return Ok(function)}
+        }
+    }
+
+    Err(
+        create_error("No matching function overload found.".to_string())
+    )
+}
+
+pub fn call_function_with_name(name: String, args: Vec<Box<dyn IAntObject>>, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    let func = find_function(name, args.clone(), env);
+
+    if let Ok(func) = func {
+        return if let Some(_) = (func.to_owned() as Box<dyn Any>).downcast_ref::<AntFunction>() {
+            Some(call_function(func, args, evaluator, env))
+        } else if let Some(_) = (func.to_owned() as Box<dyn Any>).downcast_ref::<AntNativeFunction>() {
+            call_native_function(func, args, env)
+        } else {
+            None
+        }
+    }
+
+    if let Err(err) = func {
+        return Some(err)
+    }
+
+    None // 不可能到达的代码
+}
+
+pub fn call_native_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAntObject>>, env: &Environment) -> Option<Box<dyn IAntObject>> {
+    let converted_function = function.as_any().downcast_ref::<AntNativeFunction>();
+    if converted_function.is_none() {
+        return Some(not_callable_error(function.inspect()))
+    }
+
     let mut func = (*converted_function.unwrap()).clone();
     func.env.outer = Some(Box::new(env.clone()));
 
     // 检查参数数量
-    check_function_args_count(func.param_env.clone(), &mut func.env, args);
-
-    eval_function(Box::new(func))
-}
-
-pub fn eval_function(function: Box<dyn IAntObject>) -> Box<dyn IAntObject> {
-    let function = function.as_any().downcast_ref::<AntFunction>();
-    if function.is_none() {
-        return AntError::new_with_native_value(
-            Box::new(
-                format!("object {} is not callable", function.unwrap().inspect())
-            )
-        );
+    let result = check_function_args_count(func.param_env.clone(), &mut func.env, args);
+    if let Err(err) = result {
+        return Some(err)
     }
 
-    let return_value = function.unwrap().clone().block.eval(
-        &mut (function.unwrap().clone().env.clone())
-    );
+    func.function.clone()(&mut func.env.clone())
+}
 
-    unwrap_return_value(
-        if return_value.is_some() { return_value.unwrap() } else {null_obj.clone()}
-    )
+pub fn call_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAntObject>>, evaluator: &mut Evaluator, env: &mut Environment) -> Box<dyn IAntObject>{
+    let converted_function = function.as_any().downcast_ref::<AntFunction>();
+    if converted_function.is_none() {
+        return not_callable_error(function.inspect())
+    }
+
+    let mut func = (*converted_function.unwrap()).to_owned();
+    func.env.outer = Some(Box::new(env.clone()));
+
+    // 检查递归深度
+    check_recursion_depth(func.env.depth() as usize);
+
+    // 检查参数数量
+    let result = check_function_args_count(func.param_env.clone(), &mut func.env, args);
+    if let Err(err) = result {
+        return err
+    }
+
+    eval_function(evaluator, Box::new(func))
+}
+
+pub fn eval_function(evaluator: &mut Evaluator, function: Box<dyn IAntObject>) -> Box<dyn IAntObject> {
+    let func = function.as_any().downcast_ref::<AntFunction>();
+    if let Some(mut func) = func.cloned() {
+        let mut func_env = func.clone().env.clone();
+
+        let return_value = (&mut func).block.eval(
+            evaluator, 
+            &mut func_env
+        );
+
+        return unwrap_return_value(
+            if let Some(it) = return_value {it} else {null_obj.clone()}
+        )
+    }
+
+    not_callable_error(function.inspect())
 }
 
 pub fn unwrap_return_value(return_value: Box<dyn IAntObject>) -> Box<dyn IAntObject> {

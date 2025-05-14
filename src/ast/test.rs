@@ -5,14 +5,17 @@ use std::ops::Deref;
 use crate::ast::ast::Node;
 use crate::environment::environment::Environment;
 use crate::object::object::IAntObject;
+use crate::evaluator::evaluator::{self, Evaluator};
 
 
 fn test_node_eval(mut node: impl Node, expected_obj: Box<dyn IAntObject>) {
-    let result = node.eval(&mut Environment::new());
+    let mut evaluator = Evaluator::new();
+
+    let result = node.eval(&mut evaluator, &mut Environment::new());
     match result {
         None => {}
         Some(it) => {
-            if !it.deref().eq(expected_obj.clone().deref()) {
+            if !(it == expected_obj.clone()) {
                 panic!("Expected eval result is {}, but now it is {}", expected_obj.clone().inspect(), it.inspect())
             }
 

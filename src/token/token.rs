@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::constants::NULL_CHAR;
 use crate::token::token_type::TokenType;
 
@@ -27,5 +29,25 @@ impl Token {
             file,
             line,
         }
+    }
+}
+
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.token_type == other.token_type && self.value == other.value &&
+        self.file == other.file && self.line == other.line 
+    }
+}
+
+impl Eq for Token {}
+
+impl Debug for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Token")
+            .field("type", &self.token_type)   // 使用 token_type 的 Debug 实现
+            .field("value", &self.value)       // 字符串直接显示内容
+            .field("file", &self.file)         // 文件名保留完整路径
+            .field("line", &self.line)          // 行号直接显示数值
+            .finish()
     }
 }

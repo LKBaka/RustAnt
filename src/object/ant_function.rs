@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::ast::statements::block_statement::BlockStatement;
 use crate::constants::null_obj;
 use crate::environment::environment::Environment;
-use crate::impl_object_get_env_function;
+use crate::impl_object;
 use crate::object::object::GetEnv;
 use crate::object::object::{IAntObject, ObjectType, FUNCTION};
 
@@ -55,7 +55,7 @@ impl IAntObject for AntFunction {
         null_obj.clone()
     }
 
-    fn eq(&self, other: &dyn IAntObject) -> bool {
+    fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id
     }
 
@@ -78,4 +78,4 @@ pub fn create_ant_function(param_env: Environment, block: BlockStatement) -> Box
     )
 }
 
-impl_object_get_env_function!(AntFunction);
+impl_object!(AntFunction);

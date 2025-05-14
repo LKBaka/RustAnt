@@ -1,7 +1,7 @@
 #![cfg_attr(debug_assertions, allow(dead_code, unused_imports, unused_variables, unused_mut))]
 
 use std::ops::Deref;
-use crate::constants::uninit_obj;
+
 use crate::environment::data::Data;
 use crate::environment::environment::Environment;
 
@@ -10,7 +10,7 @@ fn test_env_set_value(mut env: Environment, key: String, value: Data) {
 
     let get_result =  env.get(key.deref()).unwrap();
 
-    if !get_result.eq(value.data.deref()) {
+    if !(&get_result == &value.data) {
         panic!("{}", format!("Expected inspect result is {}, but now it is {}", value.data.inspect(), get_result.inspect()));
     }
 
@@ -56,6 +56,7 @@ fn test_multi_env_fusion() {
     use crate::environment::data_info::DataInfo;
     use crate::object::ant_int::AntInt;
     use crate::object::object::IAntObject;
+    use crate::constants::uninit_obj;
 
     // 定义测试数据表
     let env1_items = vec![

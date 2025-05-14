@@ -1,2 +1,3 @@
-pub(crate) mod evaluator;
+pub mod evaluator;
 mod test;
+pub mod utils;

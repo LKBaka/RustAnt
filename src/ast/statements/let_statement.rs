@@ -6,6 +6,7 @@ use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::object::object::IAntObject;
+use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 
 impl Clone for LetStatement {
@@ -33,8 +34,13 @@ impl Node for LetStatement {
         format!("let {} = {}", self.name.to_string(), self.value.to_string())
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<(dyn IAntObject + 'static)>> {
-        let create_result = env.create(self.name.to_string().deref(), Data::new(self.value.eval(&mut env.clone()).unwrap(), DataInfo::new(false)));
+
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        let create_result = env.create(
+            self.name.to_string().deref(), Data::new(
+                self.value.eval(evaluator, &mut env.clone()).unwrap(), DataInfo::new(false)
+            )
+        );
 
         // 检查返回值是否为空。若为空，代表创建成功
         if create_result.is_some() {

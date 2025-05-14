@@ -3,11 +3,11 @@ use uuid::Uuid;
 
 use crate::constants::null_obj;
 use crate::environment::environment::Environment;
-use crate::impl_object_get_env_function;
+use crate::impl_object;
 use crate::object::object::{IAntObject, ObjectType, NATIVE_FUNCTION};
 use crate::object::object::GetEnv;
 
-type NativeFunction = fn(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>>;
+pub type NativeFunction = fn(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>>;
 
 pub struct AntNativeFunction {
     pub id: Uuid,
@@ -56,9 +56,9 @@ impl IAntObject for AntNativeFunction {
         null_obj.clone()
     }
 
-    fn eq(&self, other: &dyn IAntObject) -> bool {
+    fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id || if other.get_type() == NATIVE_FUNCTION {
-            other.as_any().downcast_ref::<AntNativeFunction>().unwrap().function == self.function
+            std::ptr::fn_addr_eq(other.as_any().downcast_ref::<AntNativeFunction>().unwrap().function, self.function)
         } else {false}
     }
 
@@ -81,4 +81,4 @@ pub fn create_ant_native_function(param_env: Environment, function: NativeFuncti
     )
 }
 
-impl_object_get_env_function!(AntNativeFunction);
+impl_object!(AntNativeFunction);

@@ -1,10 +1,11 @@
 use std::any::Any;
 use std::hash::{Hash, Hasher};
+use std::ops::Deref;
 use uuid::Uuid;
 use dyn_clone::{clone_trait_object, DynClone};
 
 use crate::environment::environment::Environment;
-use crate::impl_object_get_env_function;
+use crate::impl_object;
 
 pub type ObjectType = String;
 
@@ -22,7 +23,7 @@ pub const RETURN_VALUE: &str = "__Return_Value__";
 
 pub trait GetEnv {
     fn get_env(&self) -> Environment;
-    fn get_env_ref(&self) -> &Environment;
+    fn get_env_ref(&mut self) -> &mut Environment;
 }
 
 pub trait IAntObject: DynClone + Sync + Send + Any + GetEnv {
@@ -33,11 +34,19 @@ pub trait IAntObject: DynClone + Sync + Send + Any + GetEnv {
     fn inspect(&self) -> String;
     fn new(arg_env: Environment) -> Box<dyn IAntObject> where Self: Sized;
     fn new_with_native_value(value: Box<dyn Any>) -> Box<dyn IAntObject> where Self: Sized;
-    fn eq(&self, other: &dyn IAntObject) -> bool;
+    fn equals(&self, other: &dyn IAntObject) -> bool;
     fn as_any(&self) -> &dyn Any;
 }
 
 clone_trait_object!(IAntObject);
+
+impl PartialEq for Box<dyn IAntObject> {
+    fn eq(&self, other: &Box<dyn IAntObject>) -> bool {
+        self.equals(other.deref())
+    }
+}
+
+impl Eq for Box<dyn IAntObject> {}
 
 impl Hash for dyn IAntObject {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -46,7 +55,6 @@ impl Hash for dyn IAntObject {
 }
 
 
-// #[derive(Clone)]
 pub struct AntObject {
     id: Uuid,
     env: Environment,
@@ -97,7 +105,7 @@ impl IAntObject for AntObject {
         })
     }
 
-    fn eq(&self, other: &dyn IAntObject) -> bool {
+    fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id
     }
 
@@ -106,4 +114,4 @@ impl IAntObject for AntObject {
     }
 }
 
-impl_object_get_env_function!(AntObject);
+impl_object!(AntObject);

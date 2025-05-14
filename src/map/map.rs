@@ -19,6 +19,10 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
         Map { pairs: vec![] }
     }
 
+    pub fn clear(&mut self) {
+        self.pairs = vec![];
+    }
+
     pub fn add(&mut self, key: K, value: V) {
         self.pairs.push(Pair::new(key.clone(), value.clone()));
     }
@@ -111,10 +115,14 @@ macro_rules! map {
     // 创建一个包含多个键值对的 Map
     ($($key:expr, $value:expr),* $(,)?) => {
         {
+            use crate::map::pair::Pair;
+            use crate::map::map::Map;
+            
             let mut m = Map::new();
             $(
                 m.pairs.push(Pair::new($key, $value));
             )*
+            
             m
         }
     };

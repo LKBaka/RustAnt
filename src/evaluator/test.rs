@@ -29,7 +29,7 @@ fn test_call_stack_print() {
     let mut env = Environment::new();
 
     // 求值
-    evaluator.eval_program(program, &mut env);
+    evaluator.eval_program(Box::new(program), &mut env);
 
     evaluator.print_call_stack(error.as_any().downcast_ref::<AntError>().unwrap().clone());
 }

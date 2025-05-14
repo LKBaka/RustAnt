@@ -30,7 +30,6 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
         // 处理 else if 和 else 分支
         while parser.cur_token_is(Else) {
-            let else_token = parser.cur_token.clone();
             parser.next_token(); // 离开 else 关键字
 
             // 检查是否是 else if

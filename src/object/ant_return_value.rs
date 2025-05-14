@@ -1,12 +1,13 @@
 use std::any::Any;
-use std::ops::Deref;
 use uuid::Uuid;
 
 use crate::constants::null_obj;
 use crate::environment::environment::Environment;
-use crate::impl_object_get_env_function;
+use crate::impl_object;
 use crate::object::object::{IAntObject, ObjectType, RETURN_VALUE};
 use crate::object::object::GetEnv;
+
+use super::utils::create_error;
 
 pub struct AntReturnValue {
     id: Uuid,
@@ -44,12 +45,16 @@ impl IAntObject for AntReturnValue {
     }
 
     fn new_with_native_value(value: Box<dyn Any>) -> Box<dyn IAntObject> {
-        if value.downcast_ref::<Box<dyn IAntObject>>().is_none() {
-            return Box::new(Self {
-                id: Uuid::new_v4(),
-                env: Environment::new(),
-                value: null_obj.clone(),
-            })
+        if value.downcast_ref::<Box<dyn IAntObject + 'static>>().is_none() {
+            return create_error(
+                "return value is None".to_string()
+            )
+            
+            // return Box::new(Self {
+            //     id: Uuid::new_v4(),
+            //     env: Environment::new(),
+            //     value: null_obj.clone(),
+            // })
         }
 
         let obj = value.downcast_ref::<Box<dyn IAntObject>>().unwrap().clone();
@@ -60,9 +65,9 @@ impl IAntObject for AntReturnValue {
         })
     }
 
-    fn eq(&self, other: &dyn IAntObject) -> bool {
+    fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id || if other.get_type() == RETURN_VALUE {
-            other.as_any().downcast_ref::<AntReturnValue>().unwrap().value.eq(self.value.clone().deref())
+            other.as_any().downcast_ref::<AntReturnValue>().unwrap().value == self.value.clone()
         } else {
             false
         }
@@ -83,4 +88,4 @@ impl Clone for AntReturnValue {
     }
 }
 
-impl_object_get_env_function!(AntReturnValue);
+impl_object!(AntReturnValue);

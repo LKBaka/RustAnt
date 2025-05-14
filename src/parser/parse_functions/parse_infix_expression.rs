@@ -23,7 +23,7 @@ pub fn parse_infix_expression(parser: &mut Parser, left: Box<dyn Expression>) ->
     match right_expression {
         None => {
             parser.errors.push(
-                format!("missing expression. at file <{}>, line {}", parser.cur_token.file, parser.cur_token.line)
+                format!("missing expression. at file <{}>, line {}", token.file, token.line)
             ); None
         }
         Some(right_expression) => {

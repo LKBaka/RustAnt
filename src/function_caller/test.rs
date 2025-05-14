@@ -1,30 +1,31 @@
+use crate::evaluator::evaluator::Evaluator;
 use crate::object::ant_function::AntFunction;
 use crate::object::object::IAntObject;
 
-pub fn test_function_call(function: AntFunction, expected_return_value: Box<dyn IAntObject>) {
-    use std::ops::Deref;
-
+pub fn test_function_call(function: &mut AntFunction, expected_return_value: Box<dyn IAntObject>) {
     use crate::function_caller::function_caller::call_function;
+
+    let mut evaluator: Evaluator = Evaluator::new();
 
     if function.param_env.map.keys().len() > 0 {
         panic!("this function (test_function_call) is for testing calls to function objects without arguments. If you want to test calls with multiple arguments, switch to test_function_call_with_args.")
     }
 
-    let result = call_function(Box::new(function.clone()), vec![], &function.env);
-    if !result.eq(expected_return_value.clone().deref()) {
+    let result = call_function(Box::new(function.clone()), vec![], &mut evaluator, &mut function.env);
+    if &result != &expected_return_value {
         panic!("result {} is not equals to {}", result.inspect(), expected_return_value.inspect())
     }
 
     println!("OK. result: {} expected: {}", result.inspect(), expected_return_value.inspect())
 }
 
-pub fn test_function_call_with_args(function: AntFunction, args: Vec<Box<dyn IAntObject>>, expected_return_value: Box<dyn IAntObject>) {
-    use std::ops::Deref;
-
+pub fn test_function_call_with_args(function: &mut AntFunction, args: Vec<Box<dyn IAntObject>>, expected_return_value: Box<dyn IAntObject>) {
     use crate::function_caller::function_caller::call_function;
 
-    let result = call_function(Box::new(function.clone()), args, &function.env);
-    if !result.eq(expected_return_value.clone().deref()) {
+    let mut evaluator: Evaluator = Evaluator::new();
+
+    let result = call_function(Box::new(function.clone()), args, &mut evaluator, &mut function.env);
+    if &result != &expected_return_value {
         panic!("result {} is not equals to {}", result.inspect(), expected_return_value.inspect())
     }
 
@@ -72,7 +73,7 @@ fn test_functions_call() {
     ];
 
     for (func, expected_obj) in expected_function_result_map {
-        test_function_call(func, expected_obj)
+        test_function_call(&mut func.to_owned(), expected_obj)
     }
 }
 
@@ -122,6 +123,6 @@ fn test_functions_call_with_args() {
     ];
 
     for (func, args, expected_obj) in expected_function_result_map {
-        test_function_call_with_args(func, args, expected_obj)
+        test_function_call_with_args(&mut func.to_owned(), args, expected_obj)
     }
 }

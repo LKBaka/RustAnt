@@ -2,6 +2,7 @@ use crate::ast::ast::{Expression, Node};
 use crate::environment::environment::Environment;
 use crate::object::ant_string::AntString;
 use crate::object::object::IAntObject;
+use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 
 impl Clone for StringLiteral {
@@ -27,8 +28,8 @@ impl Node for StringLiteral {
         self.value.to_string()
     }
 
-    fn eval(&mut self, _: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        Some(AntString::new_with_native_value(Box::new(self.value.clone())))
+    fn eval(&mut self, _: &mut Evaluator, _: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        Some(AntString::new_with_native_value(Box::new(self.value.to_owned())))
     }
 }
 

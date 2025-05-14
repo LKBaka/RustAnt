@@ -8,7 +8,6 @@ use crate::token::token_type::TokenType::Ident;
 pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
     let token = parser.cur_token.clone();
     let ident;
-    let value;
 
     parser.next_token();
 
@@ -27,7 +26,13 @@ pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
     parser.next_token();
 
     // 解析表达式
-    value = parser.parse_expression(Precedence::Lowest).unwrap();
+    let temp_value = parser.parse_expression(Precedence::Lowest);
+    
+    if let Some(value) = temp_value {
+        return Some(Box::new(create_let_statement(token, ident, value)))
+    }
 
-    Some(Box::new(create_let_statement(token, ident, value)))
+    parser.errors.push(
+        format!("missing expression. at file <{}>, line {}", token.file, token.line)
+    ); None
 }

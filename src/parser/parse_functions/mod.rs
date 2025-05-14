@@ -8,4 +8,8 @@ pub mod parse_infix_expression;
 pub mod parse_if_expression;
 pub mod parse_else_if_expression;
 pub mod parse_block_statement;
+pub mod parse_assignment_expression;
+pub mod parse_function_expression;
+pub mod parse_while_statement;
+pub mod parse_return_expression;
 

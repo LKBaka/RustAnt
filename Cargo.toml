@@ -4,24 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.5.38", features = ["derive"] }
 phf = { version = "0.11.3", features = ["macros"] }
 num-bigint = "0.4"
 bigdecimal = "0.4.8"
 dyn-clone = "1.0"
 lazy_static = "1.4.0"
 num_enum = "0.7.3"
+unicode-properties = "0.1.3"
+colored = "3.0.0"
 
 [dependencies.uuid]
 version = "1.16.0"
 features = [
     "v4",
 ]
-
-# Cargo.toml 添加强制调试配置
-[profile.test]
-opt-level = 0  # 禁用优化
-debug = true   # 启用调试符号
-
-[profile.dev]
-opt-level = 0

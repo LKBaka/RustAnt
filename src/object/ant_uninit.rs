@@ -2,7 +2,7 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::environment::environment::Environment;
-use crate::impl_object_get_env_function;
+use crate::impl_object;
 use crate::object::object::{IAntObject, ObjectType, UNINIT};
 use crate::object::object::GetEnv;
 
@@ -43,7 +43,7 @@ impl IAntObject for AntUninit {
         AntUninit::new(Environment::new())
     }
 
-    fn eq(&self, other: &dyn IAntObject) -> bool {
+    fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id || if other.get_type() == UNINIT {true} else {false}
     }
 
@@ -61,4 +61,4 @@ impl Clone for AntUninit {
     }
 }
 
-impl_object_get_env_function!(AntUninit);
+impl_object!(AntUninit);

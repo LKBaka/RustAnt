@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::ast::ast::{Expression, ExpressionStatement, Program, Statement};
 use crate::constants::NULL_CHAR;
+use crate::parser::parse_functions::parse_assignment_expression::parse_assignment_expression;
 use crate::parser::parse_functions::parse_boolean::parse_boolean;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
 use crate::parser::precedence::*;
@@ -16,13 +17,17 @@ use crate::parser::parse_functions::parse_number::parse_number;
 use crate::parser::parse_functions::parse_string::parse_string;
 use crate::parser::precedence::Precedence::Lowest;
 use crate::parser::parse_functions::parse_if_expression::parse_if_expression;
+use crate::parser::parse_functions::parse_function_expression::parse_function_expression;
+
+use super::parse_functions::parse_return_expression::parse_return_expression;
+use super::parse_functions::parse_while_statement::parse_while_statement;
 
 type PrefixParseFn = fn(&mut Parser) -> Option<Box<dyn Expression>>;
 type InfixParseFn = fn(&mut Parser, Box<dyn Expression>) -> Option<Box<dyn Expression>>;
 type StmtParseFn = fn(&mut Parser) -> Option<Box<dyn Statement>>;
 
 
-pub(crate) struct Parser {
+pub struct Parser {
     tokens: Vec<Token>,
     pub errors: Vec<String>,
 
@@ -52,20 +57,28 @@ impl Parser {
         };
 
         parser.statement_parse_fn_map.insert(TokenType::Let, parse_let_statement);
+        parser.statement_parse_fn_map.insert(TokenType::While, parse_while_statement);
 
         parser.prefix_parse_fn_map.insert(TokenType::Ident, parse_ident);
         parser.prefix_parse_fn_map.insert(TokenType::Integer, parse_number);
         parser.prefix_parse_fn_map.insert(TokenType::BoolTrue, parse_boolean);
         parser.prefix_parse_fn_map.insert(TokenType::BoolFalse, parse_boolean);
         parser.prefix_parse_fn_map.insert(TokenType::String, parse_string);
+        parser.prefix_parse_fn_map.insert(TokenType::Return, parse_return_expression);
         parser.prefix_parse_fn_map.insert(TokenType::If, parse_if_expression);
+        parser.prefix_parse_fn_map.insert(TokenType::Func, parse_function_expression);
 
         parser.infix_parse_fn_map.insert(TokenType::LParen, parse_call_expression);
+        parser.infix_parse_fn_map.insert(TokenType::Assign, parse_assignment_expression);
 
         parser.infix_parse_fn_map.insert(TokenType::Plus, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::Asterisk, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::Minus, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::Slash, parse_infix_expression);
+        parser.infix_parse_fn_map.insert(TokenType::Lt, parse_infix_expression);
+        parser.infix_parse_fn_map.insert(TokenType::Gt, parse_infix_expression);
+        parser.infix_parse_fn_map.insert(TokenType::Eq, parse_infix_expression);
+        parser.infix_parse_fn_map.insert(TokenType::NotEq, parse_infix_expression);
 
         parser
     }
@@ -78,24 +91,18 @@ impl Parser {
 
         let mut expressions = vec![];
         let expr = self.parse_expression(Lowest);
-        match expr {
-            None => {}
-            Some(it) => {
-                expressions.push(it)
-            }
+        if let Some(it) = expr {
+            expressions.push(it)
         }
 
         while self.peek_token_is(Comma) {
-            let expression = self.parse_expression(Lowest);
-            match expression {
-                None => {}
-                Some(it) => {
-                    expressions.push(it)
-                }
-            }
-
             self.next_token(); // 离开表达式
             self.next_token(); // 离开逗号
+
+            let expression = self.parse_expression(Lowest);
+            if let Some(it) = expression {
+                expressions.push(it)
+            } 
         }
 
         self.next_token();
@@ -125,13 +132,13 @@ impl Parser {
             let infix_parse_fn = self.infix_parse_fn_map.get(&self.peek_token.token_type);
             match infix_parse_fn.cloned() {
                 None => {
-
                     self.errors.push(
                         format!(
                             "no infix parse function for {} found. at file <{}> line {}",
                             self.cur_token.token_type.to_string(), self.cur_token.file, self.cur_token.line
                         )
                     );
+                    
                     return None
                 }
                 Some(it) => {
@@ -141,7 +148,7 @@ impl Parser {
             }
         }
 
-        Option::from(left)
+        Some(left)
     }
 
     fn parse_expression_statement(&mut self) -> Box<dyn Statement> {
@@ -158,7 +165,13 @@ impl Parser {
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
         if self.statement_parse_fn_map.contains_key(&self.cur_token.token_type) {
-            return self.statement_parse_fn_map[&self.cur_token.token_type](self)
+            let stmt = self.statement_parse_fn_map[&self.cur_token.token_type](self);
+
+            if self.peek_token_is(Semicolon) {
+                self.next_token();
+            }
+
+            return stmt;
         }
 
         Some(self.parse_expression_statement())
@@ -201,13 +214,13 @@ impl Parser {
             self.next_pos += 1;
 
             self.cur_token = self.tokens[self.pos].clone();
-            self.peek_token =
-
-            if self.next_pos < self.tokens.len() {
+            
+            self.peek_token = if self.next_pos < self.tokens.len() {
                 self.tokens[self.next_pos].clone()
             } else {
                 Token::eof(self.cur_token.file.clone(), self.cur_token.line.clone())
             };
+            
         } else {
             self.cur_token = Token::eof(self.cur_token.file.clone(), self.cur_token.line.clone());
             self.peek_token = Token::eof(self.peek_token.file.clone(), self.peek_token.line.clone());

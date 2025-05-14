@@ -21,7 +21,7 @@ impl Data {
 
 impl PartialEq for Data {
     fn eq(&self, other: &Self) -> bool {
-        self.info == other.info && self.data.as_ref().eq(other.data.as_ref())
+        self.info == other.info && self.data == other.data.clone()
     }
 }
 
