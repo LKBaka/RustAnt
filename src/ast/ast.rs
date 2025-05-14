@@ -3,18 +3,18 @@ use std::ops::Deref;
 use dyn_clone::{clone_trait_object, DynClone};
 
 use crate::constants::{null_obj, NEW_LINE};
+use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 use crate::environment::environment::Environment;
 use crate::object::object::IAntObject;
 
-pub(crate) trait Node: DynClone + Sync + Send + Any {
+pub trait Node: DynClone + Sync + Send + Any {
     fn token_literal(&self) -> String;
     fn to_string(&self) -> String;
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<dyn IAntObject>>;
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>>;
 
-    fn as_any(&self) -> Box<dyn Any + '_> {
-        let cloned_self = self;
-        Box::new(cloned_self)
+    fn as_any(&self) -> &(dyn Any + '_) where Self: Sized {
+        self
     }
 
     fn into_any(self: Box<Self>) -> Box<dyn Any> where Self: Sized {
@@ -24,8 +24,8 @@ pub(crate) trait Node: DynClone + Sync + Send + Any {
 
 clone_trait_object!(Node);
 
-pub(crate) trait Expression: Node {}
-pub(crate) trait Statement: Node {}
+pub trait Expression: Node {}
+pub trait Statement: Node {}
 
 clone_trait_object!(Expression);
 clone_trait_object!(Statement);
@@ -63,11 +63,11 @@ impl Node for Program {
         s
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
         let mut result = Some(null_obj.clone());
 
         for statement in &mut self.statements {
-            result = statement.eval(env);
+            result = evaluator.eval_box(statement.to_owned(), env);
         }
 
         result
@@ -83,7 +83,7 @@ impl Clone for ExpressionStatement {
 }
 
 pub struct ExpressionStatement {
-    pub(crate) expression: Option<Box<dyn Expression>>
+    pub expression: Option<Box<dyn Expression>>
 }
 
 impl Node for ExpressionStatement {
@@ -103,11 +103,11 @@ impl Node for ExpressionStatement {
         }
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
         if self.expression.is_none() {
             None
         } else {
-            self.expression.clone().unwrap().eval(env)
+            evaluator.eval_box(self.expression.clone().unwrap(), env)
         }
     }
 }
