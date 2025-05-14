@@ -2,6 +2,7 @@ use crate::ast::ast::{Expression, Node, Statement};
 use crate::constants::null_obj;
 use crate::environment::environment::Environment;
 use crate::object::object::IAntObject;
+use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::is_truthy;
 use crate::token::token::Token;
 
@@ -19,10 +20,10 @@ impl Clone for IfExpression {
 
 pub struct IfExpression {
     pub token: Token,
-    pub condition: Box<dyn Expression>, // 条件
-    pub consequence: Box<dyn Statement>, // 默认块
-    pub alternative: Option<Box<dyn Statement>>, // Else 分支块
-    pub else_if_expressions: Option<Vec<Box<dyn Expression>>> // ElseIf 分支块
+    condition: Box<dyn Expression>, // 条件
+    consequence: Box<dyn Statement>, // 默认块
+    alternative: Option<Box<dyn Statement>>, // Else 分支块
+    else_if_expressions: Option<Vec<Box<dyn Expression>>> // ElseIf 分支块
 }
 
 impl Node for IfExpression {
@@ -31,8 +32,8 @@ impl Node for IfExpression {
     }
 
     fn to_string(&self) -> String {
-        let alternative_string = if self.alternative.is_some() {
-            self.clone().alternative.unwrap().to_string()
+        let alternative_string = if let Some(alternative) = &self.alternative {
+            alternative.to_string()
         } else {
             "".to_string()
         };
@@ -53,29 +54,31 @@ impl Node for IfExpression {
         )
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        let condition = self.condition.eval(env)?;
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        let condition: Box<dyn IAntObject + 'static> = self.condition.eval(evaluator, env)?;
         
         if is_truthy(condition) {
-            self.consequence.eval(env)
+            self.consequence.eval(evaluator, env)
         } else {
             if let Some(ref mut it) = self.else_if_expressions {
-                let mut result = null_obj.clone();
+                let mut result: Option<Box<dyn IAntObject>> = None;
 
-                for mut else_if_expression in it {
-                    let eval_result = else_if_expression.eval(env);
+                for else_if_expression in it {
+                    let eval_result = else_if_expression.eval(evaluator, env);
 
                     if let Some(it) = eval_result {
-                        result = it;
+                        result = Some(it);
                         break;
                     }
                 }
 
-                return Some(result);
+                if result.is_some() {
+                    return result;
+                }
             }
 
             if let Some(ref mut it) = self.alternative {
-                return it.eval(env)
+                return it.eval(evaluator, env)
             }
 
             Some(null_obj.clone())
@@ -129,11 +132,11 @@ impl Node for ElseIfExpression {
         )
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        let condition = self.condition.eval(env)?;
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        let condition = self.condition.eval(evaluator, env)?;
         
         if is_truthy(condition) {
-            self.consequence.eval(env)
+            self.consequence.eval(evaluator, env)
         } else {
             None
         }
