@@ -1,9 +1,9 @@
-use std::ops::Deref;
 use crate::ast::ast::{Expression, Node};
 use crate::environment::environment::Environment;
-use crate::object::ant_error::AntError;
 use crate::object::object::IAntObject;
+use crate::object::utils::create_error_with_name;
 use crate::token::token::Token;
+use crate::evaluator::evaluator::Evaluator;
 
 impl Clone for Identifier {
     fn clone(&self) -> Self {
@@ -28,13 +28,16 @@ impl Node for Identifier {
         self.value.to_string()
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
-        let result = env.clone().get(self.value.deref().trim());
+    fn eval(&mut self, _: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+        let result = env.get(&self.value.trim());
 
         Some(
             match result {
                 None => {
-                    AntError::new_with_native_value(Box::new(format!("identifier not found: \"{}\"", self.value.clone())))
+                    create_error_with_name(
+                        "NameError", 
+                        format!("name '{}' is not defined ", self.value.clone())
+                    )
                 }
                 Some(it) => {
                     it
