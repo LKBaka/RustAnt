@@ -3,7 +3,8 @@ use std::ops::Deref;
 use crate::ast::ast::{Node, Statement};
 use crate::constants::{null_obj, NEW_LINE};
 use crate::environment::environment::Environment;
-use crate::object::object::IAntObject;
+use crate::object::object::{IAntObject, RETURN_VALUE};
+use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 
 impl Clone for BlockStatement {
@@ -39,11 +40,17 @@ impl Node for BlockStatement {
         s
     }
 
-    fn eval(&mut self, env: &mut Environment) -> Option<Box<(dyn IAntObject + 'static)>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {        
         let mut result = Some(null_obj.clone());
 
         for statement in &mut self.statements {
-            result = statement.eval(env);
+            result = statement.eval(evaluator, env);
+
+            if let Some(it) = result.clone() {
+                if it.get_type() == RETURN_VALUE.to_string() {
+                    return result.to_owned();
+                }
+            }
         }
 
         result
