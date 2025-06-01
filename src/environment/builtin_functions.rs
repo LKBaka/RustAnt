@@ -5,11 +5,13 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use bigdecimal::{BigDecimal, FromPrimitive};
 
 use crate::environment::environment::Environment;
+use crate::extract_arg;
 use crate::object::ant_double::AntDouble;
 use crate::object::ant_string::AntString;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
+use crate::utils::run_command;
 
-pub fn builtin_print(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+pub fn builtin_print(arg_env: &mut Environment) -> Option<Object> {
     let value = arg_env.get("value").expect(
         &format!("cannot find \"value\". arg_env: {}", arg_env.to_string())
     );
@@ -23,7 +25,7 @@ pub fn builtin_print(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
     None
 }
 
-pub fn builtin_input(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+pub fn builtin_input(arg_env: &mut Environment) -> Option<Object> {
     let value = arg_env.get("prompt");
     match value {
         None => {
@@ -47,14 +49,22 @@ pub fn builtin_input(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
     }
 }
 
-pub fn builtin_clear(_arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+pub fn builtin_clear(arg_env: &mut Environment) -> Option<Object> {
     print!("\x1b[2J");
     print!("\x1b[H");
 
     None
 }
 
-pub fn builtin_now(_arg_env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+pub fn builtin_shell(arg_env: &mut Environment) -> Option<Object> {
+    let command = extract_arg!(arg_env, "command" => AntString)?;
+
+    let result = run_command(command.value.as_str());
+
+    None
+}
+
+pub fn builtin_now(_arg_env: &mut Environment) -> Option<Object> {
     Some(
         AntDouble::new_with_native_value(Box::new(BigDecimal::from_f64(
             SystemTime::now()
