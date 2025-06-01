@@ -1,10 +1,10 @@
 use crate::environment::environment::Environment;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
-use crate::object::object::{IAntObject, ERROR};
+use crate::object::object::{Object, ERROR};
 use crate::evaluator::evaluator::Evaluator;
 
-pub fn eval(code: String, file: String, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+pub fn eval(code: String, file: String, env: &mut Environment) -> Option<Object> {
     let mut code_lexer: Lexer = Lexer::new(code, file);
     let tokens = code_lexer.get_tokens();
 

@@ -4,7 +4,6 @@ fn test_call_stack_print() {
     use crate::token::token::Token;
     use crate::environment::environment::Environment;
     use crate::object::ant_error::AntError;
-    use crate::object::object::IAntObject;
     use crate::evaluator::evaluator::*;
     use crate::token::token_type::TokenType::Nonsense;
 

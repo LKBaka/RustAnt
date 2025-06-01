@@ -2,8 +2,8 @@ use num_bigint::BigInt;
 
 use crate::ast::ast::{Expression, Node};
 use crate::environment::environment::Environment;
-use crate::object::ant_int::AntInt;
-use crate::object::object::IAntObject;
+use crate::object::ant_int::create_ant_int;
+use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 
@@ -30,8 +30,8 @@ impl Node for IntegerLiteral {
         self.value.to_string()
     }
 
-    fn eval(&mut self, _: &mut Evaluator, _: &mut Environment) -> Option<Box<dyn IAntObject>> { 
-        Some(AntInt::new_with_native_value(Box::new(self.value.to_owned())))
+    fn eval(&mut self, _: &mut Evaluator, outer: &mut Environment) -> Option<Object> { 
+        Some(create_ant_int(self.value.to_owned(), Box::new(outer.clone())))
     }
 }
 

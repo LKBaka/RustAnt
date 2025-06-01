@@ -19,6 +19,8 @@ use crate::parser::precedence::Precedence::Lowest;
 use crate::parser::parse_functions::parse_if_expression::parse_if_expression;
 use crate::parser::parse_functions::parse_function_expression::parse_function_expression;
 
+use super::parse_functions::parse_class_statement::parse_class_statement;
+use super::parse_functions::parse_object_member_expression::parse_object_member_expression;
 use super::parse_functions::parse_return_expression::parse_return_expression;
 use super::parse_functions::parse_while_statement::parse_while_statement;
 
@@ -58,6 +60,7 @@ impl Parser {
 
         parser.statement_parse_fn_map.insert(TokenType::Let, parse_let_statement);
         parser.statement_parse_fn_map.insert(TokenType::While, parse_while_statement);
+        parser.statement_parse_fn_map.insert(TokenType::Class, parse_class_statement);
 
         parser.prefix_parse_fn_map.insert(TokenType::Ident, parse_ident);
         parser.prefix_parse_fn_map.insert(TokenType::Integer, parse_number);
@@ -71,6 +74,7 @@ impl Parser {
         parser.infix_parse_fn_map.insert(TokenType::LParen, parse_call_expression);
         parser.infix_parse_fn_map.insert(TokenType::Assign, parse_assignment_expression);
 
+        parser.infix_parse_fn_map.insert(TokenType::Dot, parse_object_member_expression);
         parser.infix_parse_fn_map.insert(TokenType::Plus, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::Asterisk, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::Minus, parse_infix_expression);

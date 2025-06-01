@@ -34,13 +34,13 @@ fn test_env_set_values() {
     use crate::constants::null_obj;
     use crate::environment::data_info::DataInfo;
     use crate::object::ant_int::AntInt;
-    use crate::object::object::IAntObject;
+    use crate::object::object::Object;
 
     let mut env = Environment::new();
 
     let cases = vec![
         ("null", null_obj.clone()),
-        ("zero", AntInt::new(Environment::new())),
+        ("zero", Box::new(AntInt::from(0))),
     ];
 
     for (key, value) in cases {
@@ -55,7 +55,7 @@ fn test_env_set_values() {
 fn test_multi_env_fusion() {
     use crate::environment::data_info::DataInfo;
     use crate::object::ant_int::AntInt;
-    use crate::object::object::IAntObject;
+    use crate::object::object::Object;
     use crate::constants::uninit_obj;
 
     // 定义测试数据表
@@ -65,7 +65,7 @@ fn test_multi_env_fusion() {
     ];
 
     let env2_items = vec![
-        ("null", AntInt::new(Environment::new())),
+        ("null", Box::new(AntInt::from(0)) as Object),
         ("zero", uninit_obj.clone()),
     ];
 

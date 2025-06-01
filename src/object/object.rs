@@ -8,6 +8,7 @@ use crate::environment::environment::Environment;
 use crate::impl_object;
 
 pub type ObjectType = String;
+pub type Object = Box<dyn IAntObject>;
 
 pub const OBJECT: &str = "Object";
 pub const INT: &str = "Int";
@@ -18,35 +19,34 @@ pub const NULL: &str = "Null";
 pub const UNINIT: &str = "Uninit";
 pub const ERROR: &str = "Error";
 pub const FUNCTION: &str = "Function";
+pub const ENVIRONMENT: &str = "Environment";
 pub const NATIVE_FUNCTION: &str = "NativeFunction";
 pub const RETURN_VALUE: &str = "__Return_Value__";
 
-pub trait GetEnv {
+pub trait EnvGetter {
     fn get_env(&self) -> Environment;
     fn get_env_ref(&mut self) -> &mut Environment;
 }
 
-pub trait IAntObject: DynClone + Sync + Send + Any + GetEnv {
+pub trait IAntObject: DynClone + Sync + Send + Any + EnvGetter {
     fn get_type(&self) -> ObjectType;
     fn get_value(&self) -> Box<dyn Any>;
-    fn get_base(&self) -> Option<Box<dyn IAntObject>>;
+    fn get_base(&self) -> Option<Object>;
     fn get_id(&self) -> Uuid;
     fn inspect(&self) -> String;
-    fn new(arg_env: Environment) -> Box<dyn IAntObject> where Self: Sized;
-    fn new_with_native_value(value: Box<dyn Any>) -> Box<dyn IAntObject> where Self: Sized;
     fn equals(&self, other: &dyn IAntObject) -> bool;
     fn as_any(&self) -> &dyn Any;
 }
 
 clone_trait_object!(IAntObject);
 
-impl PartialEq for Box<dyn IAntObject> {
-    fn eq(&self, other: &Box<dyn IAntObject>) -> bool {
+impl PartialEq for Object {
+    fn eq(&self, other: &Object) -> bool {
         self.equals(other.deref())
     }
 }
 
-impl Eq for Box<dyn IAntObject> {}
+impl Eq for Object {}
 
 impl Hash for dyn IAntObject {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -56,8 +56,8 @@ impl Hash for dyn IAntObject {
 
 
 pub struct AntObject {
-    id: Uuid,
-    env: Environment,
+    pub id: Uuid,
+    pub env: Environment,
 }
 
 impl Clone for AntObject {
@@ -78,7 +78,7 @@ impl IAntObject for AntObject {
         Box::new(())
     }
 
-    fn get_base(&self) -> Option<Box<dyn IAntObject>> {
+    fn get_base(&self) -> Option<Object> {
         None
     }
 
@@ -88,21 +88,6 @@ impl IAntObject for AntObject {
 
     fn inspect(&self) -> String {
         format!("AntObject(id: {})", self.id)
-    }
-
-    fn new(_arg_env: Environment) -> Box<dyn IAntObject> {
-        Box::new(Self {
-            id: Uuid::new_v4(),
-            env: Environment::new(),
-        })
-    }
-
-    fn new_with_native_value(_value: Box<dyn Any>) -> Box<dyn IAntObject>
-    {
-        Box::new(Self {
-            id: Uuid::new_v4(),
-            env: Environment::new(),
-        })
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {

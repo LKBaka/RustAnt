@@ -9,3 +9,4 @@ pub mod if_expression;
 pub mod assignment_expression;
 pub mod function_expression;
 pub mod return_expression;
+pub mod object_member_expression;

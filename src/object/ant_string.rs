@@ -6,8 +6,8 @@ use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::{IAntObject, ObjectType, STRING};
-use crate::object::object::GetEnv;
+use crate::object::object::{IAntObject, Object, ObjectType, STRING};
+use crate::object::object::EnvGetter;
 
 
 pub struct AntString {
@@ -26,62 +26,8 @@ impl Clone for AntString {
     }
 }
 
-impl IAntObject for AntString {
-    fn get_type(&self) -> ObjectType {
-        STRING.to_string()
-    }
-
-    fn get_value(&self) -> Box<dyn Any> {
-        Box::new(self.value.clone())
-    }
-
-    fn get_base(&self) -> Option<Box<dyn IAntObject>> {
-        None
-    }
-
-    fn get_id(&self) -> Uuid {
-        self.id
-    }
-
-    fn inspect(&self) -> String {
-        self.value.clone()
-    }
-
-    fn new(arg_env: Environment) -> Box<dyn IAntObject> {
-        let mut value = String::from("");
-
-        let mut new = |obj: Box<dyn IAntObject>| {
-            let cast_obj =  obj.as_any().downcast_ref::<AntString>().cloned();
-            match cast_obj {
-                None => {
-                    panic!()
-                }
-                Some(str_obj) => {
-                    value = str_obj.value
-                }
-            }
-        };
-
-        let mut env = Environment::new();
-        env.create("value", Data::new(null_obj.clone(), DataInfo::new(false)));
-
-        env = env.fusion(arg_env);
-
-
-        if env.get("value").unwrap() == null_obj.clone() {
-            panic!()
-        }
-
-        new(env.get("value").unwrap());
-
-        Box::new(Self {
-            id: Uuid::new_v4(),
-            env: env.clone(),
-            value,
-        })
-    }
-
-    fn new_with_native_value(mut value: Box<dyn Any>) -> Box<dyn IAntObject> {
+impl AntString {
+    pub fn new_with_native_value(mut value: Box<dyn Any>) -> Object {
         let cast_result = value.downcast_mut::<String>().cloned();
 
         match cast_result {
@@ -100,6 +46,28 @@ impl IAntObject for AntString {
             }
         }
 
+    }
+}
+
+impl IAntObject for AntString {
+    fn get_type(&self) -> ObjectType {
+        STRING.to_string()
+    }
+
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value.clone())
+    }
+
+    fn get_base(&self) -> Option<Object> {
+        None
+    }
+
+    fn get_id(&self) -> Uuid {
+        self.id
+    }
+
+    fn inspect(&self) -> String {
+        self.value.clone()
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {

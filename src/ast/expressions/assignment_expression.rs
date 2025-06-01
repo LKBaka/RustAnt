@@ -3,10 +3,11 @@ use std::any::Any;
 use crate::ast::ast::{Expression, Node};
 use crate::ast::expressions::identifier::Identifier;
 use crate::environment::environment::Environment;
-use crate::object::object::IAntObject;
 use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::{create_error, is_error};
 use crate::token::token::Token;
+
+use super::super::super::object::object::Object;
 
 impl Clone for AssignmentExpression {
     fn clone(&self) -> Self {
@@ -33,7 +34,7 @@ impl Node for AssignmentExpression {
         format!("{} = {}", self.left.to_string(), self.value.to_string())
     }
 
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
         if let Some(it) = (self.left.to_owned() as Box<dyn Any>).downcast_ref::<Identifier>() {
             let name = it.to_string();
 

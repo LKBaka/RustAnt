@@ -12,4 +12,5 @@ pub mod parse_assignment_expression;
 pub mod parse_function_expression;
 pub mod parse_while_statement;
 pub mod parse_return_expression;
-
+pub mod parse_object_member_expression;
+pub mod parse_class_statement;

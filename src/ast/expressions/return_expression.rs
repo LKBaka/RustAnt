@@ -3,7 +3,7 @@ use std::any::Any;
 use crate::ast::ast::{Expression, Node};
 use crate::environment::environment::Environment;
 use crate::object::ant_return_value::AntReturnValue;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 use crate::token::token::Token;
 use crate::evaluator::evaluator::Evaluator;
 
@@ -32,7 +32,7 @@ impl Node for ReturnExpression {
         self.value.to_string()
     }
 
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
         let return_value = evaluator.eval_box(self.value.to_owned(), env);
 
         if let Some(_it) = (self.value.to_owned() as Box<dyn Any>).downcast_ref::<CallExpression>() {

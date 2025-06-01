@@ -1,4 +1,3 @@
-pub mod gc;
 pub mod object;
 pub mod environment;
 pub mod ast;
@@ -13,3 +12,4 @@ pub mod arg_structure;
 pub mod constants;
 pub mod utils;
 pub mod runner; 
+pub mod module_system;

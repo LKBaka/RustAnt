@@ -1,8 +1,8 @@
 use crate::ast::ast::{Expression, Node, Statement};
 use crate::environment::environment::Environment;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
-use crate::object::utils::is_truthy;
+use crate::object::utils::{is_error, is_truthy};
 use crate::token::token::Token;
 
 use super::block_statement::BlockStatement;
@@ -32,9 +32,11 @@ impl Node for WhileStatement {
         format!("while {} {{{}}}", self.condition.to_string(), self.block.to_string())
     }
 
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {        
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {        
         loop {
             if let Some(it) = self.condition.eval(evaluator, env) {
+                if is_error(&it) {return Some(it)} 
+
                 if !is_truthy(it) {break;}
             }
 

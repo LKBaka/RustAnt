@@ -2,7 +2,7 @@ use crate::ast::ast::{Expression, Node};
 use crate::constants::{ant_false, ant_true};
 use crate::environment::environment::Environment;
 use crate::evaluator::evaluator::Evaluator;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 use crate::token::token::Token;
 
 impl Clone for BooleanLiteral {
@@ -28,7 +28,7 @@ impl Node for BooleanLiteral {
         self.value.to_string()
     }
 
-    fn eval(&mut self, _: &mut Evaluator, _: &mut Environment) -> Option<Box<(dyn IAntObject + 'static)>> {
+    fn eval(&mut self, _: &mut Evaluator, _: &mut Environment) -> Option<Object> {
         Some(
             if self.value {
                 ant_true.clone()

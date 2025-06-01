@@ -1,14 +1,14 @@
 use crate::environment::data_info::DataInfo;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 
 #[derive(Clone)]
 pub struct Data {
     pub info: DataInfo,
-    pub data: Box<dyn IAntObject>,
+    pub data: Object,
 }
 
 impl Data {
-    pub fn new(data: Box<dyn IAntObject>, data_info: DataInfo) -> Data {
+    pub fn new(data: Object, data_info: DataInfo) -> Data {
         Data {
             data, info: data_info,
         }

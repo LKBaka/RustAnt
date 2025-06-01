@@ -31,7 +31,7 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
         let pos = self.pairs.iter().position(|pair| pair.key == k);
 
         if pos.is_some() {
-            return Some(self.pairs[pos.unwrap()].clone().value)
+            return Some(self.pairs[pos.unwrap()].value.clone())
         }
 
         None

@@ -2,13 +2,24 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::environment::environment::Environment;
+use crate::object::object::{IAntObject, Object, ObjectType, UNINIT};
+use crate::object::object::EnvGetter;
 use crate::impl_object;
-use crate::object::object::{IAntObject, ObjectType, UNINIT};
-use crate::object::object::GetEnv;
 
 pub struct AntUninit {
     id: Uuid,
     env: Environment,
+}
+
+impl AntUninit {
+    pub fn new(_arg_env: Environment) -> Object {
+        let obj = Box::new(Self {
+            id: Uuid::new_v4(),
+            env: Environment::new(),
+        });
+
+        obj
+    }
 }
 
 impl IAntObject for AntUninit {
@@ -20,7 +31,7 @@ impl IAntObject for AntUninit {
         Box::new(())
     }
 
-    fn get_base(&self) -> Option<Box<dyn IAntObject>> {
+    fn get_base(&self) -> Option<Object> {
         None
     }
 
@@ -32,23 +43,13 @@ impl IAntObject for AntUninit {
         "uninit".to_string()
     }
 
-    fn new(_arg_env: Environment) -> Box<dyn IAntObject> {
-        Box::new(Self {
-            id: Uuid::new_v4(),
-            env: Environment::new(),
-        })
-    }
-
-    fn new_with_native_value(_value: Box<dyn Any>) -> Box<dyn IAntObject> {
-        AntUninit::new(Environment::new())
-    }
-
-    fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == UNINIT {true} else {false}
-    }
-
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    
+    fn equals(&self, other: &dyn IAntObject) -> bool {
+        other.get_id() == self.id || if other.get_type() == UNINIT {true} else {false}
     }
 }
 

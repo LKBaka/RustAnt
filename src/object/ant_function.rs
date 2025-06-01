@@ -2,11 +2,10 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::ast::statements::block_statement::BlockStatement;
-use crate::constants::null_obj;
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::GetEnv;
-use crate::object::object::{IAntObject, ObjectType, FUNCTION};
+use crate::object::object::EnvGetter;
+use crate::object::object::{IAntObject, Object, ObjectType, FUNCTION};
 
 pub struct AntFunction {
     pub id: Uuid,
@@ -35,7 +34,7 @@ impl IAntObject for AntFunction {
         Box::new(())
     }
 
-    fn get_base(&self) -> Option<Box<dyn IAntObject>> {
+    fn get_base(&self) -> Option<Object> {
         None
     }
 
@@ -47,14 +46,6 @@ impl IAntObject for AntFunction {
         format!("<function id: {}>", self.id)
     }
 
-    fn new(_: Environment) -> Box<dyn IAntObject> {
-        null_obj.clone()
-    }
-
-    fn new_with_native_value(_: Box<dyn Any>) -> Box<dyn IAntObject> {
-        null_obj.clone()
-    }
-
     fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id
     }
@@ -64,7 +55,7 @@ impl IAntObject for AntFunction {
     }
 }
 
-pub fn create_ant_function(param_env: Environment, block: BlockStatement) -> Box<dyn IAntObject> {
+pub fn create_ant_function(param_env: Environment, block: BlockStatement) -> Object {
     let env = Environment::new();
     let id = Uuid::new_v4();
 

@@ -1,13 +1,12 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::constants::null_obj;
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::{IAntObject, ObjectType, NATIVE_FUNCTION};
-use crate::object::object::GetEnv;
+use crate::object::object::{IAntObject, Object, ObjectType, NATIVE_FUNCTION};
+use crate::object::object::EnvGetter;
 
-pub type NativeFunction = fn(arg_env: &mut Environment) -> Option<Box<dyn IAntObject>>;
+pub type NativeFunction = fn(arg_env: &mut Environment) -> Option<Object>;
 
 pub struct AntNativeFunction {
     pub id: Uuid,
@@ -36,7 +35,7 @@ impl IAntObject for AntNativeFunction {
         Box::new(())
     }
 
-    fn get_base(&self) -> Option<Box<dyn IAntObject>> {
+    fn get_base(&self) -> Option<Object> {
         None
     }
 
@@ -46,14 +45,6 @@ impl IAntObject for AntNativeFunction {
 
     fn inspect(&self) -> String {
         format!("<function id: {}>", self.id)
-    }
-
-    fn new(_: Environment) -> Box<dyn IAntObject> {
-        null_obj.clone()
-    }
-
-    fn new_with_native_value(_: Box<dyn Any>) -> Box<dyn IAntObject> {
-        null_obj.clone()
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
@@ -67,7 +58,7 @@ impl IAntObject for AntNativeFunction {
     }
 }
 
-pub fn create_ant_native_function(param_env: Environment, function: NativeFunction) -> Box<dyn IAntObject> {
+pub fn create_ant_native_function(param_env: Environment, function: NativeFunction) -> Object {
     let env = Environment::new();
     let id = Uuid::new_v4();
 

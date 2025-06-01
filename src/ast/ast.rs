@@ -6,12 +6,12 @@ use crate::constants::{null_obj, NEW_LINE};
 use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 use crate::environment::environment::Environment;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 
 pub trait Node: DynClone + Sync + Send + Any {
     fn token_literal(&self) -> String;
     fn to_string(&self) -> String;
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>>;
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object>;
 
     fn as_any(&self) -> &(dyn Any + '_) where Self: Sized {
         self
@@ -63,7 +63,7 @@ impl Node for Program {
         s
     }
 
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
         let mut result = Some(null_obj.clone());
 
         for statement in &mut self.statements {
@@ -103,7 +103,7 @@ impl Node for ExpressionStatement {
         }
     }
 
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
         if self.expression.is_none() {
             None
         } else {

@@ -9,38 +9,43 @@ use crate::evaluator::evaluator::Evaluator;
 use crate::object::ant_function::AntFunction;
 use crate::object::ant_native_function::AntNativeFunction;
 use crate::object::ant_return_value::AntReturnValue;
-use crate::object::object::{IAntObject, RETURN_VALUE, UNINIT};
-use crate::object::utils::create_error;
-use crate::gc::gc::check_recursion_depth;
+use crate::object::object::{Object, RETURN_VALUE, UNINIT};
+use crate::object::utils::{create_error, is_error};
 
-pub fn fill_args(args: Vec<Box<dyn IAntObject>>, param_env: Environment, env: &mut Environment) {
+pub fn fill_args(args: Vec<Object>, param_env: Environment, env: &mut Environment) -> Result<(), Object> {
     for (i, pair) in param_env.map.pairs.iter().enumerate() {
         let name = pair.key.clone();
         let default_value = pair.value.data.clone();
 
         if i < args.len() {
+            if is_error(&args[i]) {return Err(args[i].clone())}
+
             // 如果有对应的实参，使用实参值
             env.create(&name, Data::new(args[i].clone(), DataInfo::new(false)));
             continue
         }
 
         // 如果没有对应的实参，使用默认值
-        env.create(&name, Data::new(default_value, DataInfo::new(false)));
+        env.create(&name, Data::new(default_value, DataInfo::new(false))); 
     }
+
+    Ok(())
 }
 
-fn not_callable_error(obj_inspected: String) -> Box<dyn IAntObject> {
+fn not_callable_error(obj_inspected: String) -> Object {
     create_error(
         format!("object {} is not callable", obj_inspected)
     )
 }
 
-fn check_function_args_count(param_env: Environment, env: &mut Environment, args: Vec<Box<dyn IAntObject>>) -> Result<i32, Box<dyn IAntObject>>{
+fn check_function_args_count(param_env: Environment, env: &mut Environment, args: Vec<Object>) -> Result<(), Object>{
     if args.len() == param_env.map.keys().len() {
         // 若实参数量与形参数量相同，则按位置陆续传输参数
         for i in 0..args.len() {
             let name = param_env.map.keys()[i].clone();
-            let value: Box<dyn IAntObject + 'static> = args[i].clone();
+            let value: Object = args[i].clone();
+
+            if is_error(&value) {return Err(value)}
 
             let result = env.create(&name, Data::new(value.to_owned(), DataInfo::new(false)));
             if result.is_some() {
@@ -48,7 +53,7 @@ fn check_function_args_count(param_env: Environment, env: &mut Environment, args
             }
         }
 
-        return Ok(0)
+        return Ok(())
     }
 
     // 获取所有必须提供的形参
@@ -73,23 +78,16 @@ fn check_function_args_count(param_env: Environment, env: &mut Environment, args
     }
 
     // 填充参数
-    fill_args(args, param_env, env);
+    let fill_result = fill_args(args, param_env, env);
 
-    Ok(0)
+    fill_result
 }
 
-pub fn find_function(name: String, args: Vec<Box<dyn IAntObject>>, env: &mut Environment) -> Result<Box<dyn IAntObject>, Box<dyn IAntObject>> {
-    let try_get_functions = env.get_values(&*name);
-
-    if let Option::None = try_get_functions {
-        return Err(
-            create_error(
-                format!("cannot find function \"{}\"", name)
-            )
-        )
-    }
-
-    let functions = try_get_functions.unwrap();
+pub fn find_function(name: String, args: Vec<Object>, env: &mut Environment) -> Result<Object, Object> {
+    let functions = match env.get_values(&*name) {
+        Some(funcs) => funcs,
+        None => return Err(create_error(format!("cannot find function \"{}\"", name))),
+    };
 
     for function in functions {
         let converted_function = function.as_any().downcast_ref::<AntFunction>();
@@ -108,45 +106,46 @@ pub fn find_function(name: String, args: Vec<Box<dyn IAntObject>>, env: &mut Env
             );
 
             if let Ok(_) = check_result {return Ok(function)}
+            if let Err(it) = check_result {return Err(it)}
         }
     }
 
     Err(
-        create_error("No matching function overload found.".to_string())
+        create_error("no matching function overload found.".to_string())
     )
 }
 
-pub fn call_function_with_name(name: String, args: Vec<Box<dyn IAntObject>>, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+pub fn call_function_with_name(name: String, args: Vec<Object>, evaluator: &mut Evaluator, env: &mut Environment) -> Result<Option<Object>, Object> {
     let func = find_function(name, args.clone(), env);
 
     if let Ok(func) = func {
         return if let Some(_) = (func.to_owned() as Box<dyn Any>).downcast_ref::<AntFunction>() {
-            Some(call_function(func, args, evaluator, env))
+            Ok(Some(call_function(func, args, evaluator, env)))
         } else if let Some(_) = (func.to_owned() as Box<dyn Any>).downcast_ref::<AntNativeFunction>() {
-            call_native_function(func, args, env)
+            Ok(call_native_function(func, args, env))
         } else {
-            None
+            Err(not_callable_error(func.inspect()))
         }
     }
 
     if let Err(err) = func {
-        return Some(err)
+        return Err(err)
     }
 
-    None // 不可能到达的代码
+    Ok(Some(null_obj.clone())) // 不可能到达的代码
 }
 
-pub fn call_native_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAntObject>>, env: &Environment) -> Option<Box<dyn IAntObject>> {
+pub fn call_native_function(function: Object, args: Vec<Object>, env: &Environment) -> Option<Object> {
     let converted_function = function.as_any().downcast_ref::<AntNativeFunction>();
     if converted_function.is_none() {
         return Some(not_callable_error(function.inspect()))
     }
 
-    let mut func = (*converted_function.unwrap()).clone();
-    func.env.outer = Some(Box::new(env.clone()));
+    let mut func = (converted_function.unwrap()).to_owned();
+    func.env.outer = Some(Box::new(env.to_owned()));
 
     // 检查参数数量
-    let result = check_function_args_count(func.param_env.clone(), &mut func.env, args);
+    let result = check_function_args_count(func.param_env, &mut func.env, args);
     if let Err(err) = result {
         return Some(err)
     }
@@ -154,17 +153,14 @@ pub fn call_native_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAn
     func.function.clone()(&mut func.env.clone())
 }
 
-pub fn call_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAntObject>>, evaluator: &mut Evaluator, env: &mut Environment) -> Box<dyn IAntObject>{
+pub fn call_function(function: Object, args: Vec<Object>, evaluator: &mut Evaluator, env: &mut Environment) -> Object{
     let converted_function = function.as_any().downcast_ref::<AntFunction>();
     if converted_function.is_none() {
         return not_callable_error(function.inspect())
     }
 
     let mut func = (*converted_function.unwrap()).to_owned();
-    func.env.outer = Some(Box::new(env.clone()));
-
-    // 检查递归深度
-    check_recursion_depth(func.env.depth() as usize);
+    func.env.outer = Some(Box::new(env.to_owned()));
 
     // 检查参数数量
     let result = check_function_args_count(func.param_env.clone(), &mut func.env, args);
@@ -175,7 +171,7 @@ pub fn call_function(function: Box<dyn IAntObject>, args: Vec<Box<dyn IAntObject
     eval_function(evaluator, Box::new(func))
 }
 
-pub fn eval_function(evaluator: &mut Evaluator, function: Box<dyn IAntObject>) -> Box<dyn IAntObject> {
+pub fn eval_function(evaluator: &mut Evaluator, function: Object) -> Object {
     let func = function.as_any().downcast_ref::<AntFunction>();
     if let Some(mut func) = func.cloned() {
         let mut func_env = func.clone().env.clone();
@@ -193,9 +189,9 @@ pub fn eval_function(evaluator: &mut Evaluator, function: Box<dyn IAntObject>) -
     not_callable_error(function.inspect())
 }
 
-pub fn unwrap_return_value(return_value: Box<dyn IAntObject>) -> Box<dyn IAntObject> {
+pub fn unwrap_return_value(return_value: Object) -> Object {
     if return_value.get_type() == RETURN_VALUE {
-        return return_value.as_any().downcast_ref::<AntReturnValue>().unwrap().clone().value
+        return return_value.as_any().downcast_ref::<AntReturnValue>().unwrap().to_owned().value
     }
 
     return_value

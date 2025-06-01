@@ -3,6 +3,8 @@ use std::io::Write;
 use crate::environment::utils::create_top_env;
 use crate::runner::eval::eval;
 
+use super::utils::import_all_modules;
+
 pub struct REPLRunner {
 
 }
@@ -14,6 +16,8 @@ impl REPLRunner {
 
     pub fn run(&self) {
         let mut env = create_top_env();
+        
+        import_all_modules(&mut env);
 
         loop {
             let mut code: String = String::new();

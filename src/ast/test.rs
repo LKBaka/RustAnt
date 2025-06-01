@@ -4,11 +4,11 @@ use std::ops::Deref;
 
 use crate::ast::ast::Node;
 use crate::environment::environment::Environment;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 use crate::evaluator::evaluator::{self, Evaluator};
 
 
-fn test_node_eval(mut node: impl Node, expected_obj: Box<dyn IAntObject>) {
+fn test_node_eval(mut node: impl Node, expected_obj: Object) {
     let mut evaluator = Evaluator::new();
 
     let result = node.eval(&mut evaluator, &mut Environment::new());

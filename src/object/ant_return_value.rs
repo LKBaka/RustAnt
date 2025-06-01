@@ -1,18 +1,34 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::constants::null_obj;
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::{IAntObject, ObjectType, RETURN_VALUE};
-use crate::object::object::GetEnv;
+use crate::object::object::{IAntObject, Object, ObjectType, RETURN_VALUE};
+use crate::object::object::EnvGetter;
 
 use super::utils::create_error;
 
 pub struct AntReturnValue {
     id: Uuid,
     env: Environment,
-    pub value: Box<dyn IAntObject>
+    pub value: Object
+}
+
+impl AntReturnValue {
+    pub fn new_with_native_value(value: Box<dyn Any>) -> Object {
+        if value.downcast_ref::<Box<dyn IAntObject + 'static>>().is_none() {
+            return create_error(
+                "return value is None".to_string()
+            )
+        }
+
+        let obj = value.downcast_ref::<Object>().unwrap().clone();
+        Box::new(Self {
+            id: Uuid::new_v4(),
+            env: Environment::new(),
+            value: obj,
+        })
+    }
 }
 
 impl IAntObject for AntReturnValue {
@@ -24,7 +40,7 @@ impl IAntObject for AntReturnValue {
         self.value.get_value()
     }
 
-    fn get_base(&self) -> Option<Box<dyn IAntObject>> {
+    fn get_base(&self) -> Option<Object> {
         None
     }
 
@@ -34,35 +50,6 @@ impl IAntObject for AntReturnValue {
 
     fn inspect(&self) -> String {
         self.value.inspect()
-    }
-
-    fn new(_arg_env: Environment) -> Box<dyn IAntObject> {
-        Box::new(Self {
-            id: Uuid::new_v4(),
-            env: Environment::new(),
-            value: null_obj.clone(),
-        })
-    }
-
-    fn new_with_native_value(value: Box<dyn Any>) -> Box<dyn IAntObject> {
-        if value.downcast_ref::<Box<dyn IAntObject + 'static>>().is_none() {
-            return create_error(
-                "return value is None".to_string()
-            )
-            
-            // return Box::new(Self {
-            //     id: Uuid::new_v4(),
-            //     env: Environment::new(),
-            //     value: null_obj.clone(),
-            // })
-        }
-
-        let obj = value.downcast_ref::<Box<dyn IAntObject>>().unwrap().clone();
-        Box::new(Self {
-            id: Uuid::new_v4(),
-            env: Environment::new(),
-            value: obj,
-        })
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {

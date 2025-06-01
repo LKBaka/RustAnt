@@ -7,11 +7,11 @@ use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::object::ant_native_function::create_ant_native_function;
 use crate::object::ant_string::AntString;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 
-use super::builtin_functions::{builtin_clear, builtin_now};
+use super::builtin_functions::{builtin_clear, builtin_now, builtin_shell};
 
-pub fn create_env(map: Vec<(String, Box<dyn IAntObject>)>) -> Environment {
+pub fn create_env(map: Vec<(String, Object)>) -> Environment {
     let mut env = Environment::new();
 
     for (name, value) in map {
@@ -43,6 +43,16 @@ fn add_builtin_functions(env: &mut Environment) {
         create_ant_native_function(param_env, builtin_input)
     };
 
+    let shell_function = {
+        let param_env = create_env(
+            vec![
+                ("command".to_string(), uninit_obj.clone()),
+            ]
+        );
+
+        create_ant_native_function(param_env, builtin_shell)
+    };
+
     let clear_function = {
         let param_env = create_env(vec![]);
 
@@ -57,6 +67,7 @@ fn add_builtin_functions(env: &mut Environment) {
 
     env.create("print", Data::new(print_function, DataInfo::new(false)));
     env.create("input", Data::new(input_function, DataInfo::new(false)));
+    env.create("shell", Data::new(shell_function, DataInfo::new(false)));
     env.create("clear", Data::new(clear_function, DataInfo::new(false)));
     env.create("now", Data::new(now_function, DataInfo::new(false)));
 }

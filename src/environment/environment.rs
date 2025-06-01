@@ -4,9 +4,8 @@ use std::ops::Deref;
 use crate::environment::data::Data;
 use crate::map;
 use crate::map::map::Map;
-use crate::object::object::{IAntObject, FUNCTION};
+use crate::object::object::{Object, FUNCTION};
 use crate::object::utils::{create_error, create_error_with_name};
-use crate::gc::gc::{inc_ref, dec_ref};
 
 #[derive(Clone)]
 pub struct Environment {
@@ -15,27 +14,12 @@ pub struct Environment {
     pub outer: Option<Box<Environment>>,
 }
 
-impl Drop for Environment {
-    fn drop(&mut self) {
-        // 清理所有变量
-        for pair in &self.map.pairs {
-            dec_ref(&pair.value.data);
-        }
-        // 清理函数变量
-        for pair in &self.func_map.pairs {
-            for data in &pair.value {
-                dec_ref(&data.data);
-            }
-        }
-    }
-}
-
 impl Environment {
-    pub fn new_with_outer(outer: Environment) -> Environment {
+    pub fn new_with_outer(outer: Box<Environment>) -> Environment {
         Environment {
             map: map!(),
             func_map: map!(),
-            outer: Some(Box::new(outer.clone())),
+            outer: Some(outer),
         }
     }
 
@@ -52,17 +36,7 @@ impl Environment {
         self.func_map.clear();
     }
 
-    pub fn depth(&self) -> i32 {
-        return if self.outer.is_none() {
-            0
-        } else {
-            1 + self.outer.clone().unwrap().depth()
-        }
-    }
-
     pub fn remove_data(&mut self, value: Data) {
-        dec_ref(&value.data);
-
         self.map.pairs.retain(|pair| pair.value != value);
 
         for func_pair in &mut self.func_map.pairs {
@@ -72,9 +46,7 @@ impl Environment {
         self.func_map.pairs.retain(|pair| !pair.value.is_empty());
     }
 
-    pub fn remove_obj(&mut self, value: Box<dyn IAntObject>) {
-        dec_ref(&value);
-
+    pub fn remove_obj(&mut self, value: Object) {
         self.map.pairs.retain(|pair| !(pair.value.data == value.clone()));
 
         for func_pair in &mut self.func_map.pairs {
@@ -84,14 +56,12 @@ impl Environment {
         self.func_map.pairs.retain(|pair| !pair.value.is_empty());
     }
 
-    pub fn create(&mut self, key: &str, value: Data) -> Option<Box<dyn IAntObject>> {
+    pub fn create(&mut self, key: &str, value: Data) -> Option<Object> {
         if self.map.contains_key(key.to_string()) {
             return Some(
                 create_error_with_name("NameError", format!("variable \"{}\" already exists", key))
             );
         }
-
-        inc_ref(&value.data);
 
         if value.data.get_type() != FUNCTION {
             self.map.add(key.to_string(), value);
@@ -103,7 +73,7 @@ impl Environment {
         None
     }
 
-    pub fn set(&mut self, key: &str, value: Data) -> Option<Box<dyn IAntObject>> {
+    pub fn set(&mut self, key: &str, value: Data) -> Option<Object> {
         if self.map.contains_key(key.to_string()) {
             self.map.set(key.to_string(), value);
             return None;
@@ -114,7 +84,7 @@ impl Environment {
         )
     }
 
-    pub fn set_value(&mut self, key: &str, value: Box<dyn IAntObject>) -> Option<Box<dyn IAntObject>> {
+    pub fn set_value(&mut self, key: &str, value: Object) -> Option<Object> {
         if self.map.contains_key(key.to_string()) {
             let data = self.get_data(key);
             if let Some(mut it) = data {
@@ -140,15 +110,14 @@ impl Environment {
             return Option::from(self.func_map.get(key.to_string()).unwrap()[0].clone())
         }
 
-        if self.outer.is_some() {
-            let mut outer = self.outer.clone().unwrap();
+        if let Some(mut outer) = self.outer.clone() {
             return outer.get_data(key)
         }
 
         None
     }
 
-    pub fn get_values(&mut self, key: &str) -> Option<Vec<Box<dyn IAntObject>>> {
+    pub fn get_values(&mut self, key: &str) -> Option<Vec<Object>> {
         if self.map.contains_key(key.to_string()) {
             return Some(vec![self.map.get(key.to_string()).unwrap().data.clone()])
         }
@@ -164,15 +133,14 @@ impl Environment {
             return Some(values)
         }
 
-        if self.outer.is_some() {
-            let mut outer = self.outer.clone().unwrap();
+        if let Some(mut outer) = self.outer.clone() {
             return outer.get_values(key)
         }
 
         None
     }
 
-    pub fn get(&mut self, key: &str) -> Option<Box<dyn IAntObject>> {
+    pub fn get(&mut self, key: &str) -> Option<Object> {
         if self.map.contains_key(key.to_string()) {
             return Some(self.map.get(key.to_string()).unwrap().data.clone())
         }
@@ -181,10 +149,10 @@ impl Environment {
             return Some(self.func_map.get(key.to_string()).unwrap()[0].data.clone())
         }
 
-        if self.outer.is_some() {
-            let mut outer = self.outer.clone().unwrap();
+        if let Some(mut outer) = self.outer.clone() {
             return outer.get(key)
         }
+
 
         None
     }

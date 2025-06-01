@@ -1,8 +1,14 @@
+#[cfg(test)]
 use crate::evaluator::evaluator::Evaluator;
-use crate::object::ant_function::AntFunction;
-use crate::object::object::IAntObject;
 
-pub fn test_function_call(function: &mut AntFunction, expected_return_value: Box<dyn IAntObject>) {
+#[cfg(test)]
+use crate::object::ant_function::AntFunction;
+
+#[cfg(test)]
+use crate::object::object::Object;
+
+#[cfg(test)]
+pub fn test_function_call(function: &mut AntFunction, expected_return_value: Object) {
     use crate::function_caller::function_caller::call_function;
 
     let mut evaluator: Evaluator = Evaluator::new();
@@ -19,7 +25,8 @@ pub fn test_function_call(function: &mut AntFunction, expected_return_value: Box
     println!("OK. result: {} expected: {}", result.inspect(), expected_return_value.inspect())
 }
 
-pub fn test_function_call_with_args(function: &mut AntFunction, args: Vec<Box<dyn IAntObject>>, expected_return_value: Box<dyn IAntObject>) {
+#[cfg(test)]
+pub fn test_function_call_with_args(function: &mut AntFunction, args: Vec<Object>, expected_return_value: Object) {
     use crate::function_caller::function_caller::call_function;
 
     let mut evaluator: Evaluator = Evaluator::new();

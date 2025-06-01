@@ -12,3 +12,5 @@ pub mod ant_return_value;
 pub mod ant_native_function;
 pub mod object_macro;
 pub mod ant_double;
+pub mod ant_env;
+pub mod ant_class;

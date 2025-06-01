@@ -32,7 +32,6 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
     }
 
     parser.next_token(); // 离开条件表达式
-    parser.next_token(); // 离开大括号
 
     let block = parse_block_statement(parser);
     if let Option::None = block {

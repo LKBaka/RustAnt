@@ -5,7 +5,7 @@ use colored::Colorize;
 
 use crate::ast::expressions::function_expression::FunctionExpression;
 use crate::environment::environment::Environment;
-use crate::object::object::{IAntObject, ERROR};
+use crate::object::object::{IAntObject, Object, ERROR};
 use crate::ast::ast::{Node, Program};
 use crate::object::ant_error::AntError;
 use crate::utils::type_of;
@@ -43,7 +43,7 @@ impl Evaluator {
         }
     }
 
-    pub fn eval_box(&mut self, node: Box<dyn Node + 'static>, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    pub fn eval_box(&mut self, node: Box<dyn Node + 'static>, env: &mut Environment) -> Option<Object> {
         if type_of(&node) == TypeId::of::<Program>() {
             return self.eval_program(node.clone(), env)
         }
@@ -57,7 +57,7 @@ impl Evaluator {
         node.clone().eval(self, env)
     }
 
-    pub fn eval(&mut self, node: impl Node + Clone + 'static, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    pub fn eval(&mut self, node: impl Node + Clone + 'static, env: &mut Environment) -> Option<Object> {
         if type_of(&node) == TypeId::of::<Program>() {
             return self.eval_program(Box::new(node.clone()), env)
         }
@@ -71,7 +71,7 @@ impl Evaluator {
         node.clone().eval(self, env)
     }
 
-    pub fn eval_program(&mut self, node: Box<dyn Node + 'static>, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    pub fn eval_program(&mut self, node: Box<dyn Node + 'static>, env: &mut Environment) -> Option<Object> {
         let program = (node.clone() as Box<dyn Any>).downcast_ref::<Program>().unwrap().clone();
 
         let program_token = program.token.clone();

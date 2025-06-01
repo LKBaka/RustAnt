@@ -1,6 +1,6 @@
 use crate::ast::ast::{Expression, Node};
 use crate::environment::environment::Environment;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 use crate::object::utils::create_error_with_name;
 use crate::token::token::Token;
 use crate::evaluator::evaluator::Evaluator;
@@ -28,7 +28,7 @@ impl Node for Identifier {
         self.value.to_string()
     }
 
-    fn eval(&mut self, _: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, _: &mut Evaluator, env: &mut Environment) -> Option<Object> {
         let result = env.get(&self.value.trim());
 
         Some(

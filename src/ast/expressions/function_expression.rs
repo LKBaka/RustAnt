@@ -11,7 +11,7 @@ use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::object::ant_function::AntFunction;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 
@@ -49,7 +49,7 @@ impl Node for FunctionExpression {
         )
     }
 
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
         // 筛选出所有赋值表达式
         let assignment_expressions = self.params
             .iter()
@@ -65,10 +65,10 @@ impl Node for FunctionExpression {
             .collect::<Vec<Box<dyn Expression>>>();
         
         // 函数的环境
-        let func_env = Environment::new_with_outer(env.clone());
+        let func_env = Environment::new_with_outer(Box::new(env.to_owned()));
 
         // 函数形参的环境
-        let mut param_env = Environment::new_with_outer(env.clone());
+        let mut param_env = Environment::new_with_outer(Box::new(env.to_owned()));
 
         // 在形参环境中注册所有标识符
         for ident_expression in ident_expressions {
