@@ -5,8 +5,9 @@ use crate::ast::expressions::identifier::Identifier;
 use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
-use crate::object::object::IAntObject;
+use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
+use crate::object::utils::is_error;
 use crate::token::token::Token;
 
 impl Clone for LetStatement {
@@ -35,10 +36,18 @@ impl Node for LetStatement {
     }
 
 
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Box<dyn IAntObject>> {
+    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
+        let value = self.value.eval(evaluator, &mut env.clone()).unwrap();
+        
+        // 检查值是否为错误对象
+        if is_error(&value) {
+            // 如果是错误对象，直接返回
+            return Some(value);
+        }
+
         let create_result = env.create(
             self.name.to_string().deref(), Data::new(
-                self.value.eval(evaluator, &mut env.clone()).unwrap(), DataInfo::new(false)
+                value, DataInfo::new(false)
             )
         );
 
