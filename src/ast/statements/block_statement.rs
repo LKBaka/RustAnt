@@ -47,9 +47,9 @@ impl Node for BlockStatement {
         for statement in &mut self.statements {
             result = statement.eval(evaluator, env);
 
-            if let Some(it) = result.clone() {
+            if let Some(it) = &result {
                 if it.get_type() == RETURN_VALUE.to_string() || is_error(&it) {
-                    return result.to_owned();
+                    return result;
                 } 
             }
         }
