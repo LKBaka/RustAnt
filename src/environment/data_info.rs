@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct DataInfo {
     pub readonly: bool,
 }
@@ -11,12 +12,6 @@ impl DataInfo {
 
     pub fn to_string(&self) -> String {
         format!("DataInfo(readonly: {})", self.readonly)
-    }
-}
-
-impl Clone for DataInfo {
-    fn clone(&self) -> Self {
-        DataInfo::new(self.readonly)
     }
 }
 
