@@ -1,2 +1,5 @@
 let a = 1;
-print(a.eq(1))
+
+let s = now();
+print(a.plus(1).plus(1))
+print(now() - s);
