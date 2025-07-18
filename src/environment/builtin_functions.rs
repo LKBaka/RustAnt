@@ -13,11 +13,11 @@ use crate::utils::run_command;
 
 pub fn builtin_print(arg_env: &mut Environment) -> Option<Object> {
     let value = arg_env.get("value").expect(
-        &format!("cannot find \"value\". arg_env: {}", arg_env.to_string())
+        &format!("cannot find 'value'. arg_env: {}", arg_env.to_string())
     );
 
     let end = arg_env.get("end").expect(
-        &format!("cannot find \"end\". arg_env: {}", arg_env.to_string())
+        &format!("cannot find 'end'. arg_env: {}", arg_env.to_string())
     );
 
     print!("{}{}", value.inspect(), end.inspect());
@@ -49,9 +49,12 @@ pub fn builtin_input(arg_env: &mut Environment) -> Option<Object> {
     }
 }
 
-pub fn builtin_clear(arg_env: &mut Environment) -> Option<Object> {
-    print!("\x1b[2J");
-    print!("\x1b[H");
+pub fn builtin_clear(_arg_env: &mut Environment) -> Option<Object> {
+    if cfg!(target_os = "windows") {
+        let result = run_command("cls");
+    } else if cfg!(target_os = "linux") {
+        let result = run_command("clear");
+    }
 
     None
 }
