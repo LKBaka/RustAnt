@@ -1,5 +1,6 @@
 use crate::map::pair::Pair;
 
+#[derive(PartialEq, Eq)]
 pub struct Map<K, V> {
     pub pairs: Vec<Pair<K, V>>
 }
@@ -27,8 +28,8 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
         self.pairs.push(Pair::new(key.clone(), value.clone()));
     }
 
-    pub fn get(&mut self, k: K) -> Option<V> {
-        let pos = self.pairs.iter().position(|pair| pair.key == k);
+    pub fn get(&self, k: &K) -> Option<V> {
+        let pos = self.pairs.iter().position(|pair| &pair.key == k);
 
         if pos.is_some() {
             return Some(self.pairs[pos.unwrap()].value.clone())
@@ -71,9 +72,9 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
         values.clone()
     }
 
-    pub fn contains_key(&self, k: K) -> bool {
+    pub fn contains_key(&self, k: &K) -> bool {
         for key in self.keys() {
-            if k == key {
+            if k == &key {
                 return true
             }
         }
@@ -108,7 +109,7 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
 
 #[macro_export]
 macro_rules! map {
-    // 创建一个空的 Map
+    // 创建一个空的 map
     () => {
         Map::new()
     };
@@ -127,4 +128,3 @@ macro_rules! map {
         }
     };
 }
-
