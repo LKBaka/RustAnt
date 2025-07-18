@@ -4,13 +4,13 @@ func counter(x) {
     } else {
         let foobar = 9999
         return counter(x + 1)
-    };
-};
+    }
+}
 
 let start = now();
 
 print("start");
-print(counter(0))
+print(counter(0));
 print("end");
 
 let end = now();
