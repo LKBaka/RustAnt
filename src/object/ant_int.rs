@@ -2,26 +2,29 @@ use std::any::Any;
 use std::vec;
 use bigdecimal::BigDecimal;
 use uuid::Uuid;
-use num_bigint::BigInt;
 
-use crate::object::object::EnvGetter;
+use crate::object::object::{EnvGetter, DOUBLE};
 use crate::constants::{ant_false, ant_true, null_obj, uninit_obj};
 use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::environment::utils::create_env;
 use crate::evaluator::utils::native_boolean_to_boolean_obj;
-use crate::{impl_minus_func, impl_multiply_func, impl_object, impl_plus_func};
+use crate::type_defs::RcRefCellEnv;
+use crate::{impl_gt_func, impl_lt_func, impl_minus_func, impl_multiply_func, impl_object, impl_plus_func};
 use crate::object::ant_double::AntDouble;
 use crate::object::ant_native_function::{create_ant_native_function, NativeFunction};
 use crate::object::object::{IAntObject, Object, ObjectType, INT};
 use crate::object::utils::{create_error, create_error_with_name, is_truthy};
 use crate::extract_arg;
+use crate::{type_hint, type_hint_map};
+
+use super::type_hint::{TypeHint, TypeHintMap};
 
 pub struct AntInt {
     id: Uuid,
     env: Environment,
-    pub value: BigInt,
+    pub value: BigDecimal,
 }
 
 impl Clone for AntInt {
@@ -36,7 +39,7 @@ impl Clone for AntInt {
 
 impl AntInt {
     pub fn new_with_native_value(mut value: Box<dyn Any>) -> Object {
-        let cast_result = value.downcast_mut::<BigInt>().cloned();
+        let cast_result = value.downcast_mut::<BigDecimal>().cloned();
 
         if let Some(it) = cast_result {
             let env = create_env(
@@ -56,7 +59,7 @@ impl AntInt {
             return Box::new(obj);
         }
 
-        panic!("value is not BigInt")
+        panic!("value is not BigDecimal. value's type id: {:?}", value.type_id());
     }
 }
 
@@ -84,6 +87,8 @@ impl IAntObject for AntInt {
     fn equals(&self, other: &dyn IAntObject) -> bool {
         other.get_id() == self.id || if other.get_type() == INT {
             other.as_any().downcast_ref::<AntInt>().unwrap().value == self.value
+        } else if let Some(double_obj) = other.as_any().downcast_ref::<AntDouble>() {
+            &double_obj.value == &self.value
         } else {false}
     }
 
@@ -147,7 +152,7 @@ fn init_env(int_obj: &mut AntInt) {
 
         fn divide(arg_env: &mut Environment) -> Option<Object> {
             fn divide_int(me: AntInt, other: AntInt) -> Option<Object> {
-                if other.value == BigInt::from(0) {
+                if other.value == BigDecimal::from(0) {
                     return Some(
                         create_error("division by zero".to_string())
                     )
@@ -161,7 +166,7 @@ fn init_env(int_obj: &mut AntInt) {
             let me = extract_arg!(arg_env, "me" => AntInt);
 
             if me.is_none() {
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(me) = me {
                 if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return divide_int(me, value)}
             }
@@ -170,36 +175,32 @@ fn init_env(int_obj: &mut AntInt) {
         }
 
         fn greater_than(arg_env: &mut Environment) -> Option<Object> {
-            fn greater_than_int(me: AntInt, other: AntInt) -> Option<Object> {
-                Some(
-                    native_boolean_to_boolean_obj(me.value > other.value)
-                )
-            }
+            impl_gt_func!(gt_int, AntInt, AntInt);
+            impl_gt_func!(gt_double, AntInt, AntDouble);
 
             let me = extract_arg!(arg_env, "me" => AntInt);
 
             if me.is_none() {
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(me) = me {
-                if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return greater_than_int(me, value)}
+                if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return gt_int(me, value)}
+                if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return gt_double(me, value)}
             }
 
             None
         }
 
         fn less_than(arg_env: &mut Environment) -> Option<Object> {
-            fn less_than_int(me: AntInt, other: AntInt) -> Option<Object> {
-                Some(
-                    native_boolean_to_boolean_obj(me.value < other.value)
-                )
-            }
+            impl_lt_func!(lt_int, AntInt, AntInt);
+            impl_lt_func!(lt_double, AntInt, AntDouble);
 
             let me = extract_arg!(arg_env, "me" => AntInt);
 
             if me.is_none() {
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(me) = me {
-                if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return less_than_int(me, value)}
+                if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return lt_int(me, value)}
+                if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return lt_double(me, value)}
             }
 
             None
@@ -210,12 +211,17 @@ fn init_env(int_obj: &mut AntInt) {
                 Some(native_boolean_to_boolean_obj( me == other))
             }
 
+            fn eq_double(me: AntInt, other: AntDouble) -> Option<Object> {
+                Some(native_boolean_to_boolean_obj( me.value == other.value))
+            }
+
             let me = extract_arg!(arg_env, "me" => AntInt);
 
             if me.is_none() {
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(me) = me {
                 if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return eq_int(me, value)}
+                if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return eq_double(me, value)}
             }
 
             None
@@ -225,9 +231,13 @@ fn init_env(int_obj: &mut AntInt) {
             let me = extract_arg!(arg_env, "me" => AntInt);
 
             if me.is_none() {
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(_me) = me {
                 if let Some(_value) = extract_arg!(arg_env, "value" => AntInt) {
+                    return Some(native_boolean_to_boolean_obj(!is_truthy(eq(arg_env).expect(""))))
+                }
+
+                if let Some(_value) = extract_arg!(arg_env, "value" => AntDouble) {
                     return Some(native_boolean_to_boolean_obj(!is_truthy(eq(arg_env).expect(""))))
                 }
             }
@@ -242,6 +252,8 @@ fn init_env(int_obj: &mut AntInt) {
             ]
         );
 
+        let type_hint_map = type_hint_map!("value" => type_hint!(INT, DOUBLE));
+
         let operator_functions = vec![
             ("plus", plus as NativeFunction),
             ("minus", minus),
@@ -254,7 +266,9 @@ fn init_env(int_obj: &mut AntInt) {
         ];
 
         for (op, func) in operator_functions {
-            let native_func_object = create_ant_native_function(func_param_env.clone(), func); 
+            let native_func_object = create_ant_native_function(
+                func_param_env.clone(), Some(type_hint_map.clone()), func
+            ); 
 
             int_obj.env.create(op, Data::new(native_func_object, DataInfo::new(false)));
         }
@@ -267,19 +281,20 @@ fn init_env(int_obj: &mut AntInt) {
                 let me = extract_arg!(arg_env, "me" => AntInt);
 
                 if let Some(me) = me {
-                    if me.value != BigInt::from(0) {
+                    if me.value != BigDecimal::from(0) {
                         return Some(ant_true.clone());
                     } else {
                         return Some(ant_false.clone());
                     }
                 }
 
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             }
 
             create_ant_native_function(
                 create_env(vec![("me".into(), Box::new(int_obj.clone()))]),
-                __bool__
+                Some(type_hint_map!()),
+                __bool__,
             )
         };
 
@@ -292,12 +307,12 @@ impl From<i32> for AntInt {
         AntInt { 
             id: Uuid::new_v4(), 
             env: Environment::new(), 
-            value: BigInt::from(value) 
+            value: BigDecimal::from(value) 
         }
     }
 }
 
-pub fn create_ant_int(value: BigInt, outer: Box<Environment>) -> Object {
+pub fn create_ant_int(value: BigDecimal, outer: RcRefCellEnv) -> Object {
     let mut env = create_env(
     vec![
             ("value".to_string(), null_obj.clone())
