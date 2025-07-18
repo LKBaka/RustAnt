@@ -1,36 +1,18 @@
+use bigdecimal::BigDecimal;
 use uuid::Uuid;
 
 use crate::constants::{ant_true, ant_false};
 use crate::environment::utils::create_env;
 use crate::evaluator::evaluator::Evaluator;
 use crate::function_caller::function_caller::call_function_with_name;
+use crate::object::ant_double::AntDouble;
 use crate::object::ant_error::AntError;
-use crate::object::ant_function::AntFunction;
+use crate::object::ant_int::AntInt;
 use crate::object::object::{IAntObject, ERROR};
 
 use super::ant_class::AntClass;
 use super::ant_string::AntString;
 use super::object::Object;
-
-pub fn is_eq_functions(
-    left_func_name: String, right_func_name: String,
-    left: Object, right: Object
-) -> bool {
-    if left.as_any().downcast_ref::<AntFunction>().is_none() {
-        return false
-    }
-
-    if right.as_any().downcast_ref::<AntFunction>().is_none() {
-        return false
-    }
-
-    let left_function = left.as_any().downcast_ref::<AntFunction>().unwrap();
-    let right_function = left.as_any().downcast_ref::<AntFunction>().unwrap();
-
-    left_func_name == right_func_name &&
-    left_function.env == right_function.env &&
-    left_function.param_env == right_function.param_env
-}
 
 pub fn is_native_error(obj: &Object) -> bool {
     obj.get_type() == ERROR
@@ -42,24 +24,30 @@ pub fn is_error(obj: &Object) -> bool {
 
 pub fn is_truthy(obj: Object) -> bool {
     // 明确处理 ant_true/ant_false
-    if obj == ant_true.clone() {
+    if &obj == &*ant_true {
         true
-    } else if obj == ant_false.clone() {
-        false
+    } else if &obj == &*ant_false {
+        false   
+    } else if let Some(obj) = obj.as_any().downcast_ref::<AntInt>() {
+        // 针对 AntInt 类型的特别优化
+        !(obj.value == BigDecimal::from(0))
+    } else if let Some(obj) = obj.as_any().downcast_ref::<AntDouble>() {
+        // 针对 AntDouble 类型的特别优化
+        !(obj.value == BigDecimal::from(0))
     } else {
-        let result = call_function_with_name("__bool__".into(), vec![], &mut Evaluator::new(), obj.to_owned().get_env_ref());
+        let result = call_function_with_name("__bool__".into(), &vec![], &mut Evaluator::new(), obj.clone().get_env_ref());
         if let Err(_err) = result {
             return false
         }
 
         if let Ok(result) = result { 
-            if let None = result {return false}
-                
-            if result.to_owned().unwrap() == ant_true.clone() {
-                true
-            } else if result.unwrap() == ant_false.clone() {
-                false
-            } else {false}
+            result.is_none() || {
+                let result = result.expect(
+                    &format!("__bool__ method should return a value. obj: {}", obj.inspect())
+                );
+
+                &result == &*ant_true
+            }
         } else {false}
     }
 }
@@ -99,7 +87,7 @@ pub fn unsupported_operand_type_err(op: &'static str, left_type: String, right_t
     )
 }
 
-pub fn type_error(msg: &'static str) -> Object {
+pub fn type_error(msg: &str) -> Object {
     create_error_with_name(
         "TypeError", 
         msg.into()
@@ -115,11 +103,11 @@ pub fn type_eq(left: Object, right: Object) -> bool {
         return true;
     }
 
-    if left.as_any().downcast_ref::<AntClass>().is_none() {
+    if !left.as_any().is::<AntClass>() {
         return false;
     }
 
-    if right.as_any().downcast_ref::<AntClass>().is_none() {
+    if !right.as_any().is::<AntClass>() {
         return false;
     }
 
@@ -139,7 +127,7 @@ pub fn type_eq(left: Object, right: Object) -> bool {
     false
 }
 
-pub fn check_error_name(error: Object, error_name: &'static str) -> bool {
+pub fn check_error_name(error: &Object, error_name: &'static str) -> bool {
     if let Some(err) = error.as_any().downcast_ref::<AntError>() {
         return err.error_name == error_name
     }
