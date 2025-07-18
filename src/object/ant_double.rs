@@ -3,13 +3,13 @@ use bigdecimal::BigDecimal;
 use uuid::Uuid;
 
 use crate::object::ant_int::AntInt;
-use crate::object::object::EnvGetter;
+use crate::object::object::{EnvGetter, INT};
 use crate::constants::{null_obj, uninit_obj};
 use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::environment::utils::create_env;
-use crate::impl_object;
+use crate::{impl_gt_func, impl_lt_func, impl_object, type_hint, type_hint_map};
 use crate::object::ant_native_function::create_ant_native_function;
 use crate::object::object::{IAntObject, Object, ObjectType, DOUBLE};
 use crate::extract_arg;
@@ -17,6 +17,9 @@ use crate::{impl_minus_func, impl_multiply_func, impl_plus_func};
 use crate::object::utils::create_error;
 use crate::object::ant_native_function::NativeFunction;
 use crate::evaluator::utils::native_boolean_to_boolean_obj;
+
+use super::type_hint::{TypeHint, TypeHintMap};
+
 
 pub struct AntDouble {
     id: Uuid,
@@ -42,7 +45,7 @@ fn init_env(double_obj: &mut AntDouble) {
         let me = extract_arg!(arg_env, "me" => AntDouble);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
             if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return plus_int(me, value)}
             if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return plus_double(me, value)}
@@ -58,7 +61,7 @@ fn init_env(double_obj: &mut AntDouble) {
         let me = extract_arg!(arg_env, "me" => AntDouble);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
             if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return minus_int(me, value)}
             if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return minus_double(me, value)}
@@ -74,7 +77,7 @@ fn init_env(double_obj: &mut AntDouble) {
         let me = extract_arg!(arg_env, "me" => AntDouble);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
             if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return multiply_int(me, value)}
             if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return multiply_double(me, value)}
@@ -84,7 +87,11 @@ fn init_env(double_obj: &mut AntDouble) {
     }
 
     fn divide(arg_env: &mut Environment) -> Option<Object> {
-        fn divide_int(me: AntDouble, other: AntDouble) -> Option<Object> {
+        fn divide_double(me: AntDouble, other: AntDouble) -> Option<Object> {
+            if other.value == BigDecimal::from(0) {
+                return Some(create_error(format!("division by zero")))
+            }
+
             Some(
                 AntDouble::new_with_native_value(Box::new(me.value / other.value))
             )
@@ -93,49 +100,41 @@ fn init_env(double_obj: &mut AntDouble) {
         let me = extract_arg!(arg_env, "me" => AntDouble);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
-            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return divide_int(me, value)}
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return divide_double(me, value)}
         }
 
         None
     }
 
     fn greater_than(arg_env: &mut Environment) -> Option<Object> {
-        fn greater_than_double(me: AntDouble, other: AntDouble) -> Option<Object> {
-            Some(
-                native_boolean_to_boolean_obj(me.value > other.value)
-            )
-        }
+        impl_gt_func!(gt_double, AntDouble, AntDouble);
+        impl_gt_func!(gt_int, AntDouble, AntInt);
 
         let me = extract_arg!(arg_env, "me" => AntDouble);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
-            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {
-                return greater_than_double(me, value)
-            }
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return gt_double(me, value)}
+            if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return gt_int(me, value)}
         }
 
         None
     }
 
     fn less_than(arg_env: &mut Environment) -> Option<Object> {
-        fn less_than_double(me: AntDouble, other: AntDouble) -> Option<Object> {
-            Some(
-                native_boolean_to_boolean_obj(me.value < other.value)
-            )
-        }
+        impl_lt_func!(lt_double, AntDouble, AntDouble);
+        impl_lt_func!(lt_int, AntDouble, AntInt);
 
         let me = extract_arg!(arg_env, "me" => AntDouble);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
-            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {
-                return less_than_double(me, value)
-            }
+            if let Some(value) = extract_arg!(arg_env, "value" => AntDouble) {return lt_double(me, value)}
+            if let Some(value) = extract_arg!(arg_env, "value" => AntInt) {return lt_int(me, value)}
         }
 
         None
@@ -148,6 +147,8 @@ fn init_env(double_obj: &mut AntDouble) {
         ]
     );
 
+    let type_hint_map = type_hint_map!("value" => type_hint!(INT, DOUBLE));
+
     let operator_functions = vec![
         ("plus", plus as NativeFunction),
         ("minus", minus),
@@ -158,7 +159,9 @@ fn init_env(double_obj: &mut AntDouble) {
     ];
 
     for (op, func) in operator_functions {
-        let native_func_object = create_ant_native_function(func_param_env.clone(), func); 
+        let native_func_object = create_ant_native_function(
+            func_param_env.clone(), Some(type_hint_map.clone()), func 
+        ); 
 
         double_obj.env.create(op, Data::new(native_func_object, DataInfo::new(false)));
     }
