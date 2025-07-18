@@ -11,6 +11,10 @@ use crate::object::object::Object;
 
 use super::builtin_functions::{builtin_clear, builtin_now, builtin_shell};
 
+use crate::object::object::{ANY, STRING};
+use crate::object::type_hint::{TypeHint, TypeHintMap};
+use crate::{type_hint, type_hint_map};
+
 pub fn create_env(map: Vec<(String, Object)>) -> Environment {
     let mut env = Environment::new();
 
@@ -30,7 +34,12 @@ fn add_builtin_functions(env: &mut Environment) {
             ]
         );
 
-        create_ant_native_function(param_env, builtin_print)
+        let type_hint_map = type_hint_map!(
+            "value" => type_hint!(ANY),
+            "end" => type_hint!(STRING)
+        );
+
+        create_ant_native_function(param_env, Some(type_hint_map), builtin_print)
     };
 
     let input_function = {
@@ -40,7 +49,11 @@ fn add_builtin_functions(env: &mut Environment) {
             ]
         );
 
-        create_ant_native_function(param_env, builtin_input)
+        let type_hint_map = type_hint_map!(
+            "prompt" => type_hint!(STRING)
+        );
+
+        create_ant_native_function(param_env, Some(type_hint_map), builtin_input)
     };
 
     let shell_function = {
@@ -50,19 +63,23 @@ fn add_builtin_functions(env: &mut Environment) {
             ]
         );
 
-        create_ant_native_function(param_env, builtin_shell)
+        let type_hint_map = type_hint_map!(
+            "command" => type_hint!(STRING)
+        );
+
+        create_ant_native_function(param_env, Some(type_hint_map), builtin_shell)
     };
 
     let clear_function = {
         let param_env = create_env(vec![]);
 
-        create_ant_native_function(param_env, builtin_clear)
+        create_ant_native_function(param_env, None, builtin_clear)
     };
 
     let now_function = {
         let param_env = create_env(vec![]);
 
-        create_ant_native_function(param_env, builtin_now)
+        create_ant_native_function(param_env, None, builtin_now)
     };
 
     env.create("print", Data::new(print_function, DataInfo::new(false)));
