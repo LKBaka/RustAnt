@@ -36,7 +36,7 @@ impl Node for ObjectMemberExpression {
 
     fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
         let left_obj = self.left.eval(evaluator, env);
-        if is_error(&left_obj.to_owned()?) {return Some(left_obj?)}
+        if is_error(&left_obj.clone()?) {return Some(left_obj?)}
 
         let member_not_found_err_fn = |obj_type: ObjectType, member_name: String| -> Object {
             create_error_with_name(
@@ -48,14 +48,17 @@ impl Node for ObjectMemberExpression {
 
 
         if let Some(mut it) = left_obj {
-            let result =  self.right.eval(evaluator, it.get_env_ref());
+            let obj_env = it.get_env_ref();
+            let result =  self.right.eval(evaluator, obj_env);
             
-            if result.is_none() {return None}
-            if !check_error_name(result.to_owned().unwrap(), "NameError") {return result}
+            if let Some(result) = result {
+                if !check_error_name(&result, "NameError") {return Some(result)}
 
-            if let Some(ident) = (self.right.to_owned() as Box<dyn Any>).downcast_ref::<Identifier>() {  
-                return Some(member_not_found_err_fn(it.get_type(), ident.to_string()))
+                if let Some(ident) = (self.right.as_ref() as &dyn Any).downcast_ref::<Identifier>() {  
+                    return Some(member_not_found_err_fn(it.get_type(), ident.to_string()))
+                }
             }
+
         }
 
         None
