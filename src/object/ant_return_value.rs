@@ -49,7 +49,7 @@ impl IAntObject for AntReturnValue {
     }
 
     fn inspect(&self) -> String {
-        self.value.inspect()
+        format!("<ReturnValue>({})", self.value.inspect())
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
