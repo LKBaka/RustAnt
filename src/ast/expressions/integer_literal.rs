@@ -1,10 +1,11 @@
-use num_bigint::BigInt;
+use bigdecimal::BigDecimal;
 
 use crate::ast::ast::{Expression, Node};
 use crate::environment::environment::Environment;
 use crate::object::ant_int::create_ant_int;
 use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
+use crate::rc_ref_cell;
 use crate::token::token::Token;
 
 impl Clone for IntegerLiteral {
@@ -17,7 +18,7 @@ impl Clone for IntegerLiteral {
 }
 
 pub struct IntegerLiteral {
-    pub value: BigInt,
+    pub value: BigDecimal,
     pub token: Token,
 }
 
@@ -31,13 +32,13 @@ impl Node for IntegerLiteral {
     }
 
     fn eval(&mut self, _: &mut Evaluator, outer: &mut Environment) -> Option<Object> { 
-        Some(create_ant_int(self.value.to_owned(), Box::new(outer.clone())))
+        Some(create_ant_int(self.value.clone(), rc_ref_cell!(outer.clone())))
     }
 }
 
 impl Expression for IntegerLiteral {}
 
-pub fn create_integer_literal(token: Token, value: BigInt) -> IntegerLiteral {
+pub fn create_integer_literal(token: Token, value: BigDecimal) -> IntegerLiteral {
     IntegerLiteral {
         token, value
     }

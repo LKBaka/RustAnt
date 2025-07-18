@@ -29,7 +29,7 @@ impl Node for StringLiteral {
     }
 
     fn eval(&mut self, _: &mut Evaluator, _: &mut Environment) -> Option<Object> {
-        Some(AntString::new_with_native_value(Box::new(self.value.to_owned())))
+        Some(AntString::new_with_native_value(Box::new(self.value.clone())))
     }
 }
 

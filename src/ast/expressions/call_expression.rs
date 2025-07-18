@@ -59,7 +59,7 @@ impl CallExpression {
 
                     Some(call_function(Function::Func(func), args, evaluator, env))
                 } else if let Some(it) =
-                    (func.to_owned() as Box<dyn Any>).downcast_ref::<AntNativeFunction>()
+                    (func.clone() as Box<dyn Any>).downcast_ref::<AntNativeFunction>()
                 {
                     // 先与形参环境融合，防止指定参数时参数不在环境中
                     func.get_env_ref().in_place_fusion(&it.param_env);
@@ -134,11 +134,11 @@ impl Node for CallExpression {
             // 获取函数
             let obj = it.eval(evaluator, env)?;
 
-            let mut func = (obj.as_any().downcast_ref::<AntFunction>()?).to_owned();
+            let mut func = (obj.as_any().downcast_ref::<AntFunction>()?).clone();
             let func: &mut AntFunction = &mut func;
 
             // 先与形参环境融合，防止指定参数时参数不在环境中
-            func.to_owned()
+            func.clone()
                 .get_env_ref()
                 .in_place_fusion(&func.param_env);
 

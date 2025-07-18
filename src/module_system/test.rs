@@ -14,7 +14,7 @@ fn test_import_module() {
         result.is_ok(), 
         true, 
         || {
-            println!("module import failed: {:?}", result.to_owned().err()); println!("{:?}", module_importer.module_paths)
+            println!("module import failed: {:?}", result.clone().err()); println!("{:?}", module_importer.module_paths)
         }
     );
 
