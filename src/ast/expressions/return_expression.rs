@@ -33,14 +33,14 @@ impl Node for ReturnExpression {
     }
 
     fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        let return_value = evaluator.eval_box(self.value.to_owned(), env);
+        let return_value = self.value.eval(evaluator, env);
 
-        if let Some(_it) = (self.value.to_owned() as Box<dyn Any>).downcast_ref::<CallExpression>() {
+        if let Some(_it) = (&self.value as &dyn Any).downcast_ref::<CallExpression>() {
             env.drop_all();
         }
 
         if let Some(it) = return_value {
-            Some(AntReturnValue::new_with_native_value(Box::new(it.to_owned())))
+            Some(AntReturnValue::new_with_native_value(Box::new(it.clone())))
         } else {None}
     }
 }
