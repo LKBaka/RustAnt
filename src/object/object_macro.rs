@@ -31,7 +31,7 @@ macro_rules! extract_arg {
             let return_value: Option<$type>;
         
             return_value = if let Some(it) = obj.as_any().downcast_ref::<$type>() {
-                Some(it.to_owned())
+                Some(it.clone())
             } else {
                 Option::None
             };
@@ -73,3 +73,26 @@ macro_rules! impl_multiply_func {
         }
     };
 }
+
+#[macro_export] 
+macro_rules! impl_lt_func {
+    ($func_name:ident, $me_type:ty, $other_type:ty) => {
+        fn $func_name(me: $me_type, other: $other_type) -> Option<Object> {
+            Some(
+                native_boolean_to_boolean_obj(me.value < other.value)
+            )
+        }
+    };
+}
+
+#[macro_export] 
+macro_rules! impl_gt_func {
+    ($func_name:ident, $me_type:ty, $other_type:ty) => {
+        fn $func_name(me: $me_type, other: $other_type) -> Option<Object> {
+            Some(
+                native_boolean_to_boolean_obj(me.value < other.value)
+            )
+        }
+    };
+}
+
