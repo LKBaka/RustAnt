@@ -34,15 +34,13 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
     parser.next_token(); // 离开条件表达式
 
     let block = parse_block_statement(parser);
-    if let Option::None = block {
+    if block.is_none() {
         parser.errors.push(
             format!(
-                "missing {}. at file <{}>, line {}",
-                parser.cur_token.to_string(),
+                "missing while body. at file <{}>, line {}",
                 parser.cur_token.file, parser.cur_token.line
             )
         );
-
         return None;
     }
 
@@ -50,7 +48,7 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
         create_while_statement(
             token, 
             condition.unwrap(), 
-            (block.unwrap() as Box<dyn Any>).downcast_ref::<BlockStatement>().expect("").to_owned()
+            (block.unwrap() as Box<dyn Any>).downcast_ref::<BlockStatement>().expect("").clone()
         )
     ))
 }
