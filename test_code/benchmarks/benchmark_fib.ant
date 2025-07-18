@@ -1,21 +1,19 @@
 func fib(n) {
-    if n < 1 {
-        0;
+    return if n < 1 {
+        0
     } else if n == 1 {
-        1;
+        1
     } else {
-        return fib(n - 1) + fib(n - 2);
-    };
-};
+        fib(n - 1) + fib(n - 2)
+    }
+}
 
 let start = now();
 
-print(fib(15));
+print(fib(1));
 
 let end = now();
 
 print(end - start);
 
-while 1 {
-    
-}
+input()
