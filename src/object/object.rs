@@ -10,6 +10,7 @@ use crate::impl_object;
 pub type ObjectType = String;
 pub type Object = Box<dyn IAntObject>;
 
+pub const ANY: &str = "Any";
 pub const OBJECT: &str = "Object";
 pub const INT: &str = "Int";
 pub const DOUBLE: &str = "Double";
