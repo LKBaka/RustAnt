@@ -1,0 +1,26 @@
+let s = now();
+
+print(
+    if 0 {
+        91
+    } else if 1 == 0 {
+        13
+    } else {
+        if 0 {
+            91
+        } else if 1 == 0 {
+            13
+        } else {
+            if 0 {
+                91
+            } else if 1 == 0 {
+                13
+            } else {
+                78
+            }
+        }
+    }
+);  
+
+print(now() - s);
+
