@@ -3,7 +3,9 @@ use std::{path::Path, vec};
 
 use uuid::Uuid;
 
+use crate::arg_structure::arg_structure::Args;
 use crate::object::object::AntObject;
+use crate::object::utils::is_error;
 use crate::runner;
 
 use crate::{environment::utils::create_top_env, object::object::Object};
@@ -55,8 +57,16 @@ impl ModuleImporter {
         let mut env = create_top_env();
 
         // 求值模块代码
-        runner::eval::eval(code.unwrap(), module_file, &mut env);
-
+        let module_result = runner::eval::eval(
+            code.unwrap(), module_file, &mut env, &Args {file: None, print_ast: false}
+        );
+        
+        if let Some(it) = module_result {
+            if is_error(&it) {
+                return Err(it.inspect());
+            }
+        }
+        
         Ok(Box::new(AntObject {
             id: Uuid::new_v4(),
             env,
