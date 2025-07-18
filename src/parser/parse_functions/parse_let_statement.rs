@@ -4,6 +4,7 @@ use crate::ast::statements::let_statement::create_let_statement;
 use crate::parser::parser::Parser;
 use crate::parser::precedence::Precedence;
 use crate::token::token_type::TokenType::Ident;
+use crate::token::token_type::TokenType::Semicolon;
 
 pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
     let token = parser.cur_token.clone();
@@ -27,7 +28,11 @@ pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
 
     // 解析表达式
     let temp_value = parser.parse_expression(Precedence::Lowest);
-    
+
+    if parser.peek_token_is(Semicolon) {
+        parser.next_token();
+    }
+
     if let Some(value) = temp_value {
         return Some(Box::new(create_let_statement(token, ident, value)))
     }

@@ -12,8 +12,10 @@ use crate::evaluator::utils::native_boolean_to_boolean_obj;
 use crate::object::ant_native_function::{create_ant_native_function, NativeFunction};
 use crate::object::object::{IAntObject, Object, ObjectType, ENVIRONMENT};
 use crate::object::utils::{create_error, is_truthy, unsupported_operand_type_err};
-use crate::extract_arg;
+use crate::{extract_arg, type_hint_map, type_hint};
 use crate::impl_object;
+
+use super::type_hint::{TypeHint, TypeHintMap};
 
 pub struct AntEnv {
     id: Uuid,
@@ -39,7 +41,7 @@ impl AntEnv {
             let mut obj = Self {
                 id: Uuid::new_v4(),
                 env: Environment::new(),
-                obj_env: it.to_owned(),
+                obj_env: it.clone(),
             };
 
             init_env(&mut obj);
@@ -94,7 +96,7 @@ fn init_env(int_obj: &mut AntEnv) {
         let me = extract_arg!(arg_env, "me" => AntEnv);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
             if let Some(value) = extract_arg!(arg_env, "value" => AntEnv) {return eq_int(me, value)}
         
@@ -113,7 +115,7 @@ fn init_env(int_obj: &mut AntEnv) {
         let me = extract_arg!(arg_env, "me" => AntEnv);
 
         if me.is_none() {
-            return Some(create_error(format!("type mismatch for \"me\"")))
+            return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
             if let Some(_value) = extract_arg!(arg_env, "value" => AntEnv) {
                 return Some(native_boolean_to_boolean_obj(!is_truthy(eq(arg_env).expect(""))))
@@ -138,13 +140,17 @@ fn init_env(int_obj: &mut AntEnv) {
         ]
     );
 
+    let type_hint_map = type_hint_map!("value" => type_hint!(ENVIRONMENT));
+
     let operator_functions = vec![
         ("eq", eq as NativeFunction),
         ("not_eq", not_eq),
     ];
 
     for (op, func) in operator_functions {
-        let native_func_object = create_ant_native_function(func_param_env.clone(), func); 
+        let native_func_object = create_ant_native_function(
+            func_param_env.clone(), Some(type_hint_map.clone()), func
+        ); 
 
         int_obj.env.create(op, Data::new(native_func_object, DataInfo::new(false)));
     }

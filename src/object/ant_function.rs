@@ -55,18 +55,4 @@ impl IAntObject for AntFunction {
     }
 }
 
-pub fn create_ant_function(param_env: Environment, block: BlockStatement) -> Object {
-    let env = Environment::new();
-    let id = Uuid::new_v4();
-
-    Box::new(
-        AntFunction {
-            id,
-            env,
-            param_env,
-            block
-        }
-    )
-}
-
 impl_object!(AntFunction);

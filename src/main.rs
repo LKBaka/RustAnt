@@ -13,6 +13,8 @@ mod evaluator;
 mod char_string;
 mod function_caller;
 mod module_system;
+mod byte_code_vm;
+mod type_defs;
 
 extern crate lazy_static;
 
@@ -23,15 +25,21 @@ use crate::runner::file_runner::FileRunner;
 use crate::runner::repl_runner::REPLRunner;
 
 fn main() {
+    #[cfg(feature = "byte_code_rust_ant")]
+    use crate::byte_code_vm::test::test_byte_code_rust_ant_main;
+
+    #[cfg(feature = "byte_code_rust_ant")]
+    test_byte_code_rust_ant_main();
+
     let args = Args::parse();
 
     // 判断是否需要进入REPL
-    if args.file == None { // 没有提供文件路径
+    if args.file.is_none() { // 没有提供文件路径
         // 进入REPL
-        let repl = REPLRunner::new();
+        let repl = REPLRunner::new(args);
         repl.run();
     } else {
-        let file_runner = FileRunner::new(args.file.unwrap());
+        let file_runner = FileRunner::new(args.file.clone().unwrap(), args.clone());
         file_runner.run();
     }
 }

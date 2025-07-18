@@ -1,3 +1,5 @@
+pub mod type_defs;
+pub mod byte_code_vm;
 pub mod object;
 pub mod environment;
 pub mod ast;

@@ -1,4 +1,7 @@
 #[cfg(test)]
+use bigdecimal::BigDecimal;
+
+#[cfg(test)]
 use crate::evaluator::evaluator::Evaluator;
 
 #[cfg(test)]
@@ -9,7 +12,7 @@ use crate::object::object::Object;
 
 #[cfg(test)]
 pub fn test_function_call(function: &mut AntFunction, expected_return_value: Object) {
-    use crate::function_caller::function_caller::call_function;
+    use crate::{function_caller::function_caller::call_function, object::function_enum::Function};
 
     let mut evaluator: Evaluator = Evaluator::new();
 
@@ -17,7 +20,7 @@ pub fn test_function_call(function: &mut AntFunction, expected_return_value: Obj
         panic!("this function (test_function_call) is for testing calls to function objects without arguments. If you want to test calls with multiple arguments, switch to test_function_call_with_args.")
     }
 
-    let result = call_function(Box::new(function.clone()), vec![], &mut evaluator, &mut function.env);
+    let result = call_function(Function::Func(Box::new(function.clone())), &vec![], &mut evaluator, &mut function.env);
     if &result != &expected_return_value {
         panic!("result {} is not equals to {}", result.inspect(), expected_return_value.inspect())
     }
@@ -26,12 +29,12 @@ pub fn test_function_call(function: &mut AntFunction, expected_return_value: Obj
 }
 
 #[cfg(test)]
-pub fn test_function_call_with_args(function: &mut AntFunction, args: Vec<Object>, expected_return_value: Object) {
-    use crate::function_caller::function_caller::call_function;
+pub fn test_function_call_with_args(function: &mut AntFunction, args: Vec<&Object>, expected_return_value: Object) {
+    use crate::{function_caller::function_caller::call_function, object::function_enum::Function};
 
     let mut evaluator: Evaluator = Evaluator::new();
 
-    let result = call_function(Box::new(function.clone()), args, &mut evaluator, &mut function.env);
+    let result = call_function(Function::Func(Box::new(function.clone())), &args, &mut evaluator, &mut function.env);
     if &result != &expected_return_value {
         panic!("result {} is not equals to {}", result.inspect(), expected_return_value.inspect())
     }
@@ -42,7 +45,7 @@ pub fn test_function_call_with_args(function: &mut AntFunction, args: Vec<Object
 #[test]
 fn test_functions_call() {
     use uuid::Uuid;
-    use num_bigint::BigInt;
+    use bigdecimal::BigDecimal;
 
     use crate::environment::environment::Environment;
 
@@ -69,25 +72,24 @@ fn test_functions_call() {
                             create_expression_statement(
                                 create_integer_literal(
                                     Token::new(Integer, "".to_string(), "__test_functions_call__".to_string(), -1),
-                                    BigInt::from(1)
+                                    BigDecimal::from(1)
                                 )
                             )
                         )
                     ]
                 ),
-            }, AntInt::new_with_native_value(Box::new(BigInt::from(1)))
+            }, AntInt::new_with_native_value(Box::new(BigDecimal::from(1)))
         )
     ];
 
     for (func, expected_obj) in expected_function_result_map {
-        test_function_call(&mut func.to_owned(), expected_obj)
+        test_function_call(&mut func.clone(), expected_obj)
     }
 }
 
 #[test]
 fn test_functions_call_with_args() {
     use uuid::Uuid;
-    use num_bigint::BigInt;
 
     use crate::environment::environment::Environment;
     use crate::environment::utils::create_env;
@@ -103,6 +105,8 @@ fn test_functions_call_with_args() {
     use crate::constants::null_obj;
 
     use crate::object::ant_int::AntInt;
+
+    let arg = AntInt::new_with_native_value(Box::new(BigDecimal::from(91)));
 
     let expected_function_result_map = vec![
         (
@@ -124,12 +128,12 @@ fn test_functions_call_with_args() {
                     ]
                 ),
             },
-            vec![AntInt::new_with_native_value(Box::new(BigInt::from(91)))],
-            AntInt::new_with_native_value(Box::new(BigInt::from(91)))
+            vec![&arg],
+            AntInt::new_with_native_value(Box::new(BigDecimal::from(91)))
         )
     ];
 
     for (func, args, expected_obj) in expected_function_result_map {
-        test_function_call_with_args(&mut func.to_owned(), args, expected_obj)
+        test_function_call_with_args(&mut func.clone(), args, expected_obj)
     }
 }

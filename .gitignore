@@ -3,3 +3,4 @@
 /.vscode
 /run.py
 /flamegraph.svg
+/.debug

@@ -13,6 +13,7 @@ use crate::environment::environment::Environment;
 use crate::object::ant_function::AntFunction;
 use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
+use crate::rc_ref_cell;
 use crate::token::token::Token;
 
 impl Clone for FunctionExpression {
@@ -65,10 +66,10 @@ impl Node for FunctionExpression {
             .collect::<Vec<Box<dyn Expression>>>();
         
         // 函数的环境
-        let func_env = Environment::new_with_outer(Box::new(env.to_owned()));
+        let func_env = Environment::new_with_outer(rc_ref_cell!(env.clone()));
 
         // 函数形参的环境
-        let mut param_env = Environment::new_with_outer(Box::new(env.to_owned()));
+        let mut param_env = Environment::new_with_outer(rc_ref_cell!(env.clone()));
 
         // 在形参环境中注册所有标识符
         for ident_expression in ident_expressions {
@@ -89,7 +90,7 @@ impl Node for FunctionExpression {
             let ident = assignment_expression.left.clone() as Box<dyn Any>;
             let ident = ident
                 .downcast_ref::<Identifier>()
-                .expect(&format!("non assignable expression \"{}\"", &assignment_expression.left.clone().to_string()));
+                .expect(&format!("non assignable expression '{}'", &assignment_expression.left.clone().to_string()));
 
             if let Some(it) = assignment_expression.value.clone().eval(evaluator, env) {
                 param_env.create(&ident.to_string(), Data::new(it, DataInfo::new(false)));

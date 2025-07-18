@@ -1,5 +1,5 @@
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub struct Pair<K, V> {
     pub key: K,
     pub value: V,

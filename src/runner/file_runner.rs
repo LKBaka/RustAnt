@@ -1,22 +1,20 @@
 use std::fs;
-use std::path::Path;
 
-use crate::environment::data::Data;
-use crate::environment::data_info::DataInfo;
 use crate::environment::utils::create_top_env;
 use crate::runner::eval::eval;
-use crate::module_system::import_module::ModuleImporter;
+use crate::arg_structure::arg_structure::Args;
 
 use super::utils::import_all_modules;
 
 pub struct FileRunner {
     file_path: String,
+    args: Args
 }
 
 impl FileRunner {
-    pub fn new(file_path: String) -> Self {
+    pub fn new(file_path: String, args: Args) -> Self {
         FileRunner{
-            file_path,
+            file_path, args
         }
     }
 
@@ -29,7 +27,7 @@ impl FileRunner {
                 
                 import_all_modules(&mut env);
                 
-                eval(contents, format!("main - file: {}", self.file_path).to_string(), &mut env);
+                eval(contents, format!("main - file: {}", self.file_path).to_string(), &mut env, &self.args);
             }
             Err(e) => {eprintln!("{}", e.to_string()); return;}
         }

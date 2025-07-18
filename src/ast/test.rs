@@ -2,6 +2,8 @@
 
 use std::ops::Deref;
 
+use bigdecimal::BigDecimal;
+
 use crate::ast::ast::Node;
 use crate::environment::environment::Environment;
 use crate::object::object::Object;
@@ -40,13 +42,13 @@ fn test_print_nodes() {
         create_expression_statement(
             create_integer_literal(
                 Token::new(TokenType::Integer, "91".to_string(), "__test_print_nodes__".to_string(), -1),
-                BigInt::from(91)
+                BigDecimal::from(91)
             )
         ),
         create_expression_statement(
             create_integer_literal(
                 Token::new(TokenType::Integer, "78".to_string(), "__test_print_nodes__".to_string(), -1),
-                BigInt::from(78)
+                BigDecimal::from(78)
             )
         ),
     ];
@@ -69,19 +71,19 @@ fn test_nodes_eval() {
             create_expression_statement(
                 create_integer_literal(
                     Token::new(TokenType::Integer, "91".to_string(), "__test_print_nodes__".to_string(), -1),
-                    BigInt::from(91)
+                    BigDecimal::from(91)
                 )
             ),
-            AntInt::new_with_native_value(Box::new(BigInt::from(91)))
+            AntInt::new_with_native_value(Box::new(BigDecimal::from(91)))
         ),
         (
             create_expression_statement(
                 create_integer_literal(
                     Token::new(TokenType::Integer, "78".to_string(), "__test_print_nodes__".to_string(), -1),
-                    BigInt::from(78)
+                    BigDecimal::from(78)
                 )
             ),
-            AntInt::new_with_native_value(Box::new(BigInt::from(78)))
+            AntInt::new_with_native_value(Box::new(BigDecimal::from(78)))
         )
     ];
 

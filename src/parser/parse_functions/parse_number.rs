@@ -13,7 +13,7 @@ pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
     let parse_result = BigInt::from_str(&parser.cur_token.value);
     if let Err(_) = parse_result {
-        parser.errors.push(format!("could not parse \"{}\" as integer", parser.cur_token.value.clone()));
+        parser.errors.push(format!("could not parse '{}' as integer", parser.cur_token.value.clone()));
         return None;
     }
 
@@ -21,7 +21,7 @@ pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
     if !parser.peek_token_is(TokenType::Dot) {
         return Some(Box::new(
-            create_integer_literal(token, value)
+            create_integer_literal(token, BigDecimal::from(value))
         ))
     }
 
@@ -35,7 +35,7 @@ pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     );
 
     if let Err(_) = parse_result {
-        parser.errors.push(format!("could not parse \"{}\" as decimal", s));
+        parser.errors.push(format!("could not parse '{}' as decimal", s));
         return None;
     }
 

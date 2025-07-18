@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crate::ast::ast::{Expression, Node, Statement};
 use crate::ast::expressions::identifier::Identifier;
 use crate::environment::data::Data;
@@ -46,7 +44,7 @@ impl Node for LetStatement {
         }
 
         let create_result = env.create(
-            self.name.to_string().deref(), Data::new(
+            &self.name.to_string(), Data::new(
                 value, DataInfo::new(false)
             )
         );

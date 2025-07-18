@@ -86,7 +86,7 @@ impl TokenType {
             TokenType::Var => "Var",
             TokenType::Gt => ">",
             TokenType::Semicolon => ";",
-            TokenType::Eol => "换行符",
+            TokenType::Eol => "New Line",
             TokenType::BoolTrue => "True",
             TokenType::BoolFalse => "False",
             TokenType::Return => "Return",
@@ -120,8 +120,12 @@ impl TokenType {
             TokenType::Declare => "Declare",
             TokenType::Lib => "Lib",
             TokenType::Alias => "Alias",
-            TokenType::Eof => "文件结束",
-            _ => "未知",
+            TokenType::Eof => "End Of File",
+            TokenType::Illegal => "Illegal",
+            TokenType::Ident => "Identifier",
+            TokenType::Nonsense => "Nonsense",
+            TokenType::Integer => "Integer",
+            TokenType::String => "String",
         }
     }
 }

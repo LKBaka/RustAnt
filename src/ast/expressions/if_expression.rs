@@ -48,10 +48,20 @@ impl Node for IfExpression {
             s
         } else {"".to_string()};
 
-        format!(
-            "if ({}) {{{}}} else if {{{}}} else {{{}}}",
-            self.condition.to_string(), self.consequence.to_string(), else_if_string, alternative_string
-        )
+        let mut result = format!(
+            "if ({}) {{{}}}",
+            self.condition.to_string(), self.consequence.to_string()
+        );
+        
+        if !else_if_string.is_empty() {
+            result.push_str(&format!(" {}", else_if_string));
+        }
+        
+        if !alternative_string.is_empty() {
+            result.push_str(&format!(" else {{{}}}", alternative_string));
+        }
+        
+        result
     }
 
     fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
@@ -64,19 +74,12 @@ impl Node for IfExpression {
             if let Some(ref mut it) = self.else_if_expressions {
                 // 条件为假，但是存在其他条件分支判断，遍历所有其他分支，只要其他分支返回一个值，则返回该值，否则继续尝试访问最终的分支
 
-                let mut result: Option<Object> = None;
-
                 for else_if_expression in it {
                     let eval_result = else_if_expression.eval(evaluator, env);
 
-                    if let Some(it) = eval_result {
-                        result = Some(it);
-                        break;
+                    if eval_result.is_some() {
+                        return eval_result;
                     }
-                }
-
-                if result.is_some() {
-                    return result;
                 }
             }
 
@@ -131,7 +134,7 @@ impl Node for ElseIfExpression {
 
     fn to_string(&self) -> String {
         format!(
-            "else if {} {{{}}}",
+            "else if ({}) {{{}}}",
             self.condition.to_string(), self.consequence.to_string()
         )
     }

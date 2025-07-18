@@ -15,8 +15,8 @@ impl Clone for Identifier {
 }
 
 pub struct Identifier {
-    value: String,
-    token: Token,
+    pub value: String,
+    pub token: Token,
 }
 
 impl Node for Identifier {

@@ -5,11 +5,11 @@ use crate::object::object::Object;
 
 use super::evaluator::Evaluator;
 
-pub fn eval_expressions(expressions: &Vec<Box<dyn Expression>>, evaluator: &mut Evaluator, env: &mut Environment) -> Vec<Object> {
+pub fn eval_expressions(expressions: &Vec<&Box<dyn Expression>>, evaluator: &mut Evaluator, env: &mut Environment) -> Vec<Object> {
     let mut vec = vec![];
 
     for expression in expressions {
-        let eval_result = expression.clone().eval(evaluator, env);
+        let eval_result = (**expression).clone().eval(evaluator, env);
         if let Some(it) = eval_result {
             vec.push(it)
         }

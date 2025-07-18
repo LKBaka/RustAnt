@@ -1,5 +1,6 @@
 use std::{any::{Any, TypeId}, io, process::{Command, ExitStatus, Stdio}};
 
+
 #[cfg(test)]
 use std::fmt::Debug;
 
@@ -41,4 +42,22 @@ pub fn run_command(command: &str) -> io::Result<ExitStatus> {
         });
     
     status
+}
+
+#[macro_export]
+macro_rules! hash_map {
+    ($($key:expr => $value:expr),* $(,)?) => {{
+        let mut map = std::collections::HashMap::new();
+        $(
+            map.insert($key, $value);
+        )*
+        map
+    }};
+}
+
+#[macro_export]
+macro_rules! rc_ref_cell {
+    ($value:expr) => {
+        std::rc::Rc::new(std::cell::RefCell::new($value))
+    };
 }

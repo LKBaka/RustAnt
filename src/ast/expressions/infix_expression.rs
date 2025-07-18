@@ -35,17 +35,17 @@ impl Node for InfixExpression {
     }
 
     fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        let left_obj = self.left.eval(evaluator, env);
-        if is_error(&left_obj.to_owned()?) {return Some(left_obj?)}
+        let left_obj = self.left.eval(evaluator, env)?;
+        if is_error(&left_obj) {return Some(left_obj)}
 
-        let right_obj = self.right.eval(evaluator, env);
-        if is_error(&right_obj.to_owned()?) {return Some(right_obj?)}
+        let right_obj = self.right.eval(evaluator, env)?;
+        if is_error(&right_obj) {return Some(right_obj)}
 
         let call_result = call_function_with_name(
-            OPERATOR_TO_FUNCTION_NAME_MAP[&self.operator.clone()].to_string(), 
-            vec![left_obj.clone()?, right_obj?], 
+            OPERATOR_TO_FUNCTION_NAME_MAP[&self.operator].to_string(), 
+            &vec![&left_obj, &right_obj], 
             evaluator, 
-            &mut left_obj?.get_env()
+            &mut left_obj.get_env()
         );
 
         if let Ok(it) = call_result {
