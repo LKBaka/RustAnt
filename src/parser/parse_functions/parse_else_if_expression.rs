@@ -1,31 +1,44 @@
-use crate::ast::ast::Expression;
 use crate::ast::expressions::if_expression::create_else_if_expression;
 use crate::parser::parse_functions::parse_block_statement::parse_block_statement;
-use crate::parser::parser::Parser;
 use crate::parser::precedence::Precedence;
-use crate::token::token_type::TokenType::Eol;
+
+use crate::ast::ast::Expression;
+use crate::parser::parser::Parser;
+
 
 pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let token = parser.cur_token.clone();
-    
-    // 解析条件表达式
-    let condition = parser.parse_expression(Precedence::Lowest).unwrap();
-    parser.next_token(); // 离开条件语句
 
-    // 跳过换行符
-    while parser.cur_token_is(Eol) {
-        parser.next_token();
-    }
+    parser.next_token(); // 离开 if 词法单元
 
-    // 解析代码块
-    if let Some(consequence) = parse_block_statement(parser) {
-        parser.next_token(); // 离开右大括号
-        Some(Box::new(create_else_if_expression(
-            token,
-            condition,
-            consequence
-        )))
-    } else {
-        None
-    }
-} 
+    let condition = match parser.parse_expression(Precedence::Lowest) {
+        Some(expr) => expr,
+        None => {
+            parser.errors.push(
+                format!(
+                    "missing condition. at file <{}>, line {}",
+                    parser.cur_token.file, parser.cur_token.line
+                )
+            );
+            return None;
+        }
+    };
+
+    parser.next_token(); // 离开表达式 (正常应跳转到左大括号)
+
+    let block = match parse_block_statement(parser) { 
+        Some(block) => block,
+        None => {
+            parser.errors.push(
+                format!(
+                    "missing else if body. at file <{}>, line {}",
+                    parser.cur_token.file, parser.cur_token.line
+                )
+            ); return None;
+        }
+    };
+
+    Some(Box::new(create_else_if_expression(
+        token, condition, block
+    )))
+}
