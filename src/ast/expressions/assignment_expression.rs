@@ -35,7 +35,9 @@ impl Node for AssignmentExpression {
     }
 
     fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        if let Some(it) = (self.left.to_owned() as Box<dyn Any>).downcast_ref::<Identifier>() {
+        let left = self.left.as_ref();
+
+        if let Some(it) = (left as &dyn Any).downcast_ref::<Identifier>() {
             let name = it.to_string();
 
             let value =  self.value.eval(evaluator, env).expect("value is None!");
@@ -53,7 +55,7 @@ impl Node for AssignmentExpression {
         Some(
             create_error(
                 format!(
-                    "cannot assign to expression \"{}\" here. Maybe you meant '==' instead of '='?", 
+                    "cannot assign to expression '{}' here. Maybe you meant '==' instead of '='?", 
                     self.left.to_string()
                 )
             )
