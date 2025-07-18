@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::ops::Deref;
 use dyn_clone::{clone_trait_object, DynClone};
 
 use crate::constants::{null_obj, NEW_LINE};
@@ -57,7 +56,7 @@ impl Node for Program {
         let mut s = String::new();
 
         for statement in &self.statements {
-            s.push_str(format!("{}{}", statement.to_string(), NEW_LINE.to_string()).deref());
+            s.push_str(&format!("{}{}", statement.to_string(), NEW_LINE.to_string()));
         }
         
         s
@@ -67,7 +66,7 @@ impl Node for Program {
         let mut result = Some(null_obj.clone());
 
         for statement in &mut self.statements {
-            result = evaluator.eval_box(statement.to_owned(), env);
+            result = statement.eval(evaluator, env)
         }
 
         result
@@ -104,16 +103,17 @@ impl Node for ExpressionStatement {
     }
 
     fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        if self.expression.is_none() {
-            None
+        if let Some(expression) = self.expression.as_mut() {
+            expression.eval(evaluator, env)
         } else {
-            evaluator.eval_box(self.expression.clone().unwrap(), env)
+            None
         }
     }
 }
 
 impl Statement for ExpressionStatement {}
 
+#[cfg(test)]
 pub fn create_expression_statement(expression: impl Expression + 'static) -> ExpressionStatement {
     ExpressionStatement {
         expression: Some(Box::new(expression) as Box<dyn Expression>)
