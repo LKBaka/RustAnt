@@ -15,9 +15,9 @@ use crate::parser::parse_functions::parse_infix_expression::parse_infix_expressi
 use crate::parser::parse_functions::parse_let_statement::parse_let_statement;
 use crate::parser::parse_functions::parse_number::parse_number;
 use crate::parser::parse_functions::parse_string::parse_string;
-use crate::parser::precedence::Precedence::Lowest;
 use crate::parser::parse_functions::parse_if_expression::parse_if_expression;
 use crate::parser::parse_functions::parse_function_expression::parse_function_expression;
+use crate::parser::precedence::Precedence::Lowest;
 
 use super::parse_functions::parse_class_statement::parse_class_statement;
 use super::parse_functions::parse_object_member_expression::parse_object_member_expression;
@@ -58,9 +58,9 @@ impl Parser {
             statement_parse_fn_map: HashMap::new(),
         };
 
+        parser.statement_parse_fn_map.insert(TokenType::Class, parse_class_statement);
         parser.statement_parse_fn_map.insert(TokenType::Let, parse_let_statement);
         parser.statement_parse_fn_map.insert(TokenType::While, parse_while_statement);
-        parser.statement_parse_fn_map.insert(TokenType::Class, parse_class_statement);
 
         parser.prefix_parse_fn_map.insert(TokenType::Ident, parse_ident);
         parser.prefix_parse_fn_map.insert(TokenType::Integer, parse_number);
@@ -84,14 +84,19 @@ impl Parser {
         parser.infix_parse_fn_map.insert(TokenType::Eq, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::NotEq, parse_infix_expression);
 
+        parser.next_token(); // 初始化当前词法单元
+
         parser
     }
 
     pub fn parse_expression_list(&mut self, end: TokenType) -> Vec<Box<dyn Expression>> {
         // 检查下一个词法单元是否为对应结束的词法单元
-        if self.cur_token_is(end) {
+        if self.peek_token_is(end) {
+            self.next_token();
             return vec![]; // 如果是，直接退出，跳过表达式解析
         }
+
+        self.next_token(); // 前进到表达式
 
         let mut expressions = vec![];
         let expr = self.parse_expression(Lowest);
@@ -109,7 +114,9 @@ impl Parser {
             } 
         }
 
-        self.next_token();
+        self.next_token(); // 前进到结束的词法单元
+
+        // WARNING: 若想在调用后跳过结束的词法单元，请自行在使用后处理
 
         expressions
     }
@@ -161,19 +168,15 @@ impl Parser {
         };
 
         if self.peek_token_is(Semicolon) {
-            self.next_token()
+            self.next_token();
         }
-
+        
         Box::new(expression_statement)
     }
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
         if self.statement_parse_fn_map.contains_key(&self.cur_token.token_type) {
             let stmt = self.statement_parse_fn_map[&self.cur_token.token_type](self);
-
-            if self.peek_token_is(Semicolon) {
-                self.next_token();
-            }
 
             return stmt;
         }
@@ -191,13 +194,7 @@ impl Parser {
             statements: vec![]
         };
 
-        self.next_token();
-
         while !self.cur_token_is(Eof) {
-            if self.cur_token_is(Semicolon) {
-                self.next_token()
-            }
-
             let statement = self.parse_statement();
             if statement.is_none() {
                 self.next_token();
@@ -240,7 +237,7 @@ impl Parser {
     }
 
     pub fn expect_peek(&mut self, token_type: TokenType) -> bool {
-        self.peek_token.token_type == token_type || if self.peek_token.token_type != token_type {
+        if self.peek_token.token_type != token_type {
             self.errors.push(
                 format!(
                     "missing {}. at file <{}>, line {}",
@@ -248,12 +245,14 @@ impl Parser {
                     self.cur_token.file, self.cur_token.line
                 )
             );
-            false
-        } else {true}
+            return false
+        } 
+
+        self.peek_token.token_type == token_type
     }
 
     pub fn expect_cur(&mut self, token_type: TokenType) -> bool {
-        self.cur_token.token_type == token_type || if self.cur_token.token_type != token_type {
+        if self.cur_token.token_type != token_type {
             self.errors.push(
                 format!(
                     "missing {}. at file <{}>, line {}",
@@ -261,8 +260,11 @@ impl Parser {
                     self.cur_token.file, self.cur_token.line
                 )
             );
-            false
-        } else {true}
+
+            return false
+        }
+
+        self.cur_token.token_type == token_type
     }
 
     pub fn contains_error(&self) -> bool {
@@ -272,7 +274,7 @@ impl Parser {
     pub fn print_errors(&self) {
         println!("parser {}:", if self.errors.len() > 1 {"errors"} else {"error"} );
 
-        for error in self.errors.clone() {
+        for error in &self.errors {
             println!("---> {}", error);
         }
     }
