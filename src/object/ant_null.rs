@@ -14,6 +14,9 @@ use crate::{extract_arg, impl_object};
 use crate::object::object::{IAntObject, Object, ObjectType, NULL};
 use crate::object::object::EnvGetter;
 
+use super::type_hint::{TypeHint, TypeHintMap};
+use crate::{type_hint, type_hint_map};
+
 pub struct AntNull {
     id: Uuid,
     env: Environment,
@@ -80,12 +83,20 @@ fn init_env(null_obj: &mut AntNull) {
                 Some(ant_true.clone())
             }
 
+            fn eq_other(_me: AntNull, _other: Object) -> Option<Object> {
+                Some(ant_false.clone())
+            }
+
             let me = extract_arg!(arg_env, "me" => AntNull);
 
             if me.is_none() {
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(me) = me {
                 if let Some(value) = extract_arg!(arg_env, "value" => AntNull) {return eq_null(me, value)}
+
+                if let Some(value) = extract_arg!(arg_env, "value" => Object) {
+                    return eq_other(me, value);
+                }
             }
 
             None
@@ -95,10 +106,18 @@ fn init_env(null_obj: &mut AntNull) {
             let me = extract_arg!(arg_env, "me" => AntNull);
 
             if me.is_none() {
-                return Some(create_error(format!("type mismatch for \"me\"")))
+                return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(_me) = me {
                 if let Some(_value) = extract_arg!(arg_env, "value" => AntNull) {
-                    return Some(native_boolean_to_boolean_obj(!is_truthy(eq(arg_env).expect(""))))
+                    return Some(native_boolean_to_boolean_obj(false));
+                }
+
+                if let Some(value) = extract_arg!(arg_env, "value" => Object) {
+                    if value.get_type() == NULL {
+                        return Some(native_boolean_to_boolean_obj(false));
+                    } else {
+                        return Some(native_boolean_to_boolean_obj(true));
+                    }
                 }
             }
 
@@ -112,13 +131,19 @@ fn init_env(null_obj: &mut AntNull) {
             ]
         );
 
+        let type_hint_map = type_hint_map!(
+            "value" => type_hint!(NULL)
+        );
+
         let operator_functions = vec![
             ("eq", eq as NativeFunction),
             ("not_eq", not_eq),
         ];
 
         for (op, func) in operator_functions {
-            let native_func_object = create_ant_native_function(func_param_env.clone(), func); 
+            let native_func_object = create_ant_native_function(
+                func_param_env.clone(), Some(type_hint_map.clone()), func
+            ); 
 
             null_obj.env.create(op, Data::new(native_func_object, DataInfo::new(false)));
         }
@@ -133,6 +158,7 @@ fn init_env(null_obj: &mut AntNull) {
 
             create_ant_native_function(
                 create_env(vec![("me".into(), Box::new(null_obj.clone()))]),
+                None,
                 __bool__
             )
         };
