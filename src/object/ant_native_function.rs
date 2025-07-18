@@ -6,12 +6,15 @@ use crate::impl_object;
 use crate::object::object::{IAntObject, Object, ObjectType, NATIVE_FUNCTION};
 use crate::object::object::EnvGetter;
 
+use super::type_hint::TypeHintMap;
+
 pub type NativeFunction = fn(arg_env: &mut Environment) -> Option<Object>;
 
 pub struct AntNativeFunction {
     pub id: Uuid,
     pub env: Environment,
     pub param_env: Environment,
+    pub type_hint_map: Option<TypeHintMap>,
     pub function: NativeFunction,
 }
 
@@ -21,6 +24,7 @@ impl Clone for AntNativeFunction {
             id: self.id,
             env: self.env.clone(),
             param_env: self.param_env.clone(),
+            type_hint_map: self.type_hint_map.clone(),
             function: self.function.clone(),
         }
     }
@@ -58,7 +62,11 @@ impl IAntObject for AntNativeFunction {
     }
 }
 
-pub fn create_ant_native_function(param_env: Environment, function: NativeFunction) -> Object {
+pub fn create_ant_native_function(
+    param_env: Environment, 
+    type_hint_map: Option<TypeHintMap>, 
+    function: NativeFunction
+) -> Object {
     let env = Environment::new();
     let id = Uuid::new_v4();
 
@@ -67,6 +75,7 @@ pub fn create_ant_native_function(param_env: Environment, function: NativeFuncti
             id,
             env,
             param_env,
+            type_hint_map,
             function
         }
     )
