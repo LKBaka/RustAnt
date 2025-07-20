@@ -41,6 +41,7 @@ lazy_static! {
         m.insert(TokenType::LBracket, Precedence::Index);
         m.insert(TokenType::Assign, Precedence::Assignment);
         m.insert(TokenType::Dot, Precedence::ObjMember);
+        m.insert(TokenType::GetClassMember, Precedence::ObjMember);
         m.insert(TokenType::BoolOr, Precedence::AndOr);
         m.insert(TokenType::BoolAnd, Precedence::AndOr);
         m
