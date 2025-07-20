@@ -27,7 +27,21 @@ impl FileRunner {
                 
                 import_all_modules(&mut env);
                 
+                #[cfg(feature = "get_code_run_seconds")]
+                use std::time::Instant;
+
+                #[cfg(feature = "get_code_run_seconds")]
+                let start = Instant::now();
+
                 eval(contents, format!("main - file: {}", self.file_path).to_string(), &mut env, &self.args);
+
+                #[cfg(feature = "get_code_run_seconds")]
+                println!(
+                    "{}", format!(
+                        "Code run time: {} seconds, {} milliseconds, {} nanoseconds", 
+                        start.elapsed().as_secs_f64(), start.elapsed().as_millis(), start.elapsed().as_nanos()
+                    )
+                );
             }
             Err(e) => {eprintln!("{}", e.to_string()); return;}
         }

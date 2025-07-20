@@ -46,10 +46,24 @@ impl REPLRunner {
                 continue;
             }
 
+            #[cfg(feature = "get_code_run_seconds")]
+            use std::time::Instant;
+            
+            #[cfg(feature = "get_code_run_seconds")]
+            let start = Instant::now();
+    
             let result = eval(full_code, "repl".to_string(), &mut env, &self.args);
             if let Some(it) = result {
                 println!("{}", it.inspect())
             }
+            
+            #[cfg(feature = "get_code_run_seconds")]
+            println!(
+                "{}", format!(
+                    "Code run time: {} seconds, {} milliseconds, {} nanoseconds", 
+                    start.elapsed().as_secs_f64(), start.elapsed().as_millis(), start.elapsed().as_nanos()
+                )
+            );
         }
     }
 
