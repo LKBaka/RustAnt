@@ -3,6 +3,7 @@ use std::ops::Deref;
 
 use crate::ast::ast::{Expression, Node};
 use crate::ast::expressions::assignment_expression::AssignmentExpression;
+use crate::ast::expressions::class_member_expression::ClassMemberExpression;
 use crate::ast::expressions::function_expression::FunctionExpression;
 use crate::ast::expressions::identifier::Identifier;
 use crate::constants::uninit_obj;
@@ -32,9 +33,9 @@ impl Clone for CallExpression {
 }
 
 pub struct CallExpression {
-    func: Box<dyn Expression + 'static>,
-    args: Vec<Box<dyn Expression>>,
-    token: Token,
+    pub func: Box<dyn Expression + 'static>,
+    pub args: Vec<Box<dyn Expression>>,
+    pub token: Token,
 }
 
 impl CallExpression {
@@ -177,6 +178,26 @@ impl Node for CallExpression {
                 return Self::ident_function_call_handler(
                     ident,
                     &new_args,
+                    assignment_expressions,
+                    left.get_env_ref(),
+                    evaluator,
+                )
+            }
+        } else if let Some(it) = converted_func.downcast_mut::<ClassMemberExpression>() {
+            // 求值出左侧的对象
+            let mut left = it.left.eval(evaluator, env)?;
+            left.get_env_ref().outer = Some(rc_ref_cell!(env.deref().clone()));
+
+            if is_error(&left) {
+                return Some(left);
+            }
+
+            // 尝试将右侧表达式转为标识符
+            if let Some(ident) = (it.right.as_ref() as &dyn Any).downcast_ref::<Identifier>()
+            {
+                return Self::ident_function_call_handler(
+                    ident,
+                    &args,
                     assignment_expressions,
                     left.get_env_ref(),
                     evaluator,
