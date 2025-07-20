@@ -5,6 +5,7 @@ use crate::constants::NULL_CHAR;
 use crate::parser::parse_functions::parse_assignment_expression::parse_assignment_expression;
 use crate::parser::parse_functions::parse_boolean::parse_boolean;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
+use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
 use crate::parser::precedence::*;
 use crate::token::token::Token;
 use crate::token::token_type::TokenType;
@@ -75,6 +76,7 @@ impl Parser {
         parser.infix_parse_fn_map.insert(TokenType::Assign, parse_assignment_expression);
 
         parser.infix_parse_fn_map.insert(TokenType::Dot, parse_object_member_expression);
+        parser.infix_parse_fn_map.insert(TokenType::GetClassMember, parse_class_member_expression);
         parser.infix_parse_fn_map.insert(TokenType::Plus, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::Asterisk, parse_infix_expression);
         parser.infix_parse_fn_map.insert(TokenType::Minus, parse_infix_expression);

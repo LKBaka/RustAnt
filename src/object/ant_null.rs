@@ -9,7 +9,7 @@ use crate::environment::environment::Environment;
 use crate::environment::utils::create_env;
 use crate::evaluator::utils::native_boolean_to_boolean_obj;
 use crate::object::ant_native_function::{create_ant_native_function, NativeFunction};
-use crate::object::utils::{create_error, is_truthy};
+use crate::object::utils::create_error;
 use crate::{extract_arg, impl_object};
 use crate::object::object::{IAntObject, Object, ObjectType, NULL};
 use crate::object::object::EnvGetter;

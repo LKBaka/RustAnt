@@ -3,22 +3,6 @@
 version = 4
 
 [[package]]
-name = "RustAnt"
-version = "0.1.0"
-dependencies = [
- "bigdecimal",
- "clap",
- "colored",
- "dyn-clone",
- "lazy_static",
- "num-bigint",
- "num_enum",
- "phf",
- "unicode-properties",
- "uuid",
-]
-
-[[package]]
 name = "anstream"
 version = "0.6.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -229,6 +213,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
+name = "lg-rust-binding"
+version = "0.1.0"
+source = "git+https://github.com/xiaoli-white/lg-rust-binding.git?branch=master#cc51017f4fa68e31dd645101c24dcf6596350968"
+dependencies = [
+ "indexmap",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.174"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -403,6 +395,23 @@ name = "rand_core"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
+
+[[package]]
+name = "rust_ant"
+version = "0.1.0"
+dependencies = [
+ "bigdecimal",
+ "clap",
+ "colored",
+ "dyn-clone",
+ "lazy_static",
+ "lg-rust-binding",
+ "num-bigint",
+ "num_enum",
+ "phf",
+ "unicode-properties",
+ "uuid",
+]
 
 [[package]]
 name = "rustversion"

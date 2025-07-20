@@ -134,3 +134,17 @@ pub fn check_error_name(error: &Object, error_name: &'static str) -> bool {
 
     false
 }
+
+pub fn not_implemented_error(message: &str) -> Object {
+    create_error_with_name(
+        "NotImplementedError", 
+        message.into()
+    )
+}
+
+pub fn not_implemented_error_with_name(name: &str) -> Object {
+    create_error_with_name(
+        "NotImplementedError", 
+        format!("{} is not implemented", name)
+    )
+}

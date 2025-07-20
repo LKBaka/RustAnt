@@ -10,3 +10,4 @@ pub mod assignment_expression;
 pub mod function_expression;
 pub mod return_expression;
 pub mod object_member_expression;
+pub mod class_member_expression;
