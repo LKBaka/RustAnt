@@ -5,10 +5,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use bigdecimal::{BigDecimal, FromPrimitive};
 
 use crate::environment::environment::Environment;
+use crate::environment::utils::create_env;
 use crate::extract_arg;
+use crate::object::ant_class::AntClass;
 use crate::object::ant_double::AntDouble;
+use crate::object::ant_int::AntInt;
+use crate::object::ant_native_function::create_ant_native_function;
 use crate::object::ant_string::AntString;
 use crate::object::object::Object;
+use crate::object::utils::create_error_with_name;
 use crate::utils::run_command;
 
 pub fn builtin_print(arg_env: &mut Environment) -> Option<Object> {
@@ -82,4 +87,81 @@ pub fn builtin_now(_arg_env: &mut Environment) -> Option<Object> {
                 .unwrap_or(-1.0)
         ).unwrap()))
     )
+}
+
+pub fn builtin_range(arg_env: &mut Environment) -> Option<Object> {
+    let end = extract_arg!(arg_env, "end" => AntInt)?;
+
+    let mut range_class = AntClass {
+        id: uuid::Uuid::new_v4(),
+        name: "Range".to_string(),
+        base: {
+            let iterable_class = arg_env.get("Iterable").expect(&format!(
+                "cannot find Iterable class in environment: {}",
+                arg_env.to_string()
+            ));
+
+            Some(iterable_class)
+        },
+        env: create_env(vec![
+            ("start".to_string(), AntInt::new_with_native_value(Box::new(0))),
+            ("end".to_string(), Box::new(end)),
+            ("step".to_string(), AntInt::new_with_native_value(Box::new(1))),
+            ("current".to_string(), AntInt::new_with_native_value(Box::new(1))),
+        ])
+    };
+
+    let iter_function = {
+        let native_function = |arg_env: &mut Environment| -> Option<Object> {
+            let me = extract_arg!(arg_env, "me" => AntClass)?;
+
+            return Some(Box::new(me))
+        };
+
+        let param_env = create_env(vec![
+            ("me".to_string(), Box::new(range_class.clone())),
+        ]);
+
+        create_ant_native_function(param_env, None, native_function)
+    };
+
+    let next_function = {
+        let native_function = |arg_env: &mut Environment| -> Option<Object> {
+            let me = extract_arg!(arg_env, "me" => AntClass)?;
+
+            let start_obj = extract_arg!(me.env, "start" => AntInt)?;
+            let end_obj = extract_arg!(me.env, "end" => AntInt)?;
+            let step_obj = extract_arg!(me.env, "step" => AntInt)?;
+            let current_obj = extract_arg!(me.env, "current" => AntInt)?;
+
+            let start = start_obj.value.clone();
+            let end = end_obj.value.clone(); 
+            let step = step_obj.value.clone();
+
+            let mut current = current_obj.value.clone();
+
+            if start >= end {
+                return Some(create_error_with_name("StopError", "".into())); // 迭代结束 抛出错误
+            }
+
+            current = if current == BigDecimal::from(0) {
+                start.clone()
+            } else {
+                current + step.clone()
+            };
+
+            // 修改原来的对象
+            
+            
+            return Some(Box::new(AntInt::from(current)));
+        };
+
+        let param_env = create_env(vec![
+            ("me".to_string(), Box::new(range_class.clone())),
+        ]);
+
+        create_ant_native_function(param_env, None, native_function)
+    };
+
+    None
 }
