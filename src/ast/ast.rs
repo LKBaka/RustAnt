@@ -3,6 +3,7 @@ use dyn_clone::{clone_trait_object, DynClone};
 
 use crate::constants::{null_obj, NEW_LINE};
 use crate::evaluator::evaluator::Evaluator;
+use crate::object::utils::is_error;
 use crate::token::token::Token;
 use crate::environment::environment::Environment;
 use crate::object::object::Object;
@@ -67,7 +68,13 @@ impl Node for Program {
         let mut result = Some(null_obj.clone());
 
         for statement in &mut self.statements {
-            result = statement.eval(evaluator, env)
+            result = statement.eval(evaluator, env);
+
+            if let Some(it) = &result && 
+                is_error(&it) 
+            {
+                return result;
+            }
         }
 
         result
