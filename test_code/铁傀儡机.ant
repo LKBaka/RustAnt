@@ -1,0 +1,18 @@
+class Main {
+    func run() {
+        while true {
+            clear()
+            print(" o")
+            print("oOo")
+            print(" O")
+            shell("powershell -Command sleep 0.2")
+            clear()
+            print(" o")
+            print("OoO")
+            print(" o")
+            shell("powershell -Command sleep 0.2")
+        }
+    }
+}
+
+Main::run()
