@@ -215,7 +215,7 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 [[package]]
 name = "lg-rust-binding"
 version = "0.1.0"
-source = "git+https://github.com/xiaoli-white/lg-rust-binding.git?branch=master#cc51017f4fa68e31dd645101c24dcf6596350968"
+source = "git+https://github.com/xiaoli-white/lg-rust-binding.git?branch=master#973af8c690a323fb56c156956c2cf09c07863ee1"
 dependencies = [
  "indexmap",
 ]
@@ -404,6 +404,7 @@ dependencies = [
  "clap",
  "colored",
  "dyn-clone",
+ "indexmap",
  "lazy_static",
  "lg-rust-binding",
  "num-bigint",
