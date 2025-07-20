@@ -156,6 +156,16 @@ impl Lexer {
                 }
             }
 
+            ':' => {
+                let peek_char = self.peek_char();
+                if peek_char == ':' {
+                    token.token_type = TokenType::GetClassMember;
+                    token.value = format!("{}{}", self.cur_char, peek_char);
+
+                    self.read_char();
+                }
+            }
+
             '"' => {
                 if self.cur_char == '"' {
                     let s = self.read_string();
