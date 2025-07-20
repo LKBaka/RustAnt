@@ -312,6 +312,16 @@ impl From<i32> for AntInt {
     }
 }
 
+impl From<BigDecimal> for AntInt {
+    fn from(value: BigDecimal) -> Self {
+        AntInt { 
+            id: Uuid::new_v4(), 
+            env: Environment::new(), 
+            value
+        }
+    }
+}
+
 pub fn create_ant_int(value: BigDecimal, outer: RcRefCellEnv) -> Object {
     let mut env = create_env(
     vec![
