@@ -139,7 +139,6 @@ fn add_builtin_classes(env: &mut Environment) {
         let throw_function = {
             let param_env = create_env(
                 vec![
-                    ("self".to_string(), uninit_obj.clone()),
                     ("message".to_string(), uninit_obj.clone()),
                 ]
             );
