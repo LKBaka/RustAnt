@@ -53,13 +53,13 @@ pub enum TokenType {
     From,
     As,
     Let,
-    Throw,
     Try,
     Catch,
     Finally,
     Declare,
     Lib,
     Alias,
+    GetClassMember,
     Eof,
 }
 
@@ -113,7 +113,7 @@ impl TokenType {
             TokenType::From => "From",
             TokenType::As => "As",
             TokenType::Let => "Let",
-            TokenType::Throw => "Throw",
+            // TokenType::Throw => "Throw",
             TokenType::Try => "Try",
             TokenType::Catch => "Catch",
             TokenType::Finally => "Finally",
@@ -126,6 +126,7 @@ impl TokenType {
             TokenType::Nonsense => "Nonsense",
             TokenType::Integer => "Integer",
             TokenType::String => "String",
+            TokenType::GetClassMember => "::",
         }
     }
 }
@@ -178,12 +179,13 @@ pub static TOKEN_TYPE_MAP: phf::Map<&'static str, TokenType> = phf_map! {
     "FROM" => TokenType::From,
     "AS" => TokenType::As,
     "LET" => TokenType::Let,
-    "THROW" => TokenType::Throw,
+    // "THROW" => TokenType::Throw,
     "TRY" => TokenType::Try,
     "CATCH" => TokenType::Catch,
     "FINALLY" => TokenType::Finally,
     "DECLARE" => TokenType::Declare,
     "LIB" => TokenType::Lib,
     "ALIAS" => TokenType::Alias,
+    "::" => TokenType::GetClassMember,
     "\0" => TokenType::Eof,
 };
