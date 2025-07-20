@@ -26,7 +26,7 @@ impl Clone for AntClass {
 
 impl IAntObject for AntClass {
     fn get_type(&self) -> ObjectType {
-        self.name.clone()
+        "CLASS".to_string()
     }
 
     fn get_value(&self) -> Box<dyn Any> {
