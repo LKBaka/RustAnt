@@ -1,4 +1,6 @@
 
+use unicode_properties::UnicodeEmoji;
+
 use crate::constants::*;
 use crate::token::token::Token;
 use crate::token::token_type::{TokenType, TOKEN_TYPE_MAP};
@@ -11,6 +13,7 @@ pub struct Lexer {
     pos: usize,
     next_pos: usize,
     line: i64,
+    code_vec: Vec<char>,
 }
 
 impl Lexer {
@@ -23,34 +26,32 @@ impl Lexer {
             pos: 0,
             next_pos: 0,
             line: 1,
+            code_vec: vec![],
         };
+
+        lexer.code_vec = lexer.code.chars().collect();
 
         lexer.read_char(); // 初始化
         lexer
     }
 
     fn get_ident_token_type(&self, ident: &str) -> TokenType {
-        TOKEN_TYPE_MAP
+        *TOKEN_TYPE_MAP
             .get(&ident.to_uppercase())
-            .cloned()
-            .unwrap_or(TokenType::Ident)
+            .unwrap_or(&TokenType::Ident)
     }
 
     fn peek_char(&self) -> char {
-        self.code_to_vec()[self.next_pos]
+        self.code_vec[self.next_pos]
     }
 
     fn is_valid_char(&self, c: char) -> bool {
-        c.is_alphabetic() || c == '_'
-    }
-
-    fn code_to_vec(&self) -> Vec<char> {
-        self.code.chars().collect::<Vec<char>>()
+        c.is_alphabetic() || c == '_' || c.is_emoji_char()
     }
 
     fn read_char(&mut self) -> char {
-        if self.next_pos < self.code_to_vec().len() {
-            self.cur_char = self.code_to_vec()[self.next_pos]
+        if self.next_pos < self.code_vec.len() {
+            self.cur_char = self.code_vec[self.next_pos]
         } else {
             self.cur_char = NULL_CHAR;
         }
@@ -72,15 +73,16 @@ impl Lexer {
 
     fn read_ident(&mut self) -> String {
         let start = self.pos;
-        while self.is_valid_char(self.cur_char) {
+
+        while self.is_valid_char(self.cur_char) && !self.eof() {
             self.read_char();
         }
 
-        self.code_to_vec()[start..self.pos]
+        self.code_vec[start..self.pos]
             .iter()
             .map(|ch| {ch.to_string()})
             .collect::<Vec<String>>()
-            .join("")
+            .concat()
     }
 
     fn read_number(&mut self) -> String {
@@ -90,11 +92,11 @@ impl Lexer {
             self.read_char();
         }
 
-        self.code_to_vec()[start..self.pos]
+        self.code_vec[start..self.pos]
             .iter()
             .map(|ch| {ch.to_string()})
             .collect::<Vec<String>>()
-            .join("")
+            .concat()
     }
 
     fn read_string(&mut self) -> String {
@@ -105,7 +107,34 @@ impl Lexer {
             self.read_char();
 
             if self.cur_char == '"'{
-                let s = self.code_to_vec()[start..self.pos]
+                let s = self.code_vec[start..self.pos]
+                    .iter()
+                    .map(|ch| {ch.to_string()})
+                    .collect::<Vec<String>>()
+                    .join("");
+
+                self.read_char();
+                return s
+            }
+
+            if self.eof() {
+                self.errors.push(format!("unclosed string. file: <{}>. line: {}.", self.file, start_line));
+                break
+            }
+        }
+
+        "".to_string()
+    }
+
+    fn read_comment(&mut self) -> String {
+        let start = self.pos + 1;
+        let start_line = self.line;
+
+        loop {
+            self.read_char();
+
+            if self.cur_char == NEW_LINE{
+                let s = self.code_vec[start..self.pos]
                     .iter()
                     .map(|ch| {ch.to_string()})
                     .collect::<Vec<String>>()
@@ -173,6 +202,16 @@ impl Lexer {
                     token.token_type = TokenType::String;
 
                     return token;
+                }
+            }
+
+            '/' => {
+                let peek_char = self.peek_char();
+                if peek_char == '/' {
+                    token.token_type = TokenType::Comment;
+                    token.value = format!("//{}", self.read_comment());
+
+                    self.read_char();
                 }
             }
 
@@ -279,6 +318,28 @@ fn test_lexer_unicode() {
         TokenType::Ident,
         TokenType::Assign,
         TokenType::String,
+    ];
+    
+    // 验证词法单元
+    for i in 0 .. tokens.len() - 1 {
+        assert_eq(tokens[i].token_type, expected_token_types[i], on_failure_function);
+    }
+}
+
+#[test]
+fn test_lexer_comment() {
+    use crate::token::utils::print_tokens;
+    use crate::utils::assert_eq;
+
+    let mut l = Lexer::new(
+        "// test comment".into(),
+        String::from("__test_lexer_comment__")
+    );
+    let tokens = l.get_tokens();
+
+    let on_failure_function = || print_tokens(tokens.clone());
+    let expected_token_types = vec![
+        TokenType::Comment
     ];
     
     // 验证词法单元
