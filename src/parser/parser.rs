@@ -6,6 +6,8 @@ use crate::parser::parse_functions::parse_assignment_expression::parse_assignmen
 use crate::parser::parse_functions::parse_boolean::parse_boolean;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
 use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
+use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
+use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expression;
 use crate::parser::precedence::*;
 use crate::token::token::Token;
 use crate::token::token_type::TokenType;
@@ -71,6 +73,10 @@ impl Parser {
         parser.prefix_parse_fn_map.insert(TokenType::Return, parse_return_expression);
         parser.prefix_parse_fn_map.insert(TokenType::If, parse_if_expression);
         parser.prefix_parse_fn_map.insert(TokenType::Func, parse_function_expression);
+        parser.prefix_parse_fn_map.insert(TokenType::LParen, parse_tuple_expression);
+        parser.prefix_parse_fn_map.insert(TokenType::Bang, parse_prefix_expression);
+        parser.prefix_parse_fn_map.insert(TokenType::Minus, parse_prefix_expression);
+        parser.prefix_parse_fn_map.insert(TokenType::Comment, |_| {None});
 
         parser.infix_parse_fn_map.insert(TokenType::LParen, parse_call_expression);
         parser.infix_parse_fn_map.insert(TokenType::Assign, parse_assignment_expression);
@@ -108,6 +114,12 @@ impl Parser {
 
         while self.peek_token_is(Comma) {
             self.next_token(); // 离开表达式
+
+            if self.peek_token_is(end) {      // 尾逗号
+                self.next_token();
+                break;
+            }
+
             self.next_token(); // 离开逗号
 
             let expression = self.parse_expression(Lowest);
