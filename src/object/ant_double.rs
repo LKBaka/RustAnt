@@ -37,6 +37,16 @@ impl Clone for AntDouble {
     }
 }
 
+impl From<BigDecimal> for AntDouble {
+    fn from(value: BigDecimal) -> Self {
+        AntDouble {
+            id: Uuid::new_v4(),
+            env: Environment::new(),
+            value,
+        }
+    }
+}
+
 fn init_env(double_obj: &mut AntDouble) {
     fn plus(arg_env: &mut Environment) -> Option<Object> {
         impl_plus_func!(plus_double, AntDouble, AntDouble, AntDouble);
