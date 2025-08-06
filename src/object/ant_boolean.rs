@@ -14,7 +14,7 @@ use super::object::Object;
 pub struct AntBoolean {
     id: Uuid,
     env: Environment,
-    value: bool,
+    pub value: bool,
 }
 
 impl Clone for AntBoolean {
@@ -22,7 +22,17 @@ impl Clone for AntBoolean {
         Self {
             id: self.id,
             env: self.env.clone(),
-            value: self.value.clone(),
+            value: self.value,
+        }
+    }
+}
+
+impl From<bool> for AntBoolean {
+    fn from(value: bool) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            env: Environment::new(),
+            value,
         }
     }
 }
