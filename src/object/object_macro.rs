@@ -17,6 +17,12 @@ macro_rules! impl_object {
             }
         }        
 
+        impl std::fmt::Debug for $struct_name {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(f, "[Debug] TypeName: {}, Inspect: {}", self.get_type(), self.inspect())
+            }
+        }
+
         unsafe impl Send for $struct_name {}
         unsafe impl Sync for $struct_name {}
     };
