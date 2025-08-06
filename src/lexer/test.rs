@@ -66,9 +66,8 @@ fn test_lexer_3() {
 
     let file: &'static str = "__test_lexer_3__";
 
-
     let expected_tokens = vec![
-        Token::new(TokenType::Class, "Main".into(), file.into(), 1),
+        Token::new(TokenType::Ident, "Main".into(), file.into(), 1),
         Token::new(TokenType::GetClassMember, "::".into(), file.into(), 1),
         Token::new(TokenType::Ident, "run".into(), file.into(), 1),
         Token::new(TokenType::LParen, "(".into(), file.into(), 1),
