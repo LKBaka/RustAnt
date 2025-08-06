@@ -4,6 +4,7 @@ use crate::object::ant_string::AntString;
 use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for StringLiteral {
     fn clone(&self) -> Self {
@@ -14,6 +15,7 @@ impl Clone for StringLiteral {
     }
 }
 
+#[derive(Debug)]
 pub struct StringLiteral {
     pub value: String,
     pub token: Token,
@@ -34,6 +36,8 @@ impl Node for StringLiteral {
 }
 
 impl Expression for StringLiteral {}
+
+impl_node!(StringLiteral);
 
 pub fn create_string_literal(token: Token, value: String) -> StringLiteral {
     StringLiteral {

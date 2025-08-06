@@ -18,6 +18,7 @@ use crate::object::object::EnvGetter;
 use crate::object::utils::{create_error, is_error};
 use crate::rc_ref_cell;
 use crate::token::token::Token;
+use crate::impl_node;
 
 use super::super::super::object::object::Object;
 use super::object_member_expression::ObjectMemberExpression;
@@ -32,6 +33,7 @@ impl Clone for CallExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct CallExpression {
     pub func: Box<dyn Expression + 'static>,
     pub args: Vec<Box<dyn Expression>>,
@@ -211,6 +213,8 @@ impl Node for CallExpression {
         )))
     }
 }
+
+impl_node!(CallExpression);
 
 impl Expression for CallExpression {}
 

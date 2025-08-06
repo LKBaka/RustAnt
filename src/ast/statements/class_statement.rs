@@ -11,6 +11,7 @@ use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::is_error;
 use crate::rc_ref_cell;
 use crate::token::token::Token;
+use crate::impl_node;
 
 use super::block_statement::BlockStatement;
 
@@ -25,6 +26,7 @@ impl Clone for ClassStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct ClassStatement {
     pub token: Token,
     pub name: Identifier,
@@ -83,6 +85,8 @@ impl Node for ClassStatement {
         }
     }
 }
+
+impl_node!(ClassStatement);
 
 impl Statement for ClassStatement {}
 

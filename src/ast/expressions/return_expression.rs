@@ -6,6 +6,7 @@ use crate::object::ant_return_value::AntReturnValue;
 use crate::object::object::Object;
 use crate::token::token::Token;
 use crate::evaluator::evaluator::Evaluator;
+use crate::impl_node;
 
 use super::call_expression::CallExpression;
 
@@ -18,6 +19,7 @@ impl Clone for ReturnExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct ReturnExpression {
     value: Box<dyn Expression>,
     token: Token,
@@ -46,6 +48,8 @@ impl Node for ReturnExpression {
 }
 
 impl Expression for ReturnExpression {}
+
+impl_node!(ReturnExpression);
 
 pub fn create_return_expression(token: Token, value: Box<dyn Expression>) -> ReturnExpression {
     ReturnExpression {

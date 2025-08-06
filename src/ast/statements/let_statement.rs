@@ -7,6 +7,7 @@ use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::is_error;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for LetStatement {
     fn clone(&self) -> Self {
@@ -18,6 +19,7 @@ impl Clone for LetStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct LetStatement {
     pub token: Token,
     pub name: Identifier,
@@ -56,6 +58,8 @@ impl Node for LetStatement {
         } else {None}
     }
 }
+
+impl_node!(LetStatement);
 
 impl Statement for LetStatement {}
 

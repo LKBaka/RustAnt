@@ -15,3 +15,5 @@ pub mod parse_return_expression;
 pub mod parse_object_member_expression;
 pub mod parse_class_member_expression;
 pub mod parse_class_statement;
+pub mod parse_tuple_expression;
+pub mod parse_prefix_expression;

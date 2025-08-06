@@ -7,6 +7,7 @@ use crate::object::object::{Object, RETURN_VALUE};
 use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::is_error;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for BlockStatement {
     fn clone(&self) -> Self {
@@ -17,6 +18,7 @@ impl Clone for BlockStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct BlockStatement {
     pub token: Token,
     pub statements: Vec<Box<dyn Statement>>
@@ -57,6 +59,8 @@ impl Node for BlockStatement {
         result
     }
 }
+
+impl_node!(BlockStatement);
 
 impl Statement for BlockStatement {}
 

@@ -4,6 +4,7 @@ use crate::environment::environment::Environment;
 use crate::evaluator::evaluator::Evaluator;
 use crate::object::object::Object;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for BooleanLiteral {
     fn clone(&self) -> Self {
@@ -14,6 +15,7 @@ impl Clone for BooleanLiteral {
     }
 }
 
+#[derive(Debug)]
 pub struct BooleanLiteral {
     pub value: bool,
     pub token: Token,
@@ -40,6 +42,8 @@ impl Node for BooleanLiteral {
 }
 
 impl Expression for BooleanLiteral {}
+
+impl_node!(BooleanLiteral);
 
 pub fn create_boolean_literal(token: Token, value: bool) -> BooleanLiteral {
     BooleanLiteral {

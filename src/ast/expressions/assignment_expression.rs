@@ -6,6 +6,7 @@ use crate::environment::environment::Environment;
 use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::{create_error, is_error};
 use crate::token::token::Token;
+use crate::impl_node;
 
 use super::super::super::object::object::Object;
 
@@ -19,6 +20,7 @@ impl Clone for AssignmentExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct AssignmentExpression {
     pub left: Box<dyn Expression + 'static>,
     pub value: Box<dyn Expression>,
@@ -62,6 +64,8 @@ impl Node for AssignmentExpression {
         )
     }
 }
+
+impl_node!(AssignmentExpression);
 
 impl Expression for AssignmentExpression {}
 

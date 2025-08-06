@@ -1,6 +1,5 @@
 use std::str::FromStr;
 use bigdecimal::BigDecimal;
-use num_bigint::BigInt;
 
 use crate::ast::ast::Expression;
 use crate::ast::expressions::double_literal::create_double_literal;
@@ -11,7 +10,7 @@ use crate::token::token_type::TokenType;
 pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let token = parser.cur_token.clone();
 
-    let parse_result = BigInt::from_str(&parser.cur_token.value);
+    let parse_result = BigDecimal::from_str(&parser.cur_token.value);
     if let Err(_) = parse_result {
         parser.errors.push(format!("could not parse '{}' as integer", parser.cur_token.value.clone()));
         return None;

@@ -6,6 +6,7 @@ use crate::object::object::{Object, ObjectType};
 use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 use crate::object::utils::{check_error_name, create_error_with_name, is_error};
+use crate::impl_node;
 
 use super::identifier::Identifier;
 
@@ -19,6 +20,7 @@ impl Clone for ObjectMemberExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct ObjectMemberExpression {
     pub left: Box<dyn Expression>,
     pub right: Box<dyn Expression>,
@@ -66,6 +68,8 @@ impl Node for ObjectMemberExpression {
 }
 
 impl Expression for ObjectMemberExpression {}
+
+impl_node!(ObjectMemberExpression);
 
 pub fn create_object_member_expression(token: Token, left: Box<dyn Expression>, right: Box<dyn Expression>) -> ObjectMemberExpression {
     ObjectMemberExpression {

@@ -4,6 +4,7 @@ use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::{is_error, is_truthy};
 use crate::token::token::Token;
+use crate::impl_node;
 
 use super::block_statement::BlockStatement;
 
@@ -17,6 +18,7 @@ impl Clone for WhileStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct WhileStatement {
     pub token: Token,
     pub condition: Box<dyn Expression>,
@@ -48,6 +50,8 @@ impl Node for WhileStatement {
 }
 
 impl Statement for WhileStatement {}
+
+impl_node!(WhileStatement);
 
 pub fn create_while_statement(token: Token, condition: Box<dyn Expression>, block: BlockStatement) -> WhileStatement {
     WhileStatement {

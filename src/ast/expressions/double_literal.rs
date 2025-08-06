@@ -6,6 +6,7 @@ use crate::object::ant_double::AntDouble;
 use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for DoubleLiteral {
     fn clone(&self) -> Self {
@@ -16,6 +17,7 @@ impl Clone for DoubleLiteral {
     }
 }
 
+#[derive(Debug)]
 pub struct DoubleLiteral {
     pub value: BigDecimal,
     pub token: Token,
@@ -36,6 +38,8 @@ impl Node for DoubleLiteral {
 }
 
 impl Expression for DoubleLiteral {}
+
+impl_node!(DoubleLiteral);
 
 pub fn create_double_literal(token: Token, value: BigDecimal) -> DoubleLiteral {
     DoubleLiteral {

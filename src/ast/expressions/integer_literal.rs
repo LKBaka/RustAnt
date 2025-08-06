@@ -7,6 +7,7 @@ use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::rc_ref_cell;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for IntegerLiteral {
     fn clone(&self) -> Self {
@@ -17,6 +18,7 @@ impl Clone for IntegerLiteral {
     }
 }
 
+#[derive(Debug)]
 pub struct IntegerLiteral {
     pub value: BigDecimal,
     pub token: Token,
@@ -37,6 +39,8 @@ impl Node for IntegerLiteral {
 }
 
 impl Expression for IntegerLiteral {}
+
+impl_node!(IntegerLiteral);
 
 pub fn create_integer_literal(token: Token, value: BigDecimal) -> IntegerLiteral {
     IntegerLiteral {

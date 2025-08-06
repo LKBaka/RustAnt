@@ -14,7 +14,7 @@ impl<K: Clone, V: Clone> Clone for Pair<K, V> {
     }
 }
 
-impl<K: PartialEq, V: PartialEq> Pair<K, V> {
+impl<K: PartialEq + Eq, V: PartialEq + Eq> Pair<K, V> {
     pub fn new(key: K, value: V) -> Pair<K, V> {
         Pair { key, value }
     }

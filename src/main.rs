@@ -15,7 +15,7 @@ mod function_caller;
 mod module_system;
 mod byte_code_vm;
 mod type_defs;
-mod lg_ir_gen;
+// mod lg_ir_gen;
 
 extern crate lazy_static;
 

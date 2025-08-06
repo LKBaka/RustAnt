@@ -6,6 +6,7 @@ use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::token::token::Token;
 use crate::object::utils::is_error;
+use crate::impl_node;
 
 impl Clone for InfixExpression {
     fn clone(&self) -> Self {
@@ -18,6 +19,7 @@ impl Clone for InfixExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct InfixExpression {
     pub left: Box<dyn Expression>,
     pub right: Box<dyn Expression>,
@@ -55,6 +57,8 @@ impl Node for InfixExpression {
         } else {None}
     }
 }
+
+impl_node!(InfixExpression);
 
 impl Expression for InfixExpression {}
 

@@ -104,10 +104,10 @@ pub fn builtin_range(arg_env: &mut Environment) -> Option<Object> {
             Some(iterable_class)
         },
         env: create_env(vec![
-            ("start".to_string(), AntInt::new_with_native_value(Box::new(0))),
+            ("start".to_string(), Box::new(AntInt::from(0))),
             ("end".to_string(), Box::new(end)),
-            ("step".to_string(), AntInt::new_with_native_value(Box::new(1))),
-            ("current".to_string(), AntInt::new_with_native_value(Box::new(1))),
+            ("step".to_string(), Box::new(AntInt::from(1))),
+            ("current".to_string(), Box::new(AntInt::from(1))),
         ])
     };
 

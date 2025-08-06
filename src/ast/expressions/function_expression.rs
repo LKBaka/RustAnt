@@ -15,6 +15,7 @@ use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::rc_ref_cell;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for FunctionExpression {
     fn clone(&self) -> Self {
@@ -27,6 +28,7 @@ impl Clone for FunctionExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct FunctionExpression {
     pub token: Token,
     pub name: Option<String>,
@@ -54,14 +56,14 @@ impl Node for FunctionExpression {
         // 筛选出所有赋值表达式
         let assignment_expressions = self.params
             .iter()
-            .filter(|expr| {((*expr).clone() as Box<dyn Any>).downcast_ref::<AssignmentExpression>().is_some()})
+            .filter(|expr| {((*expr).as_ref() as &dyn Any).downcast_ref::<AssignmentExpression>().is_some()})
             .map(|expr| expr.clone())
             .collect::<Vec<Box<dyn Expression>>>();
 
         // 筛选出所有标识符
         let ident_expressions = self.params
             .iter()
-            .filter(|expr| {((*expr).clone() as Box<dyn Any>).downcast_ref::<Identifier>().is_some()})
+            .filter(|expr| {((*expr).as_ref() as &dyn Any).downcast_ref::<Identifier>().is_some()})
             .map(|expr| expr.clone())
             .collect::<Vec<Box<dyn Expression>>>();
         
@@ -87,7 +89,7 @@ impl Node for FunctionExpression {
                 .downcast_ref::<AssignmentExpression>()
                 .expect("not assignment expression");
 
-            let ident = assignment_expression.left.clone() as Box<dyn Any>;
+            let ident = assignment_expression.left.as_ref() as &dyn Any;
             let ident = ident
                 .downcast_ref::<Identifier>()
                 .expect(&format!("non assignable expression '{}'", &assignment_expression.left.clone().to_string()));
@@ -113,6 +115,8 @@ impl Node for FunctionExpression {
         Some(func)
     }
 }
+
+impl_node!(FunctionExpression);
 
 impl Expression for FunctionExpression {}
 

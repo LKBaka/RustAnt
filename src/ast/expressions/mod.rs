@@ -11,3 +11,5 @@ pub mod function_expression;
 pub mod return_expression;
 pub mod object_member_expression;
 pub mod class_member_expression;
+pub mod tuple_expression;
+pub mod prefix_expression;

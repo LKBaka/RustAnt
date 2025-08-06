@@ -4,6 +4,7 @@ use crate::object::object::Object;
 use crate::object::utils::create_error_with_name;
 use crate::token::token::Token;
 use crate::evaluator::evaluator::Evaluator;
+use crate::impl_node;
 
 impl Clone for Identifier {
     fn clone(&self) -> Self {
@@ -14,6 +15,7 @@ impl Clone for Identifier {
     }
 }
 
+#[derive(Debug)]
 pub struct Identifier {
     pub value: String,
     pub token: Token,
@@ -48,6 +50,8 @@ impl Node for Identifier {
 }
 
 impl Expression for Identifier {}
+
+impl_node!(Identifier);
 
 pub fn create_identifier(token: Token, value: String) -> Identifier {
     Identifier {

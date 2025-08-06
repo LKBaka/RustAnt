@@ -16,8 +16,11 @@ where
     }
 }
 
-pub fn type_of<T: Any>(_: &T) -> TypeId {
-    TypeId::of::<T>()
+#[macro_export]
+macro_rules! struct_type_id {
+    ($t:ty) => {{
+        std::any::TypeId::of::<$t>()
+    }};
 }
 
 pub fn run_command(command: &str) -> io::Result<ExitStatus> {
@@ -60,4 +63,8 @@ macro_rules! rc_ref_cell {
     ($value:expr) => {
         std::rc::Rc::new(std::cell::RefCell::new($value))
     };
+}
+
+pub fn type_of<T: 'static>(_: &T) -> TypeId {
+    TypeId::of::<T>()
 }

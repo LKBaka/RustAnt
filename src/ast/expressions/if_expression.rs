@@ -5,6 +5,7 @@ use crate::object::object::Object;
 use crate::evaluator::evaluator::Evaluator;
 use crate::object::utils::is_truthy;
 use crate::token::token::Token;
+use crate::impl_node;
 
 impl Clone for IfExpression {
     fn clone(&self) -> Self {
@@ -18,6 +19,7 @@ impl Clone for IfExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct IfExpression {
     pub token: Token,
     condition: Box<dyn Expression>, // 条件
@@ -121,6 +123,7 @@ impl Clone for ElseIfExpression {
     }
 }
 
+#[derive(Debug)]
 pub struct ElseIfExpression {
     pub token: Token,
     pub condition: Box<dyn Expression>, // 条件
@@ -163,3 +166,6 @@ pub fn create_else_if_expression(
         consequence,
     }
 } 
+
+impl_node!(IfExpression);
+impl_node!(ElseIfExpression); 
