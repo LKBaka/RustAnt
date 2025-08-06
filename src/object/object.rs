@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use uuid::Uuid;
@@ -29,7 +30,7 @@ pub trait EnvGetter {
     fn get_env_ref(&mut self) -> &mut Environment;
 }
 
-pub trait IAntObject: DynClone + Sync + Send + Any + EnvGetter {
+pub trait IAntObject: DynClone + Sync + Send + Any + EnvGetter + Debug {
     fn get_type(&self) -> ObjectType;
     fn get_value(&self) -> Box<dyn Any>;
     fn get_base(&self) -> Option<Object>;
@@ -43,7 +44,7 @@ clone_trait_object!(IAntObject);
 
 impl PartialEq for Object {
     fn eq(&self, other: &Object) -> bool {
-        self.equals(other.deref())
+        self.equals(other.as_ref())
     }
 }
 
@@ -88,7 +89,7 @@ impl IAntObject for AntObject {
     }
 
     fn inspect(&self) -> String {
-        format!("AntObject(id: {})", self.id)
+        format!("<AntObject {}>", self.id)
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
