@@ -148,3 +148,38 @@ pub fn not_implemented_error_with_name(name: &str) -> Object {
         format!("{} is not implemented", name)
     )
 }
+
+#[macro_export]
+macro_rules! convert_type_use_box {
+    ($t:ty, $value:expr) => {{
+        let value = Box::new($value) as Box<dyn Any>;
+        
+        let converted = value
+            .downcast_ref::<$t>()
+            .expect(&format!("cannot convert '{:?}' to type '{}'", $value, std::any::type_name::<$t>()));
+
+        converted.clone()
+    }};
+}
+
+#[macro_export]
+macro_rules! convert_type {
+    ($t:ty, $value:expr) => {{
+        use std::any::Any;
+
+        let value = $value.as_ref() as &dyn Any;
+        
+        let converted = value
+            .downcast_ref::<$t>()
+            .expect(&format!("cannot convert '{:?}' to type '{}'", $value, std::any::type_name::<$t>()));
+
+        converted.clone()
+    }};
+}
+
+#[macro_export]
+macro_rules! big_dec {
+    ($value:expr) => {
+        BigDecimal::from($value)
+    };
+}
