@@ -60,6 +60,7 @@ pub enum TokenType {
     Lib,
     Alias,
     GetClassMember,
+    Comment,
     Eof,
 }
 
@@ -127,6 +128,7 @@ impl TokenType {
             TokenType::Integer => "Integer",
             TokenType::String => "String",
             TokenType::GetClassMember => "::",
+            TokenType::Comment => "Comment"
         }
     }
 }
