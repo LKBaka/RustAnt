@@ -1,14 +1,20 @@
 use std::any::Any;
+use std::fmt::Debug;
 use dyn_clone::{clone_trait_object, DynClone};
 
 use crate::constants::{null_obj, NEW_LINE};
 use crate::evaluator::evaluator::Evaluator;
+use crate::impl_node;
 use crate::object::utils::is_error;
 use crate::token::token::Token;
 use crate::environment::environment::Environment;
 use crate::object::object::Object;
 
-pub trait Node: DynClone + Sync + Send + Any {
+pub trait TypeNameGetter {
+    fn type_name(&self) -> String;
+}
+
+pub trait Node: DynClone + Sync + Send + Any + Debug + TypeNameGetter {
     fn token_literal(&self) -> String;
     fn to_string(&self) -> String;
     fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object>;
@@ -22,7 +28,6 @@ pub trait Node: DynClone + Sync + Send + Any {
     }
 }
 
-
 clone_trait_object!(Node);
 
 pub trait Expression: Node {}
@@ -31,6 +36,7 @@ pub trait Statement: Node {}
 clone_trait_object!(Expression);
 clone_trait_object!(Statement);
 
+#[derive(Debug)]
 pub struct Program {
     pub token: Token,
     pub(crate) statements: Vec<Box<dyn Statement>>
@@ -44,6 +50,7 @@ impl Clone for Program {
         }
     }
 }
+
 
 impl Node for Program {
     fn token_literal(&self) -> String {
@@ -81,6 +88,8 @@ impl Node for Program {
     }
 }
 
+impl_node!(Program);
+
 impl Clone for ExpressionStatement {
     fn clone(&self) -> Self {
         Self {
@@ -89,6 +98,7 @@ impl Clone for ExpressionStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct ExpressionStatement {
     pub expression: Option<Box<dyn Expression>>
 }
@@ -127,3 +137,5 @@ pub fn create_expression_statement(expression: impl Expression + 'static) -> Exp
         expression: Some(Box::new(expression) as Box<dyn Expression>)
     }
 }
+
+impl_node!(ExpressionStatement);
