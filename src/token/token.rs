@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use crate::constants::NULL_CHAR;
 use crate::token::token_type::TokenType;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Token {
     pub token_type: TokenType,
     pub value: String,
@@ -31,15 +31,6 @@ impl Token {
         }
     }
 }
-
-impl PartialEq for Token {
-    fn eq(&self, other: &Self) -> bool {
-        self.token_type == other.token_type && self.value == other.value &&
-        self.file == other.file && self.line == other.line 
-    }
-}
-
-impl Eq for Token {}
 
 impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
