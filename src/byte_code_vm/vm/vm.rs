@@ -3,31 +3,37 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     byte_code_vm::{
         code::code::{
-            read_uint16, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_MINUS, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL, OP_TRUE
+            OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL,
+            OP_GET_LOCAL, OP_INDEX, OP_MINUS, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL,
+            OP_SET_LOCAL, OP_TRUE, read_uint16,
         },
         compiler::compiler::ByteCode,
         constants::{FALSE, TRUE, UNINIT_OBJ},
-        vm::{eval_functions::{
-            eval_array_literal_utils::build_array,
-            eval_index_expression::eval_index_expression,
-            eval_infix_operator::eval_infix_operator,
-            eval_prefix_operator::eval_prefix_operator,
-        }, frame::Frame}
+        vm::{
+            eval_functions::{
+                eval_array_literal_utils::build_array,
+                eval_index_expression::eval_index_expression,
+                eval_infix_operator::eval_infix_operator,
+                eval_prefix_operator::eval_prefix_operator,
+            },
+            frame::Frame,
+        },
     },
-    object::{ant_compiled_function::CompiledFunction, object::{Object, UNINIT}},
+    object::{
+        ant_compiled_function::CompiledFunction,
+        object::{Object, UNINIT},
+    },
     rc_ref_cell,
 };
-
 
 pub const STACK_SIZE: u16 = 2048;
 pub const GLOBALS_SIZE: u16 = 65535;
 
 pub struct Vm {
     constants: Vec<Object>,
-    stack: Vec<Object>,
+    stack: Rc<RefCell<Vec<Object>>>,
     globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
     sp: usize, // stack pointer, always points to the next empty slot in the stack
-    
     frames: Vec<Rc<RefCell<Frame>>>,
     frame_index: usize,
 }
@@ -38,36 +44,39 @@ impl Vm {
 
         let main_func = CompiledFunction {
             instructions: rc_ref_cell!(bytecode.instructions),
-            locals_count: 0
+            locals_count: 0,
         };
 
         let main_frame = Frame::new(rc_ref_cell!(main_func), 0);
 
         Vm {
             constants: bytecode.constants,
+            stack: rc_ref_cell!(vec![]),
             globals: rc_ref_cell!(vec![uninit[0].clone(); GLOBALS_SIZE as usize]),
-            stack: vec![],
             sp: 0, // stack pointer starts at 0,
             frames: vec![rc_ref_cell!(main_frame)],
-            frame_index: 1
+            frame_index: 1,
         }
     }
 
-    pub fn with_globals(bytecode: ByteCode, globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>) -> Self {
+    pub fn with_globals(
+        bytecode: ByteCode,
+        globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    ) -> Self {
         let main_func = CompiledFunction {
             instructions: rc_ref_cell!(bytecode.instructions),
-            locals_count: 0
+            locals_count: 0,
         };
 
         let main_frame = Frame::new(rc_ref_cell!(main_func), 0);
 
         Vm {
             constants: bytecode.constants,
+            stack: rc_ref_cell!(vec![]),
             globals,
-            stack: Vec::new(), 
             sp: 0, // stack pointer starts at 0
             frames: vec![rc_ref_cell!(main_frame)],
-            frame_index: 1
+            frame_index: 1,
         }
     }
 
@@ -87,7 +96,7 @@ impl Vm {
 
     pub fn pop_frame(&mut self) -> Rc<RefCell<Frame>> {
         self.frame_index -= 1;
-        return self.frames[self.frame_index].clone()
+        return self.frames[self.frame_index].clone();
     }
 
     pub fn run(&mut self) -> Result<(), String> {
@@ -97,35 +106,22 @@ impl Vm {
 
         let mut op;
 
-        while 
-            self
-                .current_frame()
-                .borrow()
-                .ip < 
-            self
-                .current_frame()
-                .borrow()
-                .instructions()
-                .borrow()
-                .len() as isize - 1
+        while self.current_frame().borrow().ip
+            < self.current_frame().borrow().instructions().borrow().len() as isize - 1
         {
             self.current_frame().borrow_mut().ip += 1;
 
-            ip = self
-                .current_frame()
-                .borrow()
-                .ip as usize;
+            ip = self.current_frame().borrow().ip as usize;
 
-            instructions = self
-                .current_frame()
-                .borrow()
-                .instructions();
+            instructions = self.current_frame().borrow().instructions();
 
             op = instructions.borrow()[ip];
 
+            self.stack = self.current_frame().borrow_mut().stack.clone();
+
             match op {
                 OP_CONSTANTS => {
-                    let const_index = read_uint16(&instructions.borrow()[(ip+1)..]) ;
+                    let const_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
                     self.current_frame().borrow_mut().ip += 2;
 
                     let result = self.push(self.constants[const_index as usize].clone());
@@ -139,14 +135,15 @@ impl Vm {
                     self.pop();
                 }
 
-                OP_ADD ..= OP_NOTEQ => {
+                OP_ADD..=OP_NOTEQ => {
                     let right = self.pop();
                     let left = self.pop();
 
                     if left.is_none() || right.is_none() {
                         return Err(format!(
-                            "expected two objects of opcode {}. got {} objects", 
-                            op, left.is_some() as u8 + right.is_some() as u8
+                            "expected two objects of opcode {}. got {} objects",
+                            op,
+                            left.is_some() as u8 + right.is_some() as u8
                         ));
                     }
 
@@ -166,7 +163,7 @@ impl Vm {
                     }
                 }
 
-                OP_TRUE ..= OP_FALSE => {
+                OP_TRUE..=OP_FALSE => {
                     let obj = if op == OP_TRUE {
                         TRUE.clone()
                     } else {
@@ -180,7 +177,7 @@ impl Vm {
                     }
                 }
 
-                OP_MINUS ..= OP_BANG => {
+                OP_MINUS..=OP_BANG => {
                     let right = match self.pop() {
                         Some(obj) => obj,
                         None => return Err(format!("expected an object for opcode {}", op)),
@@ -200,9 +197,7 @@ impl Vm {
                 }
 
                 OP_SET_GLOBAL => {
-                    let global_index = read_uint16(
-                        &instructions.borrow()[(ip + 1)..]
-                    );
+                    let global_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
 
                     self.current_frame().borrow_mut().ip += 2;
 
@@ -216,7 +211,8 @@ impl Vm {
                     self.current_frame().borrow_mut().ip += 2;
 
                     let obj_clone = {
-                        let obj: &Rc<RefCell<Object>> = &self.globals.borrow_mut()[global_index as usize];
+                        let obj: &Rc<RefCell<Object>> =
+                            &self.globals.borrow_mut()[global_index as usize];
 
                         if obj.borrow().get_type() != UNINIT {
                             Some(obj.borrow().clone())
@@ -224,10 +220,10 @@ impl Vm {
                             None
                         }
                     };
-                    
+
                     if let Some(obj) = obj_clone {
                         if let Err(msg) = self.push(obj) {
-                            return Err(format!("error push global variable: {}", msg))
+                            return Err(format!("error push global variable: {}", msg));
                         }
                     }
                 }
@@ -236,17 +232,14 @@ impl Vm {
                     let array_len = read_uint16(&instructions.borrow()[(ip + 1)..]);
                     self.current_frame().borrow_mut().ip += 2;
 
-                    let array_obj = build_array(
-                        &self.stack,
-                        self.sp - array_len as usize,
-                        self.sp
-                    );
+                    let array_obj =
+                        build_array(&self.stack.borrow(), self.sp - array_len as usize, self.sp);
 
                     self.sp = self.sp - array_len as usize;
 
                     let push_result = self.push(Box::new(array_obj));
                     if let Err(msg) = push_result {
-                        return Err(format!("error push array object: {msg}"))
+                        return Err(format!("error push array object: {msg}"));
                     }
                 }
 
@@ -256,8 +249,9 @@ impl Vm {
 
                     if left.is_none() || index.is_none() {
                         return Err(format!(
-                            "expected two objects (index, left) {}. got {} objects", 
-                            op, left.is_some() as u8 + index.is_some() as u8
+                            "expected two objects (index, left) {}. got {} objects",
+                            op,
+                            left.is_some() as u8 + index.is_some() as u8
                         ));
                     }
 
@@ -267,42 +261,43 @@ impl Vm {
                     match eval_index_expression(left_obj, index_obj) {
                         Ok(obj) => {
                             if let Err(msg) = self.push(obj) {
-                                return Err(format!("error push object: {msg}"))
+                                return Err(format!("error push object: {msg}"));
                             }
                         }
 
-                        Err(msg) => return Err(format!("error evaluating index expression: {msg}"))
+                        Err(msg) => {
+                            return Err(format!("error evaluating index expression: {msg}"));
+                        }
                     }
                 }
 
                 OP_CALL => {
-                    let calling_obj = if 
-                        let Some(it) = self.stack_top() &&
-                        let Some(it) = it.as_any().downcast_ref::<CompiledFunction>()
+                    let calling_obj = if let Some(it) = self.stack_top()
+                        && let Some(it) = it.as_any().downcast_ref::<CompiledFunction>()
                     {
                         it.clone()
                     } else {
-                        return Err(format!("calling non-function"))
+                        return Err(format!("calling non-function"));
                     };
 
-                    let frame = Frame::new(rc_ref_cell!(calling_obj), self.sp);
+                    let frame = Frame::new(rc_ref_cell!(calling_obj), 0);
                     self.push_frame(rc_ref_cell!(frame.clone()));
 
-                    self.sp = frame.base_pointer + frame.func.borrow().locals_count
+                    self.sp = frame.base_pointer
                 }
 
                 OP_RETURN_VALUE => {
                     let return_value = if let Some(it) = self.pop() {
                         it
                     } else {
-                        return Err(format!("expected an object to return"))
+                        return Err(format!("expected an object to return"));
                     };
 
                     let frame = self.pop_frame(); // 弹出当前帧
                     self.sp = frame.borrow().base_pointer - 1;
-                    
-                    if let Err(msg) = self.push(return_value) { 
-                        return Err(format!("error push return value: {msg}"))
+
+                    if let Err(msg) = self.push(return_value) {
+                        return Err(format!("error push return value: {msg}"));
                     }
                 }
 
@@ -311,11 +306,13 @@ impl Vm {
 
                     self.current_frame().borrow_mut().ip += 2;
 
+                    let value = self.pop().expect("expected an object to set local");
                     let frame = self.current_frame();
-
-                    self.stack[
-                        frame.borrow().base_pointer + local_index as usize
-                    ] = self.pop().expect("expected an object to set local");
+                    let locals = &frame.borrow().locals;
+                    if (local_index as usize) >= locals.borrow().len() {
+                        locals.borrow_mut().resize(local_index as usize + 1,Box::new(UNINIT_OBJ.clone()));
+                    }
+                    locals.borrow_mut()[local_index as usize] = value;
                 }
 
                 OP_GET_LOCAL => {
@@ -323,21 +320,18 @@ impl Vm {
 
                     self.current_frame().borrow_mut().ip += 2;
 
-                    let frame = self.current_frame();
-
-                    let local_object= self.stack[
-                        frame.borrow().base_pointer + local_index as usize
-                    ].clone();
+                    let local_object =
+                        self.current_frame().borrow().locals.borrow()[local_index as usize].clone();
 
                     if let Err(msg) = self.push(local_object) {
-                        return Err(format!("error get local variable: {msg}"))
+                        return Err(format!("error get local variable: {msg}"));
                     }
                 }
 
                 _ => return Err(format!("unknown opcode: {}", op)),
             }
         }
-        
+
         Ok(())
     }
 
@@ -345,15 +339,15 @@ impl Vm {
         if self.sp == 0 {
             None
         } else {
-            Some(self.stack[self.sp - 1].clone())
+            Some(self.stack.borrow()[self.sp - 1].clone())
         }
     }
 
     pub fn last_popped_stack_elem(&self) -> Option<Object> {
-        if self.sp >= self.stack.len() {
+        if self.sp >= self.stack.borrow().len() {
             None
         } else {
-            Some(self.stack[self.sp].clone())
+            Some(self.stack.borrow()[self.sp].clone())
         }
     }
 
@@ -363,10 +357,10 @@ impl Vm {
             return Err("Stack overflow".to_string());
         }
 
-        if self.sp >= self.stack.len() {
-            self.stack.push(obj);
+        if self.sp >= self.stack.borrow().len() {
+            self.stack.borrow_mut().push(obj);
         } else {
-            self.stack[self.sp] = obj;
+            self.stack.borrow_mut()[self.sp] = obj;
         }
 
         self.sp += 1;
@@ -382,14 +376,11 @@ impl Vm {
             self.sp -= 1;
 
             // 地雷式 stack, 不是合法的 sp 范围直接 panic
-            Some(self.stack[self.sp].clone())
+            Some(self.stack.borrow()[self.sp].clone())
         }
     }
 
     pub fn frames(&self) -> Vec<Frame> {
-        self.frames
-            .iter()
-            .map(|f| f.borrow().clone())
-            .collect()
+        self.frames.iter().map(|f| f.borrow().clone()).collect()
     }
 }
