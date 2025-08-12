@@ -33,7 +33,6 @@ pub struct Vm {
     constants: Vec<Object>,
     stack: Rc<RefCell<Vec<Object>>>,
     globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-    sp: usize, // stack pointer, always points to the next empty slot in the stack
     frames: Vec<Rc<RefCell<Frame>>>,
     frame_index: usize,
 }
@@ -53,7 +52,6 @@ impl Vm {
             constants: bytecode.constants,
             stack: rc_ref_cell!(vec![]),
             globals: rc_ref_cell!(vec![uninit[0].clone(); GLOBALS_SIZE as usize]),
-            sp: 0, // stack pointer starts at 0,
             frames: vec![rc_ref_cell!(main_frame)],
             frame_index: 1,
         }
@@ -74,7 +72,6 @@ impl Vm {
             constants: bytecode.constants,
             stack: rc_ref_cell!(vec![]),
             globals,
-            sp: 0, // stack pointer starts at 0
             frames: vec![rc_ref_cell!(main_frame)],
             frame_index: 1,
         }
@@ -106,6 +103,8 @@ impl Vm {
 
         let mut op;
 
+        self.stack = self.current_frame().borrow_mut().stack.clone();
+
         while self.current_frame().borrow().ip
             < self.current_frame().borrow().instructions().borrow().len() as isize - 1
         {
@@ -116,8 +115,6 @@ impl Vm {
             instructions = self.current_frame().borrow().instructions();
 
             op = instructions.borrow()[ip];
-
-            self.stack = self.current_frame().borrow_mut().stack.clone();
 
             match op {
                 OP_CONSTANTS => {
@@ -156,7 +153,7 @@ impl Vm {
                         return Err(format!("error evaluating infix operator {}: {}", op, err));
                     }
 
-                    let push_result = self.push(eval_operator_result.unwrap());
+                    let push_result = self.push(eval_operator_result?);
 
                     if push_result.is_err() {
                         return push_result;
@@ -238,8 +235,8 @@ impl Vm {
                         self.current_frame().borrow().sp,
                     );
 
-                    self.current_frame().borrow_mut().sp =
-                        self.current_frame().borrow().sp - array_len as usize;
+                    let frame = self.current_frame();
+                    frame.borrow_mut().sp -= array_len as usize;
 
                     let push_result = self.push(Box::new(array_obj));
                     if let Err(msg) = push_result {
@@ -276,7 +273,7 @@ impl Vm {
                 }
 
                 OP_CALL => {
-                    let calling_obj = if let Some(it) = self.stack_top()
+                    let calling_obj = if let Some(it) = self.pop()
                         && let Some(it) = it.as_any().downcast_ref::<CompiledFunction>()
                     {
                         it.clone()
@@ -286,19 +283,21 @@ impl Vm {
 
                     let frame = Frame::new(rc_ref_cell!(calling_obj));
                     self.push_frame(rc_ref_cell!(frame.clone()));
+
+                    self.stack = frame.stack;
                 }
 
                 OP_RETURN_VALUE => {
-                    let return_value = if let Some(it) = self.pop() {
-                        it
-                    } else {
-                        return Err(format!("expected an object to return"));
-                    };
+                    let return_value = self.pop();
 
                     self.pop_frame(); // 弹出当前帧
 
-                    if let Err(msg) = self.push(return_value) {
-                        return Err(format!("error push return value: {msg}"));
+                    self.stack = self.current_frame().borrow().stack.clone();
+
+                    if let Some(value) = return_value {
+                        if let Err(msg) = self.push(value) {
+                            return Err(format!("error push return value: {msg}"));
+                        }
                     }
                 }
 
@@ -360,11 +359,14 @@ impl Vm {
             return Err("Stack overflow".to_string());
         }
 
-        if self.current_frame().borrow().sp >= self.stack.borrow().len() {
-            self.stack.borrow_mut().push(obj);
-        } else {
-            self.stack.borrow_mut()[self.current_frame().borrow().sp] = obj;
+        let frame = self.current_frame();
+        if frame.borrow().sp >= self.stack.borrow().len() {
+            self.stack.borrow_mut().resize(
+                self.current_frame().borrow().sp + 1,
+                Box::new(UNINIT_OBJ.clone()),
+            );
         }
+        self.stack.borrow_mut()[self.current_frame().borrow().sp] = obj;
 
         self.current_frame().borrow_mut().sp += 1;
 
