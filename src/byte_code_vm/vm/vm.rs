@@ -347,7 +347,7 @@ impl Vm {
     }
 
     pub fn last_popped_stack_elem(&self) -> Option<Object> {
-        if self.current_frame().borrow().sp >= self.stack.borrow().len() {
+        if self.current_frame().borrow().sp == 0 {
             None
         } else {
             Some(self.stack.borrow()[self.current_frame().borrow().sp].clone())
