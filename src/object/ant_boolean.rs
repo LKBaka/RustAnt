@@ -7,7 +7,6 @@ use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{IAntObject, ObjectType, BOOLEAN};
-use crate::object::object::EnvGetter;
 
 use super::object::Object;
 

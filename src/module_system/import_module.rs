@@ -3,12 +3,10 @@ use std::{path::Path, vec};
 
 use uuid::Uuid;
 
-use crate::arg_structure::arg_structure::Args;
 use crate::object::object::AntObject;
 use crate::object::utils::is_error;
-use crate::runner;
 
-use crate::{environment::utils::create_top_env, object::object::Object};
+use crate::{environment::utils::create_env, object::object::Object};
 
 pub struct ModuleImporter {
     pub module_name: String,
@@ -54,14 +52,13 @@ impl ModuleImporter {
         }
 
         // 创建一个新的环境来保存模块里的内容
-        let mut env = create_top_env();
+        let env = create_env(vec![]);
 
-        // 求值模块代码
-        let module_result = runner::eval::eval(
-            code.unwrap(), module_file, &mut env, &Args {file: None, print_ast: false}
-        );
-        
-        if let Some(it) = module_result {
+        panic!("unimplented import_modules.rs");
+
+        let o: Object = Box::new(crate::byte_code_vm::constants::TRUE.clone());
+
+        if let Some(it) = Some(o) {
             if is_error(&it) {
                 return Err(it.inspect());
             }

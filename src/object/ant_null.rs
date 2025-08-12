@@ -7,12 +7,11 @@ use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::environment::utils::create_env;
-use crate::evaluator::utils::native_boolean_to_boolean_obj;
 use crate::object::ant_native_function::{create_ant_native_function, NativeFunction};
 use crate::object::utils::create_error;
 use crate::{extract_arg, impl_object};
 use crate::object::object::{IAntObject, Object, ObjectType, NULL};
-use crate::object::object::EnvGetter;
+use crate::byte_code_vm::utils::native_boolean_to_object;
 
 use super::type_hint::{TypeHint, TypeHintMap};
 use crate::{type_hint, type_hint_map};
@@ -109,14 +108,14 @@ fn init_env(null_obj: &mut AntNull) {
                 return Some(create_error(format!("type mismatch for 'me'")))
             } else if let Some(_me) = me {
                 if let Some(_value) = extract_arg!(arg_env, "value" => AntNull) {
-                    return Some(native_boolean_to_boolean_obj(false));
+                    return Some(native_boolean_to_object(false));
                 }
 
                 if let Some(value) = extract_arg!(arg_env, "value" => Object) {
                     if value.get_type() == NULL {
-                        return Some(native_boolean_to_boolean_obj(false));
+                        return Some(native_boolean_to_object(false));
                     } else {
-                        return Some(native_boolean_to_boolean_obj(true));
+                        return Some(native_boolean_to_object(true));
                     }
                 }
             }

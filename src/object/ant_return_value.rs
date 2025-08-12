@@ -4,31 +4,11 @@ use uuid::Uuid;
 use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{IAntObject, Object, ObjectType, RETURN_VALUE};
-use crate::object::object::EnvGetter;
-
-use super::utils::create_error;
 
 pub struct AntReturnValue {
     id: Uuid,
     env: Environment,
     pub value: Object
-}
-
-impl AntReturnValue {
-    pub fn new_with_native_value(value: Box<dyn Any>) -> Object {
-        if value.downcast_ref::<Box<dyn IAntObject + 'static>>().is_none() {
-            return create_error(
-                "return value is None".to_string()
-            )
-        }
-
-        let obj = value.downcast_ref::<Object>().unwrap().clone();
-        Box::new(Self {
-            id: Uuid::new_v4(),
-            env: Environment::new(),
-            value: obj,
-        })
-    }
 }
 
 impl IAntObject for AntReturnValue {

@@ -9,12 +9,9 @@ mod ast;
 mod environment;
 mod object;
 mod map;
-mod evaluator;
 mod char_string;
-mod function_caller;
 mod module_system;
 mod byte_code_vm;
-mod type_defs;
 // mod lg_ir_gen;
 
 extern crate lazy_static;
@@ -26,12 +23,6 @@ use crate::runner::file_runner::FileRunner;
 use crate::runner::repl_runner::REPLRunner;
 
 fn main() {
-    #[cfg(feature = "byte_code_rust_ant")]
-    use crate::byte_code_vm::test::test_byte_code_rust_ant_main;
-
-    #[cfg(feature = "byte_code_rust_ant")]
-    test_byte_code_rust_ant_main();
-
     let args = Args::parse();
 
     // 判断是否需要进入REPL

@@ -1,11 +1,13 @@
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 use crate::ast::ast::{Expression, ExpressionStatement, Program, Statement};
 use crate::constants::NULL_CHAR;
+use crate::parser::parse_functions::parse_array_literal::parse_array_literal;
 use crate::parser::parse_functions::parse_assignment_expression::parse_assignment_expression;
 use crate::parser::parse_functions::parse_boolean::parse_boolean;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
 use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
+use crate::parser::parse_functions::parse_index_expression::parse_index_expression;
 use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
 use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expression;
 use crate::parser::precedence::*;
@@ -56,9 +58,9 @@ impl Parser {
             next_pos: 0,
             cur_token: Token::new(Nonsense, NULL_CHAR.to_string(), "<uninit_parser>".to_string(), -1),
             peek_token: Token::new(Nonsense, NULL_CHAR.to_string(), "<uninit_parser>".to_string(), -1),
-            prefix_parse_fn_map: HashMap::new(),
-            infix_parse_fn_map: HashMap::new(),
-            statement_parse_fn_map: HashMap::new(),
+            prefix_parse_fn_map: HashMap::with_capacity(12),
+            infix_parse_fn_map: HashMap::with_capacity(12),
+            statement_parse_fn_map: HashMap::with_capacity(3),
         };
 
         parser.statement_parse_fn_map.insert(TokenType::Class, parse_class_statement);
@@ -74,11 +76,13 @@ impl Parser {
         parser.prefix_parse_fn_map.insert(TokenType::If, parse_if_expression);
         parser.prefix_parse_fn_map.insert(TokenType::Func, parse_function_expression);
         parser.prefix_parse_fn_map.insert(TokenType::LParen, parse_tuple_expression);
+        parser.prefix_parse_fn_map.insert(TokenType::LBracket, parse_array_literal);
         parser.prefix_parse_fn_map.insert(TokenType::Bang, parse_prefix_expression);
         parser.prefix_parse_fn_map.insert(TokenType::Minus, parse_prefix_expression);
         parser.prefix_parse_fn_map.insert(TokenType::Comment, |_| {None});
 
         parser.infix_parse_fn_map.insert(TokenType::LParen, parse_call_expression);
+        parser.infix_parse_fn_map.insert(TokenType::LBracket, parse_index_expression);
         parser.infix_parse_fn_map.insert(TokenType::Assign, parse_assignment_expression);
 
         parser.infix_parse_fn_map.insert(TokenType::Dot, parse_object_member_expression);
@@ -152,7 +156,7 @@ impl Parser {
 
         while
             (!self.peek_token_is(Semicolon)) &&
-            get_token_precedence(self.peek_token.token_type) > precedence
+            precedence < get_token_precedence(self.peek_token.token_type)
         {
             let infix_parse_fn = self.infix_parse_fn_map.get(&self.peek_token.token_type);
             match infix_parse_fn.cloned() {

@@ -1,9 +1,18 @@
+use std::cell::RefCell;
 use std::io;
 use std::io::Write;
+use std::rc::Rc;
+
+use colored::Colorize;
 
 use crate::arg_structure::arg_structure::Args;
-use crate::environment::utils::create_top_env;
-use crate::runner::eval::eval;
+use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
+use crate::byte_code_vm::constants::UNINIT_OBJ;
+use crate::byte_code_vm::run::{run, RunError};
+use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
+use crate::environment::utils::create_env;
+use crate::object::object::Object;
+use crate::rc_ref_cell;
 
 use super::utils::import_all_modules;
 
@@ -11,15 +20,23 @@ pub struct REPLRunner {
     args: Args
 }
 
+const REPL_FILE_NAME: &'static str = "repl";
+
 impl REPLRunner {
     pub fn new(args: Args) -> Self {
         REPLRunner {args}
     }
 
     pub fn run(&self) {
-        let mut env = create_top_env();
+        let mut env = create_env(vec![]);
         
         import_all_modules(&mut env);
+
+        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Box::new(UNINIT_OBJ.clone()));
+
+        let symbol_table = rc_ref_cell!(SymbolTable::new());
+        let constants = rc_ref_cell!(vec![]);
+        let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);  
 
         loop {
             let mut code: String = String::new();
@@ -48,20 +65,44 @@ impl REPLRunner {
 
             #[cfg(feature = "get_code_run_seconds")]
             use std::time::Instant;
-            
+
             #[cfg(feature = "get_code_run_seconds")]
-            let start = Instant::now();
-    
-            let result = eval(full_code, "repl".to_string(), &mut env, &self.args);
-            if let Some(it) = result {
-                println!("{}", it.inspect())
-            }
-            
+            let start = Instant::now();  
+
+            let result = run(
+                code,
+                REPL_FILE_NAME.to_string(),
+                symbol_table.clone(),
+                constants.clone(),
+                globals.clone()
+            );         
+
+            match result {
+                Ok(it) => {
+                    if let Some(it) = it {
+                        println!("{}", it.inspect())
+                    }
+                },
+                Err(err) => {
+                    let print_msg = |msg: String| eprintln!("{}", msg.red());
+                        
+                    match err {
+                        RunError::CompileError(msg) => print_msg(msg),
+                        RunError::RuntimeError(msg) => {
+                            eprintln!("{}", msg.inspect().red());
+                        },
+                    }
+                }
+            }    
+
+            #[cfg(feature = "get_code_run_seconds")]
+            let start_elapsed = start.elapsed();
+                
             #[cfg(feature = "get_code_run_seconds")]
             println!(
                 "{}", format!(
                     "Code run time: {} seconds, {} milliseconds, {} nanoseconds", 
-                    start.elapsed().as_secs_f64(), start.elapsed().as_millis(), start.elapsed().as_nanos()
+                    start_elapsed.as_secs_f64(), start_elapsed.as_millis(), start_elapsed.as_nanos()
                 )
             );
         }

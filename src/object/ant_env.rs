@@ -2,13 +2,12 @@ use std::any::Any;
 use std::vec;
 use uuid::Uuid;
 
-use crate::object::object::EnvGetter;
+use crate::byte_code_vm::utils::native_boolean_to_object;
 use crate::constants::uninit_obj;
 use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::environment::utils::create_env;
-use crate::evaluator::utils::native_boolean_to_boolean_obj;
 use crate::object::ant_native_function::{create_ant_native_function, NativeFunction};
 use crate::object::object::{IAntObject, Object, ObjectType, ENVIRONMENT};
 use crate::object::utils::{create_error, is_truthy, unsupported_operand_type_err};
@@ -90,7 +89,7 @@ impl_object!(AntEnv);
 fn init_env(int_obj: &mut AntEnv) {
     fn eq(arg_env: &mut Environment) -> Option<Object> {
         fn eq_int(me: AntEnv, other: AntEnv) -> Option<Object> {
-           Some(native_boolean_to_boolean_obj( me == other))
+           Some(native_boolean_to_object( me == other))
         }
 
         let me = extract_arg!(arg_env, "me" => AntEnv);
@@ -118,7 +117,7 @@ fn init_env(int_obj: &mut AntEnv) {
             return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
             if let Some(_value) = extract_arg!(arg_env, "value" => AntEnv) {
-                return Some(native_boolean_to_boolean_obj(!is_truthy(eq(arg_env).expect(""))))
+                return Some(native_boolean_to_object(!is_truthy(eq(arg_env).expect(""))))
             }
 
         

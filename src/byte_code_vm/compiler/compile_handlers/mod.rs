@@ -1,2 +1,5 @@
 pub mod compile_infix_expression;
 pub mod compile_prefix_expression;
+pub mod compile_if_expression;
+pub mod compile_function_expression;
+pub mod compile_call_expression;

@@ -1,4 +1,4 @@
-use std::{any::{Any, TypeId}, io, process::{Command, ExitStatus, Stdio}};
+use std::{io, process::{Command, ExitStatus, Stdio}};
 
 
 #[cfg(test)]
@@ -63,8 +63,4 @@ macro_rules! rc_ref_cell {
     ($value:expr) => {
         std::rc::Rc::new(std::cell::RefCell::new($value))
     };
-}
-
-pub fn type_of<T: 'static>(_: &T) -> TypeId {
-    TypeId::of::<T>()
 }

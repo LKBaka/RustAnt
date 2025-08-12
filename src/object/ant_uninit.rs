@@ -3,7 +3,6 @@ use uuid::Uuid;
 
 use crate::environment::environment::Environment;
 use crate::object::object::{IAntObject, Object, ObjectType, UNINIT};
-use crate::object::object::EnvGetter;
 use crate::impl_object;
 
 pub struct AntUninit {
@@ -12,13 +11,20 @@ pub struct AntUninit {
 }
 
 impl AntUninit {
-    pub fn new(_arg_env: Environment) -> Object {
+    pub fn new() -> Object {
         let obj = Box::new(Self {
             id: Uuid::new_v4(),
             env: Environment::new(),
         });
 
         obj
+    }
+
+    pub fn create() -> Self {
+        Self { 
+            id: Uuid::new_v4(),
+            env: Environment::new()
+        }
     }
 }
 

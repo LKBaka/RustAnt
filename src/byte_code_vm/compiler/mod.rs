@@ -1,3 +1,4 @@
+pub mod symbol_table;
 pub mod utils;
 pub mod test;
 pub mod compiler;

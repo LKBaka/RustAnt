@@ -1,16 +1,6 @@
 #[macro_export] 
 macro_rules! impl_object {
     ($struct_name:ident) => {
-        impl EnvGetter for $struct_name {
-            fn get_env(&self) -> Environment {
-                return self.env.clone()
-            }
-
-            fn get_env_ref(&mut self) -> &mut Environment {
-                return &mut self.env
-            }
-        }
-
         impl PartialEq for $struct_name {
             fn eq(&self, other: &Self) -> bool {
                 self.equals(*Box::new(other))
@@ -46,59 +36,3 @@ macro_rules! extract_arg {
         }
     };
 }
-
-#[macro_export] 
-macro_rules! impl_plus_func {
-    ($func_name:ident, $me_type:ty, $other_type:ty, $result_type:ty) => {
-        fn $func_name(me: $me_type, other: $other_type) -> Option<Object> {
-            Some(
-                <$result_type>::new_with_native_value(Box::new(other.value + me.value))
-            )
-        }
-    };
-}
-
-#[macro_export] 
-macro_rules! impl_minus_func {
-    ($func_name:ident, $me_type:ty, $other_type:ty, $result_type:ty) => {
-        fn $func_name(me: $me_type, other: $other_type) -> Option<Object> {
-            Some(
-                <$result_type>::new_with_native_value(Box::new(me.value - other.value))
-            )
-        }
-    };
-}
-
-#[macro_export] 
-macro_rules! impl_multiply_func {
-    ($func_name:ident, $me_type:ty, $other_type:ty, $result_type:ty) => {
-        fn $func_name(me: $me_type, other: $other_type) -> Option<Object> {
-            Some(
-                <$result_type>::new_with_native_value(Box::new(other.value * me.value))
-            )
-        }
-    };
-}
-
-#[macro_export] 
-macro_rules! impl_lt_func {
-    ($func_name:ident, $me_type:ty, $other_type:ty) => {
-        fn $func_name(me: $me_type, other: $other_type) -> Option<Object> {
-            Some(
-                native_boolean_to_boolean_obj(me.value < other.value)
-            )
-        }
-    };
-}
-
-#[macro_export] 
-macro_rules! impl_gt_func {
-    ($func_name:ident, $me_type:ty, $other_type:ty) => {
-        fn $func_name(me: $me_type, other: $other_type) -> Option<Object> {
-            Some(
-                native_boolean_to_boolean_obj(me.value < other.value)
-            )
-        }
-    };
-}
-

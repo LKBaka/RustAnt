@@ -1,7 +1,6 @@
 use std::any::Any;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
-use std::ops::Deref;
 use uuid::Uuid;
 use dyn_clone::{clone_trait_object, DynClone};
 
@@ -23,14 +22,11 @@ pub const ERROR: &str = "Error";
 pub const FUNCTION: &str = "Function";
 pub const ENVIRONMENT: &str = "Environment";
 pub const NATIVE_FUNCTION: &str = "NativeFunction";
+pub const COMPILED_FUNCTION: &str = "CompiledFunction";
+pub const ARRAY: &str = "Array";
 pub const RETURN_VALUE: &str = "__Return_Value__";
 
-pub trait EnvGetter {
-    fn get_env(&self) -> Environment;
-    fn get_env_ref(&mut self) -> &mut Environment;
-}
-
-pub trait IAntObject: DynClone + Sync + Send + Any + EnvGetter + Debug {
+pub trait IAntObject: DynClone + Sync + Send + Any + Debug {
     fn get_type(&self) -> ObjectType;
     fn get_value(&self) -> Box<dyn Any>;
     fn get_base(&self) -> Option<Object>;

@@ -13,7 +13,7 @@ pub fn bang(right: Object) -> Result<Object, String> {
         return Ok(Box::new(AntBoolean::from(right.value == BigDecimal::from(0))));
     }
 
-    Err(format!("Unimplemented for type: {:?}", right_as_anyed.type_id()))
+    Err(format!("unimplemented for type: {:?}", right_as_anyed.type_id()))
 }
 
 pub fn minus(right: Object) -> Result<Object, String> {
@@ -27,7 +27,7 @@ pub fn minus(right: Object) -> Result<Object, String> {
         return Ok(Box::new(AntDouble::from(-&right.value)));
     }
 
-    Err(format!("Unimplemented for type: {:?}", right_as_anyed.type_id()))
+    Err(format!("unimplemented for type: {:?}", right_as_anyed.type_id()))
 }
 
 pub fn eval_prefix_operator(op: OpCode, right: Object) -> Result<Object, String> {
@@ -35,7 +35,7 @@ pub fn eval_prefix_operator(op: OpCode, right: Object) -> Result<Object, String>
         OP_BANG => bang(right),
         OP_MINUS => minus(right),
 
-        _ => Err(format!("Unknown prefix operator: {}", op)),
+        _ => Err(format!("unknown prefix operator: {}", op)),
     }
 
 }

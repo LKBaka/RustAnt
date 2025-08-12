@@ -232,9 +232,7 @@ impl Lexer {
             }
         }
 
-        if token.token_type != TokenType::Illegal {
-            self.read_char();
-        }
+        self.read_char();
 
         token
     }

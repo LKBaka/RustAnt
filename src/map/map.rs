@@ -2,7 +2,7 @@ use crate::map::pair::Pair;
 
 #[derive(PartialEq, Eq)]
 pub struct Map<K, V> {
-    pub pairs: Vec<Pair<K, V>>
+    pub pairs: Vec<Pair<K, V>>,
 }
 
 impl<K: Clone, V: Clone> Clone for Map<K, V> {
@@ -82,20 +82,6 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
         false
     }
 
-    pub fn eq(&self, other: Map<K, V>) -> bool {
-        if other.pairs.len() != self.pairs.len() {
-            return false
-        }
-
-        let mut equal = vec![];
-
-        for i in 0..self.pairs.len() {
-            equal.push(other.pairs[i] == self.pairs[i])
-        }
-
-        equal.iter().all(|equal| {*equal})
-    }
-
     pub fn filter(&self, predicate: impl Fn(&K, &V) -> bool) -> Self {
         let mut filtered_map = Map::new();
         for pair in &self.pairs {
@@ -106,6 +92,35 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
         filtered_map
     }
 }
+
+pub struct MapIterator<K, V> {
+    pub pairs: Vec<Pair<K, V>>,
+    pub pair_index: usize,
+}
+
+impl<K: Clone, V: Clone> Iterator for MapIterator<K, V> {
+    type Item = Pair<K, V>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.pair_index < self.pairs.len() {
+            Some(self.pairs[self.pair_index].clone())
+        } else {
+            None
+        }
+    }
+} 
+
+impl<K: Clone, V: Clone> IntoIterator for Map<K, V> {
+    type Item = Pair<K, V>;
+    type IntoIter = MapIterator<K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        MapIterator {
+            pairs: vec![],
+            pair_index: 0
+        }
+    }
+}   
 
 #[macro_export]
 macro_rules! map {

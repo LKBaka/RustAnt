@@ -14,7 +14,7 @@ pub fn compile_prefix_expression(
     let op_code = if let Some(op) = PREFIX_OPERATOR_TO_OPCODE.get(&prefix_expr.operator) {
         *op
     } else {
-        return Err(format!("Unknown prefix operator: {}", prefix_expr.operator));
+        return Err(format!("unknown prefix operator: {}", prefix_expr.operator));
     };
 
     compiler.emit(op_code, vec![]);

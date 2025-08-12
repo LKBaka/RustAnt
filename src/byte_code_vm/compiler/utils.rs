@@ -1,10 +1,34 @@
-use crate::{byte_code_vm::compiler::compiler::{ByteCode, Compiler}, parser::utils::parse};
+use std::{cell::RefCell, rc::Rc};
+
+use crate::{byte_code_vm::compiler::{compiler::{ByteCode, Compiler}, symbol_table::symbol_table::SymbolTable}, object::object::Object, parser::utils::parse};
 
 pub fn compile_it(code: String, file: String) -> Result<ByteCode, String> {
     let program = parse(code, file);
 
     if let Ok(it) = program {
         let mut compiler = Compiler::new();
+
+        let result = compiler.start_compile(it);
+
+        return match result {
+            Ok(_) => Ok(compiler.bytecode()),
+            Err(msg) => Err(msg)
+        }
+    }
+
+    Err(String::from("parse failed!"))
+}
+
+pub fn compile_with_state(
+    code: String, 
+    file: String, 
+    symbol_table: Rc<RefCell<SymbolTable>>,
+    constants: Rc<RefCell<Vec<Object>>>
+) -> Result<ByteCode, String> {
+    let program = parse(code, file);
+
+    if let Ok(it) = program {
+        let mut compiler = Compiler::with_state(symbol_table, constants);
 
         let result = compiler.start_compile(it);
 

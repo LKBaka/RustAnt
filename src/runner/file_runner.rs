@@ -1,8 +1,15 @@
-use std::fs;
+use std::{cell::RefCell, fs, rc::Rc};
 
-use crate::environment::utils::create_top_env;
-use crate::runner::eval::eval;
-use crate::arg_structure::arg_structure::Args;
+use colored::Colorize;
+
+use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
+use crate::byte_code_vm::constants::UNINIT_OBJ;
+use crate::byte_code_vm::run::run;
+use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
+use crate::object::object::ERROR;
+use crate::{arg_structure::arg_structure::Args, environment::utils::create_env, object::object::Object};
+use crate::rc_ref_cell;
+
 
 use super::utils::import_all_modules;
 
@@ -23,7 +30,7 @@ impl FileRunner {
         let contents = fs::read_to_string(&self.file_path);
         match contents {
             Ok(contents) => {
-                let mut env = create_top_env();
+                let mut env = create_env(vec![]);
                 
                 import_all_modules(&mut env);
                 
@@ -33,13 +40,47 @@ impl FileRunner {
                 #[cfg(feature = "get_code_run_seconds")]
                 let start = Instant::now();
 
-                eval(contents, format!("main - file: {}", self.file_path).to_string(), &mut env, &self.args);
+                let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Box::new(UNINIT_OBJ.clone()));
 
+                let symbol_table = rc_ref_cell!(SymbolTable::new());
+                let constants = rc_ref_cell!(vec![]);
+                let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);    
+
+                let result = run(
+                    contents,
+                    self.file_path.clone(),
+                    symbol_table,
+                    constants,
+                    globals
+                );         
+
+                if let Err(err_enum) = result {
+                    use crate::byte_code_vm::run::RunError;
+
+                    if let RunError::CompileError(msg) = err_enum {
+                        use colored::Colorize;
+
+                        eprintln!("{}", msg.red());
+                    } else if let RunError::RuntimeError(err) = err_enum {
+                        use colored::Colorize;
+
+                        eprintln!("{}", err.inspect().red());
+                    }
+                } else if 
+                    let Ok(Some(result)) = result &&
+                    result.get_type() == ERROR
+                {
+                    eprintln!("{}", result.inspect().red());
+                }   
+
+                #[cfg(feature = "get_code_run_seconds")]
+                let start_elapsed = start.elapsed();
+                
                 #[cfg(feature = "get_code_run_seconds")]
                 println!(
                     "{}", format!(
                         "Code run time: {} seconds, {} milliseconds, {} nanoseconds", 
-                        start.elapsed().as_secs_f64(), start.elapsed().as_millis(), start.elapsed().as_nanos()
+                        start_elapsed.as_secs_f64(), start_elapsed.as_millis(), start_elapsed.as_nanos()
                     )
                 );
             }

@@ -1,4 +1,4 @@
-pub mod eval_prefix_operator;
-pub mod eval_infix_operator;
+pub mod frame;
+pub mod eval_functions;
 pub mod vm;
 pub mod test;

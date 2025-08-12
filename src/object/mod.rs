@@ -1,4 +1,3 @@
-pub mod function_enum;
 pub mod object;
 pub mod utils;
 mod test;
@@ -16,3 +15,5 @@ pub mod ant_double;
 pub mod ant_env;
 pub mod ant_class;
 pub mod type_hint;
+pub mod ant_array;
+pub mod ant_compiled_function;

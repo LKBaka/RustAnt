@@ -1,12 +1,8 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::object::object::EnvGetter;
-use crate::environment::data::Data;
-use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::ant_string::AntString;
 use crate::object::object::{IAntObject, Object, ObjectType, ERROR};
 
 pub struct AntError {
@@ -23,32 +19,6 @@ impl Clone for AntError {
             env: self.env.clone(),
             error_name: self.error_name.clone(),
             message: self.message.clone(),
-        }
-    }
-}
-
-impl AntError {
-    pub fn new_with_native_value(mut value: Box<dyn Any>) -> Object {
-        let cast_result = value.downcast_mut::<String>().cloned();
-
-        match cast_result {
-            None => {
-                panic!("message is not String")
-            }
-            Some(s) => {
-                let mut env = Environment::new();
-                env.create("value", Data::new(
-                    AntString::new_with_native_value(Box::new(s.clone())),
-                    DataInfo::new(false))
-                );
-
-                Box::new(Self {
-                    id: Uuid::new_v4(),
-                    env,
-                    error_name: "error".to_string(),
-                    message: s
-                })
-            }
         }
     }
 }

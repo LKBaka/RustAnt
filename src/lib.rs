@@ -1,13 +1,10 @@
-pub mod type_defs;
 pub mod byte_code_vm;
 pub mod object;
 pub mod environment;
 pub mod ast;
-pub mod evaluator;
 pub mod parser;
 pub mod token;
 pub mod lexer;
-pub mod function_caller;
 pub mod map;
 pub mod char_string;
 pub mod arg_structure;

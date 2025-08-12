@@ -4,7 +4,6 @@ use uuid::Uuid;
 use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{IAntObject, Object, ObjectType, NATIVE_FUNCTION};
-use crate::object::object::EnvGetter;
 
 use super::type_hint::TypeHintMap;
 

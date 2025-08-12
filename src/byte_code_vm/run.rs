@@ -1,36 +1,60 @@
+use std::{cell::RefCell, rc::Rc};
+
+
 use colored::Colorize;
 
-use crate::{byte_code_vm::{code::code::instruction_to_str, compiler::utils::compile_it, vm::vm::Vm}, object::{object::Object, utils::create_error_with_name}};
+use crate::{byte_code_vm::{code::code::instruction_to_str, compiler::{symbol_table::symbol_table::SymbolTable, utils::compile_with_state}, vm::{frame::fmt_frames, vm::Vm}}, object::{object::Object, utils::create_error_with_name}};
 
 pub enum RunError {
     RuntimeError(Object),
     CompileError(String),
 }
 
-pub fn run(code: String, file: String) -> Result<Option<Object>, RunError> {
+pub fn run(
+    code: String, 
+    file: String, 
+    symbol_table: Rc<RefCell<SymbolTable>>, 
+    constants: Rc<RefCell<Vec<Object>>>, 
+    globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>
+) -> Result<Option<Object>, RunError> {
     let bytecode = {
-        let compile_result = compile_it(code, file);
+        let compile_result = compile_with_state(
+            code, file, symbol_table, constants
+        );
+        
         match compile_result {
             Ok(bytecode) => bytecode,
             Err(msg) => return Err(RunError::CompileError(msg))
         }
     };
 
+    #[cfg(feature = "debug")]
     println!("{}, ByteCode: {:?}, Instructions: {}", "机器已上电".green(), bytecode, instruction_to_str(&bytecode.instructions));
 
-    let mut vm = Vm::new(bytecode);
+    let mut vm = Vm::with_globals(bytecode, globals);
 
     match vm.run() {
         Ok(_) => {
+            #[cfg(feature = "debug")]
+            println!("{}", fmt_frames(&vm.frames()));
+
             if let Some(result) = vm.last_popped_stack_elem() {
                 Ok(Some(result))
             } else {
                 Ok(None)
             }
         },
-        Err(msg) => Err(RunError::RuntimeError(create_error_with_name(
-            "RuntimeError",
-            msg
-        ))),
+        Err(msg) => {
+            #[cfg(feature = "debug")]
+            println!("{}", fmt_frames(&vm.frames()));
+            
+            Err(RunError::RuntimeError(create_error_with_name(
+                "RuntimeError",
+                msg
+            )))
+        }
     }
+
+
 }
+

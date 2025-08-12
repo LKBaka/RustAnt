@@ -1,14 +1,29 @@
-#[cfg(feature = "byte_code_rust_ant")]
 pub fn test_byte_code_rust_ant_main() {
+    use std::cell::RefCell;
     use std::io;
 
     use std::io::Write;
+    use std::rc::Rc;
 
-    let mut code = String::new();
+    use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
+    use crate::byte_code_vm::constants::UNINIT_OBJ;
+    use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
+    use crate::object::object::Object;
+    use crate::rc_ref_cell;
+
+    let mut code;
 
     let file = "repl".to_string();
 
+    let uninit: Vec<Rc<RefCell<Object>>> = vec![rc_ref_cell!(Box::new(UNINIT_OBJ.clone()))];
+
+    let symbol_table = rc_ref_cell!(SymbolTable::new());
+    let constants = rc_ref_cell!(vec![]);
+    let globals = rc_ref_cell!(vec![uninit[0].clone(); GLOBALS_SIZE as usize]);    
+
     loop {
+        code = String::new();
+
         // get user input (repl)
         print!(">>> ");
 
@@ -23,8 +38,7 @@ pub fn test_byte_code_rust_ant_main() {
             Err(e) => {eprintln!("{}", e.to_string()); continue;},
             Ok(_) => {}
         }
-
-
+        
         #[cfg(feature = "get_code_run_seconds")]
         use std::time::Instant;
 
@@ -33,7 +47,10 @@ pub fn test_byte_code_rust_ant_main() {
         #[cfg(feature = "get_code_run_seconds")]
         let start = Instant::now();
 
-        let result = run(code.clone(), file.clone());
+        let result = run(
+            code.clone(), file.clone(), symbol_table.clone(), constants.clone(), globals.clone()
+        );
+        
         if let Err(err_enum) = result {
             use crate::byte_code_vm::run::RunError;
 
@@ -57,7 +74,5 @@ pub fn test_byte_code_rust_ant_main() {
                 start.elapsed().as_secs_f64(), start.elapsed().as_millis(), start.elapsed().as_nanos()
             )
         );
-
-        code = String::new();
     }
 }

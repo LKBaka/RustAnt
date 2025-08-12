@@ -4,7 +4,6 @@ use uuid::Uuid;
 use crate::ast::statements::block_statement::BlockStatement;
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::EnvGetter;
 use crate::object::object::{IAntObject, Object, ObjectType, FUNCTION};
 
 pub struct AntFunction {

@@ -1,7 +1,6 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::object::object::EnvGetter;
 use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{IAntObject, Object, ObjectType};

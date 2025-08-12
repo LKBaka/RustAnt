@@ -16,7 +16,7 @@ lazy_static! {
 
     // 未初始化对象 通常用于在初始化函数参数前填充形参, 在类中则表示需要定义 (参考接口)
     pub static ref uninit_obj: Object = {
-        AntUninit::new(Environment::new())
+        AntUninit::new()
     };
 
     pub static ref ant_true: Object = {

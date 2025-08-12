@@ -16,7 +16,7 @@ fn print_parse_object_member_expression_call() {
 fn print_ast() {
     use crate::{ast::ast::Node, lexer::lexer::Lexer, parser::parser::Parser};
 
-    let code = "fib(n - 1) + fib(n - 2)";
+    let code = "[1, 2, 3][1 + 1]";
     let file = "__print_ast__".to_string();
 
     let mut lexer = Lexer::new(code.into(), file.into());
