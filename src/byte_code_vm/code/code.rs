@@ -21,6 +21,17 @@ pub const OP_TRUE: u8 = 10;
 pub const OP_FALSE: u8 = 11;
 pub const OP_MINUS: u8 = 12;
 pub const OP_BANG: u8 = 13;
+pub const OP_JUMP: u8 = 14;
+pub const OP_JUMP_NOT_TRUTHY: u8 = 15;
+pub const OP_GET_GLOBAL: u8 = 16;
+pub const OP_SET_GLOBAL: u8 = 17;
+pub const OP_ARRAY: u8 = 18;
+pub const OP_INDEX: u8 = 19;
+pub const OP_CALL: u8 = 20;
+pub const OP_RETURN_VALUE: u8 = 21;
+pub const OP_RETURN: u8 = 22;
+pub const OP_GET_LOCAL: u8 = 23;
+pub const OP_SET_LOCAL: u8 = 24;
 
 pub const INFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_map! {
     "+" => OP_ADD,
@@ -70,11 +81,23 @@ lazy_static! {
         m.insert(OP_FALSE, Definition::new("OpFalse".into(), vec![]));
         m.insert(OP_MINUS, Definition::new("OpMinus".into(), vec![]));
         m.insert(OP_BANG, Definition::new("OpBang".into(), vec![]));
+        m.insert(OP_JUMP, Definition::new("OpJump".into(), vec![2]));
+        m.insert(OP_JUMP_NOT_TRUTHY, Definition::new("OpJumpNotTruthy".into(), vec![2]));
+        m.insert(OP_GET_GLOBAL, Definition::new("OpGetGlobal".into(), vec![2]));
+        m.insert(OP_SET_GLOBAL, Definition::new("OpSetGlobal".into(), vec![2]));
+        m.insert(OP_ARRAY, Definition::new("OpArray".into(), vec![2]));
+        m.insert(OP_INDEX, Definition::new("OpIndex".into(), vec![]));
+        m.insert(OP_CALL, Definition::new("OpCall".into(), vec![]));
+        m.insert(OP_RETURN_VALUE, Definition::new("OpReturnValue".into(), vec![]));
+        m.insert(OP_RETURN, Definition::new("OpReturn".into(), vec![]));
+        m.insert(OP_GET_LOCAL, Definition::new("OpGetLocal".into(), vec![2]));
+        m.insert(OP_SET_LOCAL, Definition::new("OpSetLocal".into(), vec![2]));
 
         m
     };
 }
 
+#[inline]
 pub fn lookup(op: u8) -> Result<Definition, String> {
     let definition = definitions.get(&op);
 
@@ -99,7 +122,7 @@ pub fn make(op: OpCode, operands: &Vec<u16>) -> Vec<u8> {
 
             for (i, operand) in operands.iter().enumerate() {
                 let width = def.operand_widths[i];
-                
+
                 match width {
                     2 => {
                         // 处理 2 字节操作数 (大端序)
@@ -108,11 +131,11 @@ pub fn make(op: OpCode, operands: &Vec<u16>) -> Vec<u8> {
                     }
 
                     // 添加其他宽度处理...
-                    _ => panic!("unsupported operand width: {}", width), 
+                    _ => panic!("unsupported operand width: {}", width),
                 }
 
                 offset += width as usize;
-            }            
+            }
 
             instruction
         },
@@ -140,7 +163,7 @@ pub fn instruction_to_str(ins: &Instructions) -> String {
                 continue;
             }
         };
-        
+
         let result = read_operands(&def, &ins[(i + 1)..].to_vec());
 
         let operands = result.0;
@@ -153,6 +176,41 @@ pub fn instruction_to_str(ins: &Instructions) -> String {
 
     s
 }
+
+pub fn instruction_to_str_with_indent(ins: &Instructions, indent: &str) -> String {
+    let mut s = String::new();
+
+    let mut i = 0;
+
+    let ins_length = ins.len();
+
+    while i < ins_length {
+        let def = {
+            let result = lookup(ins[i]);
+
+            if let Ok(it) = result {
+                it
+            } else if let Err(msg) = result {
+                s.push_str(&format!("Error: {}", msg.red()));
+                continue;
+            } else {
+                continue;
+            }
+        };
+
+        let result = read_operands(&def, &ins[(i + 1)..].to_vec());
+
+        let operands = result.0;
+        let read = result.1;
+
+        s.push_str(&format!("{indent}{:04} {}\n", i, fmt_instruction(&def, &operands)));
+
+        i += 1 + read
+    }
+
+    s
+}
+
 
 pub fn fmt_instruction(def: &Definition, operands: &Vec<i32>) -> String {
     let operand_count = def.operand_widths.len();
@@ -186,7 +244,7 @@ pub fn read_operands(def: &Definition, ins: &Instructions) -> (Vec<i32>, usize) 
     (operands, offset)
 }
 
+#[inline]
 pub fn read_uint16(ins: &[u8]) -> u16 {
     BigEndian::read_u16(ins)
 }
-
