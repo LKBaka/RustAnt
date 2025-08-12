@@ -2,13 +2,10 @@ use std::any::Any;
 use std::fmt::Debug;
 use dyn_clone::{clone_trait_object, DynClone};
 
-use crate::constants::{null_obj, NEW_LINE};
-use crate::evaluator::evaluator::Evaluator;
+use crate::constants::NEW_LINE;
+
 use crate::impl_node;
-use crate::object::utils::is_error;
 use crate::token::token::Token;
-use crate::environment::environment::Environment;
-use crate::object::object::Object;
 
 pub trait TypeNameGetter {
     fn type_name(&self) -> String;
@@ -17,7 +14,6 @@ pub trait TypeNameGetter {
 pub trait Node: DynClone + Sync + Send + Any + Debug + TypeNameGetter {
     fn token_literal(&self) -> String;
     fn to_string(&self) -> String;
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object>;
 
     fn as_any(&self) -> &(dyn Any + '_) where Self: Sized {
         self
@@ -70,22 +66,6 @@ impl Node for Program {
         
         s
     }
-
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        let mut result = Some(null_obj.clone());
-
-        for statement in &mut self.statements {
-            result = statement.eval(evaluator, env);
-
-            if let Some(it) = &result && 
-                is_error(&it) 
-            {
-                return result;
-            }
-        }
-
-        result
-    }
 }
 
 impl_node!(Program);
@@ -117,14 +97,6 @@ impl Node for ExpressionStatement {
             "".to_string()
         } else {
             self.expression.clone().unwrap().to_string()
-        }
-    }
-
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        if let Some(expression) = self.expression.as_mut() {
-            expression.eval(evaluator, env)
-        } else {
-            None
         }
     }
 }

@@ -1,9 +1,5 @@
 use crate::ast::ast::{Expression, Node, Statement};
-use crate::constants::null_obj;
-use crate::environment::environment::Environment;
-use crate::object::object::Object;
-use crate::evaluator::evaluator::Evaluator;
-use crate::object::utils::is_truthy;
+
 use crate::token::token::Token;
 use crate::impl_node;
 
@@ -22,10 +18,10 @@ impl Clone for IfExpression {
 #[derive(Debug)]
 pub struct IfExpression {
     pub token: Token,
-    condition: Box<dyn Expression>, // 条件
-    consequence: Box<dyn Statement>, // 默认块
-    alternative: Option<Box<dyn Statement>>, // Else 分支块
-    else_if_expressions: Option<Vec<Box<dyn Expression>>> // ElseIf 分支块
+    pub condition: Box<dyn Expression>, // 条件
+    pub consequence: Box<dyn Statement>, // 默认块
+    pub alternative: Option<Box<dyn Statement>>, // Else 分支块
+    pub else_if_expressions: Option<Vec<Box<dyn Expression>>> // ElseIf 分支块
 }
 
 impl Node for IfExpression {
@@ -64,34 +60,6 @@ impl Node for IfExpression {
         }
         
         result
-    }
-
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        let condition: Object = self.condition.eval(evaluator, env)?;
-        
-        if is_truthy(condition) {
-            // 条件为真，直接求值默认代码块
-            self.consequence.eval(evaluator, env)
-        } else {
-            if let Some(ref mut it) = self.else_if_expressions {
-                // 条件为假，但是存在其他条件分支判断，遍历所有其他分支，只要其他分支返回一个值，则返回该值，否则继续尝试访问最终的分支
-
-                for else_if_expression in it {
-                    let eval_result = else_if_expression.eval(evaluator, env);
-
-                    if eval_result.is_some() {
-                        return eval_result;
-                    }
-                }
-            }
-
-            if let Some(ref mut it) = self.alternative {
-                return it.eval(evaluator, env)
-            }
-
-            // 如果不存在其他任何分支，则返回空
-            Some(null_obj.clone())
-        }
     }
 }
 
@@ -140,16 +108,6 @@ impl Node for ElseIfExpression {
             "else if ({}) {{{}}}",
             self.condition.to_string(), self.consequence.to_string()
         )
-    }
-
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        let condition = self.condition.eval(evaluator, env)?;
-        
-        if is_truthy(condition) {
-            self.consequence.eval(evaluator, env)
-        } else {
-            None
-        }
     }
 }
 

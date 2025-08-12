@@ -1,9 +1,5 @@
 use crate::ast::ast::{Expression, Node};
-use crate::constants::null_obj;
-use crate::environment::environment::Environment;
-use crate::object::object::Object;
 use crate::token::token::Token;
-use crate::evaluator::evaluator::Evaluator;
 use crate::impl_node;
 
 impl Clone for TupleExpression {
@@ -32,14 +28,6 @@ impl Node for TupleExpression {
             .collect();
 
         format!("({})", expressions_str.join(", "))
-    }
-
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        if self.expressions.len() == 1 {
-            self.expressions[0].eval(evaluator, env)
-        } else {
-            Some(null_obj.clone())
-        }
     }
 }
 

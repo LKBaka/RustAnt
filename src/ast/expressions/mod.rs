@@ -13,3 +13,5 @@ pub mod object_member_expression;
 pub mod class_member_expression;
 pub mod tuple_expression;
 pub mod prefix_expression;
+pub mod array_literal;
+pub mod index_expression;

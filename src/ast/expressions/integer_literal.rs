@@ -1,11 +1,6 @@
 use bigdecimal::BigDecimal;
 
 use crate::ast::ast::{Expression, Node};
-use crate::environment::environment::Environment;
-use crate::object::ant_int::create_ant_int;
-use crate::object::object::Object;
-use crate::evaluator::evaluator::Evaluator;
-use crate::rc_ref_cell;
 use crate::token::token::Token;
 use crate::impl_node;
 
@@ -31,10 +26,6 @@ impl Node for IntegerLiteral {
 
     fn to_string(&self) -> String {
         self.value.to_string()
-    }
-
-    fn eval(&mut self, _: &mut Evaluator, outer: &mut Environment) -> Option<Object> { 
-        Some(create_ant_int(self.value.clone(), rc_ref_cell!(outer.clone())))
     }
 }
 

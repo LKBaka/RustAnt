@@ -1,14 +1,9 @@
-use std::any::Any;
 
 use crate::ast::ast::{Expression, Node};
-use crate::ast::expressions::identifier::Identifier;
-use crate::environment::environment::Environment;
-use crate::evaluator::evaluator::Evaluator;
-use crate::object::utils::{create_error, is_error};
+
 use crate::token::token::Token;
 use crate::impl_node;
 
-use super::super::super::object::object::Object;
 
 impl Clone for AssignmentExpression {
     fn clone(&self) -> Self {
@@ -34,34 +29,6 @@ impl Node for AssignmentExpression {
 
     fn to_string(&self) -> String {
         format!("{} = {}", self.left.to_string(), self.value.to_string())
-    }
-
-    fn eval(&mut self, evaluator: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        let left = self.left.as_ref();
-
-        if let Some(it) = (left as &dyn Any).downcast_ref::<Identifier>() {
-            let name = it.to_string();
-
-            let value =  self.value.eval(evaluator, env).expect("value is None!");
-            if is_error(&value) {return Some(value)};
-
-            let result = env.set_value(&name, value);
-            if let Some(err_obj) = result {
-                return Some(err_obj)
-            }
-
-            return None;
-        }
-
-        // 不支持赋值的表达式，抛出错误
-        Some(
-            create_error(
-                format!(
-                    "cannot assign to expression '{}' here. Maybe you meant '==' instead of '='?", 
-                    self.left.to_string()
-                )
-            )
-        )
     }
 }
 

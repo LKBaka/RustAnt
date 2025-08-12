@@ -1,8 +1,5 @@
 use crate::ast::ast::{Expression, Node};
-use crate::constants::{ant_false, ant_true};
-use crate::environment::environment::Environment;
-use crate::evaluator::evaluator::Evaluator;
-use crate::object::object::Object;
+
 use crate::token::token::Token;
 use crate::impl_node;
 
@@ -28,16 +25,6 @@ impl Node for BooleanLiteral {
 
     fn to_string(&self) -> String {
         self.value.to_string()
-    }
-
-    fn eval(&mut self, _: &mut Evaluator, _: &mut Environment) -> Option<Object> {
-        Some(
-            if self.value {
-                ant_true.clone()
-            } else {
-                ant_false.clone()
-            }
-        )
     }
 }
 

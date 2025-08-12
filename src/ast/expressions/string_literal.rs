@@ -1,8 +1,5 @@
 use crate::ast::ast::{Expression, Node};
-use crate::environment::environment::Environment;
-use crate::object::ant_string::AntString;
-use crate::object::object::Object;
-use crate::evaluator::evaluator::Evaluator;
+
 use crate::token::token::Token;
 use crate::impl_node;
 
@@ -28,10 +25,6 @@ impl Node for StringLiteral {
 
     fn to_string(&self) -> String {
         self.value.to_string()
-    }
-
-    fn eval(&mut self, _: &mut Evaluator, _: &mut Environment) -> Option<Object> {
-        Some(AntString::new_with_native_value(Box::new(self.value.clone())))
     }
 }
 

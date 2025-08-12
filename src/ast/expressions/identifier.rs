@@ -1,9 +1,6 @@
 use crate::ast::ast::{Expression, Node};
-use crate::environment::environment::Environment;
-use crate::object::object::Object;
-use crate::object::utils::create_error_with_name;
 use crate::token::token::Token;
-use crate::evaluator::evaluator::Evaluator;
+
 use crate::impl_node;
 
 impl Clone for Identifier {
@@ -28,24 +25,6 @@ impl Node for Identifier {
 
     fn to_string(&self) -> String {
         self.value.to_string()
-    }
-
-    fn eval(&mut self, _: &mut Evaluator, env: &mut Environment) -> Option<Object> {
-        let result = env.get(&self.value.trim());
-
-        Some(
-            match result {
-                None => {
-                    create_error_with_name(
-                        "NameError", 
-                        format!("name '{}' is not defined ", self.value.clone())
-                    )
-                }
-                Some(it) => {
-                    it
-                }
-            }
-        )
     }
 }
 
