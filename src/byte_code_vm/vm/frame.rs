@@ -8,17 +8,17 @@ pub struct Frame {
     pub stack: Rc<RefCell<Vec<Object>>>,
     pub locals: Rc<RefCell<Vec<Object>>>,
     pub ip: isize,
-    pub base_pointer: usize
+    pub sp: usize,
 }
 
 impl Frame {
-    pub fn new(func: Rc<RefCell<CompiledFunction>>, base_pointer: usize) -> Self {
+    pub fn new(func: Rc<RefCell<CompiledFunction>>) -> Self {
         Self {
             func,
             ip: -1,
-            base_pointer,
             stack: rc_ref_cell!(vec![]),
-            locals: rc_ref_cell!(vec![])
+            locals: rc_ref_cell!(vec![]),
+            sp: 0,
         }
     }
 

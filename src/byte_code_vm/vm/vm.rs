@@ -47,7 +47,7 @@ impl Vm {
             locals_count: 0,
         };
 
-        let main_frame = Frame::new(rc_ref_cell!(main_func), 0);
+        let main_frame = Frame::new(rc_ref_cell!(main_func));
 
         Vm {
             constants: bytecode.constants,
@@ -68,7 +68,7 @@ impl Vm {
             locals_count: 0,
         };
 
-        let main_frame = Frame::new(rc_ref_cell!(main_func), 0);
+        let main_frame = Frame::new(rc_ref_cell!(main_func));
 
         Vm {
             constants: bytecode.constants,
@@ -232,10 +232,14 @@ impl Vm {
                     let array_len = read_uint16(&instructions.borrow()[(ip + 1)..]);
                     self.current_frame().borrow_mut().ip += 2;
 
-                    let array_obj =
-                        build_array(&self.stack.borrow(), self.sp - array_len as usize, self.sp);
+                    let array_obj = build_array(
+                        &self.stack.borrow(),
+                        self.current_frame().borrow().sp - array_len as usize,
+                        self.current_frame().borrow().sp,
+                    );
 
-                    self.sp = self.sp - array_len as usize;
+                    self.current_frame().borrow_mut().sp =
+                        self.current_frame().borrow().sp - array_len as usize;
 
                     let push_result = self.push(Box::new(array_obj));
                     if let Err(msg) = push_result {
@@ -280,10 +284,8 @@ impl Vm {
                         return Err(format!("calling non-function"));
                     };
 
-                    let frame = Frame::new(rc_ref_cell!(calling_obj), 0);
+                    let frame = Frame::new(rc_ref_cell!(calling_obj));
                     self.push_frame(rc_ref_cell!(frame.clone()));
-
-                    self.sp = frame.base_pointer
                 }
 
                 OP_RETURN_VALUE => {
@@ -293,8 +295,7 @@ impl Vm {
                         return Err(format!("expected an object to return"));
                     };
 
-                    let frame = self.pop_frame(); // 弹出当前帧
-                    self.sp = frame.borrow().base_pointer - 1;
+                    self.pop_frame(); // 弹出当前帧
 
                     if let Err(msg) = self.push(return_value) {
                         return Err(format!("error push return value: {msg}"));
@@ -310,7 +311,9 @@ impl Vm {
                     let frame = self.current_frame();
                     let locals = &frame.borrow().locals;
                     if (local_index as usize) >= locals.borrow().len() {
-                        locals.borrow_mut().resize(local_index as usize + 1,Box::new(UNINIT_OBJ.clone()));
+                        locals
+                            .borrow_mut()
+                            .resize(local_index as usize + 1, Box::new(UNINIT_OBJ.clone()));
                     }
                     locals.borrow_mut()[local_index as usize] = value;
                 }
@@ -336,47 +339,47 @@ impl Vm {
     }
 
     pub fn stack_top(&self) -> Option<Object> {
-        if self.sp == 0 {
+        if self.current_frame().borrow().sp == 0 {
             None
         } else {
-            Some(self.stack.borrow()[self.sp - 1].clone())
+            Some(self.stack.borrow()[self.current_frame().borrow().sp - 1].clone())
         }
     }
 
     pub fn last_popped_stack_elem(&self) -> Option<Object> {
-        if self.sp >= self.stack.borrow().len() {
+        if self.current_frame().borrow().sp >= self.stack.borrow().len() {
             None
         } else {
-            Some(self.stack.borrow()[self.sp].clone())
+            Some(self.stack.borrow()[self.current_frame().borrow().sp].clone())
         }
     }
 
     #[inline]
     pub fn push(&mut self, obj: Object) -> Result<(), String> {
-        if self.sp >= STACK_SIZE as usize {
+        if self.current_frame().borrow().sp >= STACK_SIZE as usize {
             return Err("Stack overflow".to_string());
         }
 
-        if self.sp >= self.stack.borrow().len() {
+        if self.current_frame().borrow().sp >= self.stack.borrow().len() {
             self.stack.borrow_mut().push(obj);
         } else {
-            self.stack.borrow_mut()[self.sp] = obj;
+            self.stack.borrow_mut()[self.current_frame().borrow().sp] = obj;
         }
 
-        self.sp += 1;
+        self.current_frame().borrow_mut().sp += 1;
 
         Ok(())
     }
 
     #[inline]
     pub fn pop(&mut self) -> Option<Object> {
-        if self.sp == 0 {
+        if self.current_frame().borrow().sp == 0 {
             None
         } else {
-            self.sp -= 1;
+            self.current_frame().borrow_mut().sp -= 1;
 
             // 地雷式 stack, 不是合法的 sp 范围直接 panic
-            Some(self.stack.borrow()[self.sp].clone())
+            Some(self.stack.borrow()[self.current_frame().borrow().sp].clone())
         }
     }
 
