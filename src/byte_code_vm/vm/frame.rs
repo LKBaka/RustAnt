@@ -5,6 +5,7 @@ use crate::{byte_code_vm::code::code::{instruction_to_str_with_indent, Instructi
 #[derive(Clone, Debug)]
 pub struct Frame {
     pub func: Rc<RefCell<CompiledFunction>>,
+    pub stack: Rc<RefCell<Vec<Object>>>,
     pub locals: Rc<RefCell<Vec<Object>>>,
     pub ip: isize,
     pub base_pointer: usize
@@ -16,6 +17,7 @@ impl Frame {
             func,
             ip: -1,
             base_pointer,
+            stack: rc_ref_cell!(vec![]),
             locals: rc_ref_cell!(vec![])
         }
     }
