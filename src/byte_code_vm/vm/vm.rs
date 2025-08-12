@@ -153,7 +153,7 @@ impl Vm {
                         return Err(format!("error evaluating infix operator {}: {}", op, err));
                     }
 
-                    let push_result = self.push(eval_operator_result.unwrap());
+                    let push_result = self.push(eval_operator_result?);
 
                     if push_result.is_err() {
                         return push_result;
@@ -235,8 +235,8 @@ impl Vm {
                         self.current_frame().borrow().sp,
                     );
 
-                    self.current_frame().borrow_mut().sp =
-                        self.current_frame().borrow().sp - array_len as usize;
+                    let frame = self.current_frame();
+                    frame.borrow_mut().sp -= array_len as usize;
 
                     let push_result = self.push(Box::new(array_obj));
                     if let Err(msg) = push_result {
@@ -283,21 +283,21 @@ impl Vm {
 
                     let frame = Frame::new(rc_ref_cell!(calling_obj));
                     self.push_frame(rc_ref_cell!(frame.clone()));
+
+                    self.stack = frame.stack;
                 }
 
                 OP_RETURN_VALUE => {
-                    let return_value = if let Some(it) = self.pop() {
-                        it
-                    } else {
-                        return Err(format!("expected an object to return"));
-                    };
+                    let return_value = self.pop();
 
                     self.pop_frame(); // 弹出当前帧
 
                     self.stack = self.current_frame().borrow().stack.clone();
 
-                    if let Err(msg) = self.push(return_value) {
-                        return Err(format!("error push return value: {msg}"));
+                    if let Some(value) = return_value {
+                        if let Err(msg) = self.push(value) {
+                            return Err(format!("error push return value: {msg}"));
+                        }
                     }
                 }
 

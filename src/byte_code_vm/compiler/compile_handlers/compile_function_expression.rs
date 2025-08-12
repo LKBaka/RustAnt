@@ -1,8 +1,18 @@
-use crate::{ast::{ast::Node, expressions::function_expression::FunctionExpression}, byte_code_vm::{code::code::{OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL}, compiler::compiler::Compiler}, convert_type, object::ant_compiled_function::CompiledFunction, rc_ref_cell};
+use crate::{
+    ast::{ast::Node, expressions::function_expression::FunctionExpression},
+    byte_code_vm::{
+        code::code::{OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL},
+        compiler::compiler::Compiler,
+    },
+    convert_type,
+    object::ant_compiled_function::CompiledFunction,
+    rc_ref_cell,
+};
+use std::any::Any;
 
 pub fn compile_function_expression(
     compiler: &mut Compiler,
-    node: Box<dyn Node>
+    node: Box<dyn Node>,
 ) -> Result<(), String> {
     let func_expr = convert_type!(FunctionExpression, node);
 
@@ -14,33 +24,25 @@ pub fn compile_function_expression(
 
     compiler.enter_scope();
 
-    let compile_body_result = compiler.compile(Box::new(func_expr.block));
+    let compile_body_result = compiler.compile(Box::new(func_expr.block.clone()));
     if let Err(msg) = compile_body_result {
-        return Err(format!("error compile function body: {msg}"))
-    }   
-
-    if compiler.last_instruction_is(OP_POP) {
-        compiler.remove_last_pop_to(OP_RETURN_VALUE, &vec![]);
+        return Err(format!("error compile function body: {msg}"));
     }
+    
+    compiler.add_instruction(vec![OP_RETURN_VALUE]);
 
     let locals_count = compiler.symbol_table.borrow().num_definitions;
 
-    let instructions = compiler
-        .leave_scope()
-        .borrow()
-        .clone();
+    let instructions = compiler.leave_scope().borrow().clone();
 
     let compiled_function = CompiledFunction {
         instructions: rc_ref_cell!(instructions),
-        locals_count
+        locals_count,
     };
 
     let constant_index = compiler.add_constant(Box::new(compiled_function)) as u16;
 
-    compiler.emit(
-        OP_CONSTANTS,
-        vec![constant_index]
-    );
+    compiler.emit(OP_CONSTANTS, vec![constant_index]);
 
     if func_expr.name.is_some() {
         compiler.emit(OP_SET_GLOBAL, vec![symbol_index.unwrap()]);

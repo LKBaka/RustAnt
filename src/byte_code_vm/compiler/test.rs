@@ -31,9 +31,9 @@ mod tests {
                 vec![Box::new(big_dec!(1)), Box::new(big_dec!(2))],
                 vec![
                     make(OP_CONSTANTS, &vec![0u16]),
-                    make(OP_POP, &vec![]),
+                    
                     make(OP_CONSTANTS, &vec![1u16]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -43,7 +43,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_ADD, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -53,7 +53,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_SUBTRACT, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -63,7 +63,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_MULTIPLY, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -73,7 +73,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_DIVIDE, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
@@ -82,7 +82,7 @@ mod tests {
                 vec![
                     make(OP_CONSTANTS, &vec![]),
                     make(OP_MINUS, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
         ];
@@ -104,11 +104,11 @@ mod tests {
                     // 0004
                     make(OP_CONSTANTS, &vec![0u16]),
                     // 0007
-                    make(OP_POP, &vec![]),
+                    
                     // 0008
                     make(OP_CONSTANTS, &vec![1u16]),
                     // 0011
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -126,11 +126,11 @@ mod tests {
                     // 0010
                     make(OP_CONSTANTS, &vec![1]),
                     // 0013
-                    make(OP_POP, &vec![]),
+                    
                     // 0014
                     make(OP_CONSTANTS, &vec![2]),
                     // 0017
-                    make(OP_POP, &vec![]),
+                    
                 ],
             ),
             CompilerTestCase::new(
@@ -156,11 +156,11 @@ mod tests {
                     // 0020
                     make(OP_CONSTANTS, &vec![2]), // else body
                     // 0023
-                    make(OP_POP, &vec![]), // if expression all end
+                     // if expression all end
                     // 0024
                     make(OP_CONSTANTS, &vec![3]), // 3333
                     // 0027
-                    make(OP_POP, &vec![]), // pop 3333
+                     // pop 3333
                 ],
             ),
         ];
@@ -176,7 +176,7 @@ mod tests {
                 vec![],
                 vec![
                     make(OP_TRUE, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
@@ -184,7 +184,7 @@ mod tests {
                 vec![],
                 vec![
                     make(OP_FALSE, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -194,7 +194,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_GT, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -204,7 +204,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_GT, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -214,7 +214,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_EQ, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::new(
@@ -224,7 +224,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_NOTEQ, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
@@ -234,7 +234,7 @@ mod tests {
                     make(OP_TRUE, &vec![]),
                     make(OP_FALSE, &vec![]),
                     make(OP_EQ, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
@@ -244,7 +244,7 @@ mod tests {
                     make(OP_TRUE, &vec![]),
                     make(OP_FALSE, &vec![]),
                     make(OP_NOTEQ, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
@@ -253,7 +253,7 @@ mod tests {
                 vec![
                     make(OP_TRUE, &vec![]),
                     make(OP_BANG, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
         ];
@@ -295,7 +295,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_SET_GLOBAL, &vec![0u16]),
                     make(OP_GET_GLOBAL, &vec![0u16]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
 
@@ -315,7 +315,7 @@ mod tests {
                     make(OP_GET_GLOBAL, &vec![0u16]),
                     make(OP_SET_GLOBAL, &vec![1u16]),
                     make(OP_GET_GLOBAL, &vec![1u16]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
         ];
@@ -334,7 +334,7 @@ mod tests {
                 ],
                 vec![
                     make(OP_CONSTANTS, &vec![0u16]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
 
@@ -349,7 +349,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_ADD, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             ),
         ];
@@ -372,7 +372,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_CONSTANTS, &vec![2u16]),
                     make(OP_ARRAY, &vec![3u16]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             )
         ];
@@ -401,7 +401,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![4u16]),
                     make(OP_ADD, &vec![]),
                     make(OP_INDEX, &vec![]),
-                    make(OP_POP, &vec![]),
+                    
                 ]
             )
         ];

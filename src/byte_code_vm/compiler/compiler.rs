@@ -150,8 +150,6 @@ impl Compiler {
                 if let Some(expr) = expr_stmt.expression {
                     let result = self.compile(expr);
                     if result.is_err() {return result};
-
-                    self.emit(OP_POP, vec![]);
                 }
 
                 Ok(())

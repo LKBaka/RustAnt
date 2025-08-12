@@ -38,7 +38,7 @@ pub fn run(
             #[cfg(feature = "debug")]
             println!("{}", fmt_frames(&vm.frames()));
 
-            if let Some(result) = vm.last_popped_stack_elem() {
+            if let Some(result) = vm.pop() {
                 Ok(Some(result))
             } else {
                 Ok(None)

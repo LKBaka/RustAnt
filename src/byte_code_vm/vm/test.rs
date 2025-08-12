@@ -374,7 +374,7 @@ mod tests {
                 panic!("{}", format!("vm run error: {msg}").red());
             }
 
-            let last_popped = vm.last_popped_stack_elem();
+            let last_popped = vm.pop();
 
             match test_case.expected.type_id() {
                 id if id == TypeId::of::<BigDecimal>() => {
