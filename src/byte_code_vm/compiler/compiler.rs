@@ -244,7 +244,10 @@ impl Compiler {
                 let symbol = { self.symbol_table.borrow().resolve(&ident.value) };
 
                 if let Some(symbol) = symbol {
-                    self.emit(OP_GET_GLOBAL, vec![symbol.index as u16]);
+                    self.emit(
+                        if symbol.scope == SymbolScope::Global { OP_GET_GLOBAL } else { OP_GET_LOCAL }, 
+                        vec![symbol.index as u16]
+                    );
 
                     Ok(())
                 } else {
