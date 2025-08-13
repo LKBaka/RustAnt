@@ -353,6 +353,16 @@ mod tests {
                 "#.into(),
                 big_dec!(97)
             ),
+            VmTestCase::new(
+                r#"
+                func f(val) {
+                    val
+                }
+
+                f(1)
+                "#.into(),
+                big_dec!(1)
+            )
         ];
 
         run_vm_tests(tests);
