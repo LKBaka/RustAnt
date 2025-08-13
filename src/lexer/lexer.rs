@@ -345,3 +345,26 @@ fn test_lexer_comment() {
         assert_eq(tokens[i].token_type, expected_token_types[i], on_failure_function);
     }
 }
+
+#[test]
+fn test_lexer_test_print_token() {
+    use crate::token::utils::print_tokens;
+    use crate::utils::assert_eq;
+
+    let mut l = Lexer::new(
+        "TestPrint n".into(),
+        String::from("__test_lexer_test_print_token__")
+    );
+    let tokens = l.get_tokens();
+
+    let on_failure_function = || print_tokens(tokens.clone());
+    let expected_token_types = vec![
+        TokenType::TestPrint,
+        TokenType::Ident
+    ];
+    
+    // 验证词法单元
+    for i in 0 .. tokens.len() - 1 {
+        assert_eq(tokens[i].token_type, expected_token_types[i], on_failure_function);
+    }
+}
