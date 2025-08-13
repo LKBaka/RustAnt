@@ -1,14 +1,13 @@
 use crate::{
     ast::{ast::Node, expressions::function_expression::FunctionExpression},
     byte_code_vm::{
-        code::code::{OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL},
+        code::code::{OP_CONSTANTS, OP_RETURN_VALUE, OP_SET_GLOBAL},
         compiler::compiler::Compiler,
     },
     convert_type,
     object::ant_compiled_function::CompiledFunction,
     rc_ref_cell,
 };
-use std::any::Any;
 
 pub fn compile_function_expression(
     compiler: &mut Compiler,
@@ -31,13 +30,15 @@ pub fn compile_function_expression(
     
     compiler.add_instruction(vec![OP_RETURN_VALUE]);
 
-    let locals_count = compiler.symbol_table.borrow().num_definitions;
+    let local_count = compiler.symbol_table.borrow().num_definitions;
+    let param_count = func_expr.params.len();
 
     let instructions = compiler.leave_scope().borrow().clone();
 
     let compiled_function = CompiledFunction {
         instructions: rc_ref_cell!(instructions),
-        locals_count,
+        local_count,
+        param_count,
     };
 
     let constant_index = compiler.add_constant(Box::new(compiled_function)) as u16;

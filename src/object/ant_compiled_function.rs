@@ -10,12 +10,13 @@ use crate::object::object::{IAntObject, Object, ObjectType, COMPILED_FUNCTION};
 
 pub struct CompiledFunction {
     pub instructions: Rc<RefCell<Instructions>>,
-    pub locals_count: usize,
+    pub local_count: usize,
+    pub param_count: usize,
 }
 
 impl CompiledFunction {
-    fn from(instructions: Rc<RefCell<Instructions>>, locals_count: usize) -> Self {
-        Self { instructions, locals_count }
+    fn from(instructions: Rc<RefCell<Instructions>>, local_count: usize, param_count: usize) -> Self {
+        Self { instructions, local_count, param_count }
     }
 }
 
@@ -23,7 +24,8 @@ impl Clone for CompiledFunction {
     fn clone(&self) -> Self {
         Self {
             instructions: self.instructions.clone(),
-            locals_count: self.locals_count
+            local_count: self.local_count,
+            param_count: self.param_count
         }
     }
 }
@@ -49,8 +51,10 @@ impl IAntObject for CompiledFunction {
 
     fn inspect(&self) -> String {
         format!(
-            "<CompiledFunction locals_count: {} {}>", 
-            self.locals_count, instruction_to_str(&self.instructions.borrow().clone())
+            "<CompiledFunction locals_count: {} param_count: {} {}>", 
+            self.local_count, 
+            self.param_count,
+            instruction_to_str(&self.instructions.borrow().clone())
         )
     }
 

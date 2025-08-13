@@ -10,9 +10,15 @@ pub fn compile_call_expression(
         return Err(format!("error compile call expresion: {msg}"))
     }
 
-    // WARNING: 后面滚回来写参数处理!
+    let args_len = call_expr.args.len();
 
-    compiler.emit(OP_CALL, vec![]);
+    for arg in call_expr.args {
+        if let Err(msg) = compiler.compile(arg) {
+            return Err(format!("err compile args: {msg}"))
+        }
+    }
+
+    compiler.emit(OP_CALL, vec![args_len as u16]);
 
     Ok(())
 }

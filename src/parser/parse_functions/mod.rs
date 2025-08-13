@@ -19,3 +19,4 @@ pub mod parse_tuple_expression;
 pub mod parse_prefix_expression;
 pub mod parse_array_literal;
 pub mod parse_index_expression;
+pub mod parse_test_print_expression;

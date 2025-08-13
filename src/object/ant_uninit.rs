@@ -1,20 +1,17 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::environment::environment::Environment;
 use crate::object::object::{IAntObject, Object, ObjectType, UNINIT};
 use crate::impl_object;
 
 pub struct AntUninit {
     id: Uuid,
-    env: Environment,
 }
 
 impl AntUninit {
     pub fn new() -> Object {
         let obj = Box::new(Self {
             id: Uuid::new_v4(),
-            env: Environment::new(),
         });
 
         obj
@@ -23,7 +20,6 @@ impl AntUninit {
     pub fn create() -> Self {
         Self { 
             id: Uuid::new_v4(),
-            env: Environment::new()
         }
     }
 }
@@ -63,7 +59,6 @@ impl Clone for AntUninit {
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            env: self.env.clone(),
         }
     }
 }

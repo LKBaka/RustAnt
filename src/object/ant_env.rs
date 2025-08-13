@@ -117,7 +117,7 @@ fn init_env(int_obj: &mut AntEnv) {
             return Some(create_error(format!("type mismatch for 'me'")))
         } else if let Some(me) = me {
             if let Some(_value) = extract_arg!(arg_env, "value" => AntEnv) {
-                return Some(native_boolean_to_object(!is_truthy(eq(arg_env).expect(""))))
+                return Some(native_boolean_to_object(!is_truthy(&eq(arg_env).expect(""))))
             }
 
         

@@ -9,6 +9,7 @@ use crate::parser::parse_functions::parse_call_expression::parse_call_expression
 use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
 use crate::parser::parse_functions::parse_index_expression::parse_index_expression;
 use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
+use crate::parser::parse_functions::parse_test_print_expression::parse_test_print_expression;
 use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expression;
 use crate::parser::precedence::*;
 use crate::token::token::Token;
@@ -79,6 +80,7 @@ impl Parser {
         parser.prefix_parse_fn_map.insert(TokenType::LBracket, parse_array_literal);
         parser.prefix_parse_fn_map.insert(TokenType::Bang, parse_prefix_expression);
         parser.prefix_parse_fn_map.insert(TokenType::Minus, parse_prefix_expression);
+        parser.prefix_parse_fn_map.insert(TokenType::TestPrint, parse_test_print_expression);
         parser.prefix_parse_fn_map.insert(TokenType::Comment, |_| {None});
 
         parser.infix_parse_fn_map.insert(TokenType::LParen, parse_call_expression);
