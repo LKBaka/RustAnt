@@ -70,7 +70,7 @@ impl REPLRunner {
             let start = Instant::now();  
 
             let result = run(
-                code,
+                full_code,
                 REPL_FILE_NAME.to_string(),
                 symbol_table.clone(),
                 constants.clone(),
