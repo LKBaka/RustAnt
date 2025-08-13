@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::byte_code_vm::code::code::{instruction_to_str, lookup, make, read_operands, OpCode, OP_ADD, OP_CONSTANTS};
+    use crate::byte_code_vm::code::code::{instruction_to_str, lookup, make, read_operands, OpCode, OP_ADD, OP_CALL, OP_CONSTANTS};
 
     #[test]
     fn test_make() {
@@ -15,6 +15,11 @@ mod tests {
                 op: OP_CONSTANTS,
                 operands: vec![65534],
                 expected: vec![OP_CONSTANTS as u8, 255, 254],
+            },
+            TestCase {
+                op: OP_CALL,
+                operands: vec![255],
+                expected: vec![OP_CALL as u8, 255],
             },
             TestCase {
                 op: OP_ADD,
@@ -52,6 +57,7 @@ mod tests {
             make(OP_CONSTANTS, &vec![1u16]),
             make(OP_CONSTANTS, &vec![2u16]),
             make(OP_CONSTANTS, &vec![65535u16]),
+            make(OP_CALL, &vec![255u16]),
         ];
 
         let mut expected = String::new();
@@ -59,6 +65,7 @@ mod tests {
         expected.push_str("0001 OpConstant 1\n");
         expected.push_str("0004 OpConstant 2\n");
         expected.push_str("0007 OpConstant 65535\n");
+        expected.push_str("0010 OpCall 255\n");
 
         let mut concatted: Vec<u8> = vec![];
 
@@ -90,7 +97,8 @@ mod tests {
         }
 
         let tests = vec![
-            ReadOperandsTestCase::new(OP_CONSTANTS, vec![65535u16], 2)
+            ReadOperandsTestCase::new(OP_CONSTANTS, vec![65535u16], 2),
+            ReadOperandsTestCase::new(OP_CALL, vec![255u16], 1),
         ];
 
         for test_case in tests {
