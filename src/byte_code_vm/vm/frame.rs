@@ -5,20 +5,16 @@ use crate::{byte_code_vm::code::code::{instruction_to_str_with_indent, Instructi
 #[derive(Clone, Debug)]
 pub struct Frame {
     pub func: Rc<RefCell<CompiledFunction>>,
-    pub stack: Rc<RefCell<Vec<Object>>>,
-    pub locals: Rc<RefCell<Vec<Object>>>,
     pub ip: isize,
-    pub sp: usize,
+    pub base_pointer: usize,
 }
 
 impl Frame {
-    pub fn new(func: Rc<RefCell<CompiledFunction>>) -> Self {
+    pub fn new(func: Rc<RefCell<CompiledFunction>>, base_pointer: usize) -> Self {
         Self {
             func,
             ip: -1,
-            stack: rc_ref_cell!(vec![]),
-            locals: rc_ref_cell!(vec![]),
-            sp: 0,
+            base_pointer
         }
     }
 
