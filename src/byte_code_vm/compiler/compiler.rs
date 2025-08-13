@@ -2,7 +2,7 @@ use std::{any::{Any, TypeId}, cell::RefCell, mem, rc::Rc};
 
 use hashbrown::HashMap as HashBrownMap; 
 
-use crate::{ast::{ast::{ExpressionStatement, Node, Program}, expressions::{array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, tuple_expression::TupleExpression}, statements::{block_statement::BlockStatement, let_statement::LetStatement}}, byte_code_vm::{code::code::{make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL, OP_TRUE}, compiler::{compile_handlers::{compile_call_expression::compile_call_expression, compile_function_expression::compile_function_expression, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression}, symbol_table::symbol_table::{SymbolScope, SymbolTable}}}, convert_type, object::{ant_int::AntInt, ant_string::AntString, object::Object}, rc_ref_cell, struct_type_id};
+use crate::{ast::{ast::{ExpressionStatement, Node, Program}, expressions::{array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression}, statements::{block_statement::BlockStatement, let_statement::LetStatement, while_statement::WhileStatement}}, byte_code_vm::{code::code::{make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE}, compiler::{compile_handlers::{compile_call_expression::compile_call_expression, compile_function_expression::compile_function_expression, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement}, symbol_table::symbol_table::{SymbolScope, SymbolTable}}}, convert_type, object::{ant_int::AntInt, ant_string::AntString, object::Object}, rc_ref_cell, struct_type_id};
 
 #[derive(Debug, Clone)]
 pub struct CompilationScope {
@@ -84,6 +84,7 @@ impl Compiler {
         m.insert(struct_type_id!(IfExpression), compile_if_expression);
         m.insert(struct_type_id!(FunctionExpression), compile_function_expression);
         m.insert(struct_type_id!(CallExpression), compile_call_expression);
+        m.insert(struct_type_id!(WhileStatement), compile_while_statement);
     }
 
     pub fn new() -> Self {
@@ -226,9 +227,16 @@ impl Compiler {
                 }
 
                 if let Some(ident) = (assign_expr.left as Box<dyn Any>).downcast_ref::<Identifier>() {
-                    let symbol = self.symbol_table.borrow_mut().define(&ident.value);
+                    let symbol = if let Some(it) = 
+                        self.symbol_table.borrow_mut().resolve(&ident.value)
+                    {
+                        it
+                    } else {
+                        return Err(format!("undefined identifier: {}", ident.value))    
+                    };
+
                     self.emit(
-                        if symbol.scope == SymbolScope::Global { OP_GET_GLOBAL } else { OP_GET_LOCAL }, 
+                        if symbol.scope == SymbolScope::Global { OP_SET_GLOBAL } else { OP_SET_LOCAL }, 
                         vec![symbol.index as u16]
                     );
                 }
@@ -249,7 +257,7 @@ impl Compiler {
 
                     Ok(())
                 } else {
-                    Err(format!("undefined identifier '{}'", ident.value))
+                    Err(format!("undefined variable '{}'", ident.value))
                 }
             }
 
@@ -294,6 +302,18 @@ impl Compiler {
                 }
 
                 self.emit(OP_RETURN_VALUE, vec![]);
+
+                Ok(())
+            }
+
+            id if id == TypeId::of::<TestPrintExpression>() => {
+                let test_print_expr = convert_type!(TestPrintExpression, node);
+
+                if let Err(msg) = self.compile(test_print_expr.value) {
+                    return Err(format!("error compile return value: {msg}"))
+                }
+
+                self.emit(OP_TEST_PRINT, vec![]);
 
                 Ok(())
             }
