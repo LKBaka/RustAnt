@@ -20,10 +20,10 @@ pub fn is_error(obj: &Object) -> bool {
     is_native_error(obj)
 }
 
-pub fn is_truthy(obj: Object) -> bool {
-    if &obj == &*ant_true {
+pub fn is_truthy(obj: &Object) -> bool {
+    if obj == &*ant_true {
         true
-    } else if &obj == &*ant_false {
+    } else if obj == &*ant_false {
         false   
     } else if let Some(obj) = obj.as_any().downcast_ref::<AntInt>() {
         !(obj.value == BigDecimal::from(0))
