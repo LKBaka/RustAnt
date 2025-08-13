@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Read};
 
 use byteorder::{BigEndian, ByteOrder};
 use colored::Colorize;
@@ -32,6 +32,9 @@ pub const OP_RETURN_VALUE: u8 = 21;
 pub const OP_RETURN: u8 = 22;
 pub const OP_GET_LOCAL: u8 = 23;
 pub const OP_SET_LOCAL: u8 = 24;
+pub const OP_TEST_PRINT: u8 = 254;
+pub const OP_NOP: u8 = 255;
+
 
 pub const INFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_map! {
     "+" => OP_ADD,
@@ -87,11 +90,13 @@ lazy_static! {
         m.insert(OP_SET_GLOBAL, Definition::new("OpSetGlobal".into(), vec![2]));
         m.insert(OP_ARRAY, Definition::new("OpArray".into(), vec![2]));
         m.insert(OP_INDEX, Definition::new("OpIndex".into(), vec![]));
-        m.insert(OP_CALL, Definition::new("OpCall".into(), vec![]));
+        m.insert(OP_CALL, Definition::new("OpCall".into(), vec![1]));
         m.insert(OP_RETURN_VALUE, Definition::new("OpReturnValue".into(), vec![]));
         m.insert(OP_RETURN, Definition::new("OpReturn".into(), vec![]));
         m.insert(OP_GET_LOCAL, Definition::new("OpGetLocal".into(), vec![2]));
         m.insert(OP_SET_LOCAL, Definition::new("OpSetLocal".into(), vec![2]));
+        m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
+        m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
         m
     };
@@ -128,6 +133,11 @@ pub fn make(op: OpCode, operands: &Vec<u16>) -> Vec<u8> {
                         // 处理 2 字节操作数 (大端序)
                         let bytes = operand.to_be_bytes();
                         instruction[offset..offset + 2].copy_from_slice(&bytes);
+                    }
+
+                    1 => {
+                        // 处理单字节操作数 (大端序)
+                        instruction[offset] = *operand as u8
                     }
 
                     // 添加其他宽度处理...
@@ -236,6 +246,17 @@ pub fn read_operands(def: &Definition, ins: &Instructions) -> (Vec<i32>, usize) 
                 let bytes = &ins[offset..offset + width as usize];
                 operands.push(i32::from(BigEndian::read_u16(&bytes)));
             }
+
+            1 => {
+                let mut bytes = &ins[offset..offset + width as usize];
+
+                let mut operand = [0u8; 1];
+
+                bytes.read_exact(&mut operand).unwrap();
+
+                operands.push(operand[0] as i32);
+            }
+
             _ => {}
         }
         offset += width as usize;
@@ -248,3 +269,9 @@ pub fn read_operands(def: &Definition, ins: &Instructions) -> (Vec<i32>, usize) 
 pub fn read_uint16(ins: &[u8]) -> u16 {
     BigEndian::read_u16(ins)
 }
+
+#[inline]
+pub fn read_uint8(ins: &[u8]) -> u8 {
+    ins[0]
+}
+
