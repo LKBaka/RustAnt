@@ -38,7 +38,7 @@ pub struct Vm {
 
 impl Vm {
     pub fn new(bytecode: ByteCode) -> Self {
-        let uninit: Vec<Rc<RefCell<Object>>> = vec![rc_ref_cell!(Box::new(UNINIT_OBJ.clone()))];
+        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Box::new(UNINIT_OBJ.clone()));
 
         let main_func = CompiledFunction {
             instructions: rc_ref_cell!(bytecode.instructions),
@@ -51,7 +51,7 @@ impl Vm {
         Vm {
             constants: bytecode.constants,
             stack: vec![],
-            globals: rc_ref_cell!(vec![uninit[0].clone(); GLOBALS_SIZE as usize]),
+            globals: rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]),
             frames: vec![rc_ref_cell!(main_frame)],
             frame_index: 1,
             sp: 0
