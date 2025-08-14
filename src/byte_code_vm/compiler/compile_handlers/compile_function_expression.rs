@@ -1,5 +1,5 @@
 use crate::{
-    ast::{ast::Node, expressions::function_expression::FunctionExpression},
+    ast::{ast::Node, expressions::{function_expression::FunctionExpression, identifier::Identifier}},
     byte_code_vm::{
         code::code::{OP_CONSTANTS, OP_RETURN_VALUE, OP_SET_GLOBAL},
         compiler::compiler::Compiler,
@@ -22,6 +22,20 @@ pub fn compile_function_expression(
     };
 
     compiler.enter_scope();
+
+    let param_vec: Vec<&Identifier> = func_expr.params
+        .iter()
+        .map(|expr| 
+            (expr.as_ref() as &dyn std::any::Any).downcast_ref::<Identifier>().expect(&format!(
+                "expected an identifier, got: {}",
+                expr.type_name()
+            ))
+        )
+        .collect();
+
+    for param in param_vec {
+        compiler.symbol_table.borrow_mut().define(&param.value);
+    }
 
     let compile_body_result = compiler.compile(Box::new(func_expr.block.clone()));
     if let Err(msg) = compile_body_result {
