@@ -7,11 +7,9 @@ use crate::byte_code_vm::constants::UNINIT_OBJ;
 use crate::byte_code_vm::run::run;
 use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
 use crate::object::object::ERROR;
-use crate::{arg_structure::arg_structure::Args, environment::utils::create_env, object::object::Object};
+use crate::{arg_structure::arg_structure::Args, object::object::Object};
 use crate::rc_ref_cell;
 
-
-use super::utils::import_all_modules;
 
 pub struct FileRunner {
     file_path: String,
@@ -30,10 +28,6 @@ impl FileRunner {
         let contents = fs::read_to_string(&self.file_path);
         match contents {
             Ok(contents) => {
-                let mut env = create_env(vec![]);
-                
-                import_all_modules(&mut env);
-                
                 #[cfg(feature = "get_code_run_seconds")]
                 use std::time::Instant;
 

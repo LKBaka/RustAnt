@@ -10,11 +10,8 @@ use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
 use crate::byte_code_vm::constants::UNINIT_OBJ;
 use crate::byte_code_vm::run::{run, RunError};
 use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
-use crate::environment::utils::create_env;
 use crate::object::object::Object;
 use crate::rc_ref_cell;
-
-use super::utils::import_all_modules;
 
 pub struct REPLRunner {
     args: Args
@@ -28,10 +25,6 @@ impl REPLRunner {
     }
 
     pub fn run(&self) {
-        let mut env = create_env(vec![]);
-        
-        import_all_modules(&mut env);
-
         let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Box::new(UNINIT_OBJ.clone()));
 
         let symbol_table = rc_ref_cell!(SymbolTable::new());

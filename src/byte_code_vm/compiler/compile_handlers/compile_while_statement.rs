@@ -1,4 +1,4 @@
-use crate::{ast::{ast::Node, statements::while_statement::WhileStatement}, byte_code_vm::{code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NOP, OP_POP}, compiler::compiler::Compiler, constants::FAKE_OFFSET_JUMP}, convert_type};
+use crate::{ast::{ast::Node, statements::while_statement::WhileStatement}, byte_code_vm::{code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NOP}, compiler::compiler::Compiler, constants::FAKE_OFFSET_JUMP}, convert_type};
 
 pub fn compile_while_statement(
     compiler: &mut Compiler,

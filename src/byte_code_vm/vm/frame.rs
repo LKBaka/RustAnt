@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{byte_code_vm::code::code::{instruction_to_str_with_indent, Instructions}, object::{ant_compiled_function::CompiledFunction, object::Object}, rc_ref_cell};
+use crate::{byte_code_vm::code::code::{instruction_to_str_with_indent, Instructions}, object::ant_compiled_function::CompiledFunction};
 
 #[derive(Clone, Debug)]
 pub struct Frame {
