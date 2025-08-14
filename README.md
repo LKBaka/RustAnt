@@ -210,7 +210,7 @@ cargo run --features debug
 ### 贡献指南
 
 - 请确保代码符合项目的编码规范
-- 新功能请添加相应的测试用例
+- 新功能请添加相应的测试用例 (编译器中的函数相关测试可豁免)
 - 提交信息请使用清晰的描述
 - 如有疑问，欢迎在 [Issues](https://github.com/LKBaka/RustAnt/issues) 中讨论
 
