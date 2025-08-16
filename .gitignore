@@ -5,3 +5,6 @@
 /flamegraph.svg
 /.debug
 /.zed
+.DS_Store
+Thumbs.db
+desktop.ini
