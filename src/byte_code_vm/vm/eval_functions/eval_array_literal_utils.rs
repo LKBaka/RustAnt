@@ -4,7 +4,11 @@ pub fn build_array(stack: &Vec<Object>, start_index: usize, end_index: usize) ->
     let mut items = Vec::with_capacity(end_index - start_index);
 
     for i in start_index..end_index {
-        items.push(stack[i].clone());
+        if items.len() <= i {
+            items.push(stack[i].clone());
+        } else {
+            items[i - start_index] = stack[i].clone();
+        }
     }
 
     AntArray::from(items)

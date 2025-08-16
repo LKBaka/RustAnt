@@ -243,7 +243,12 @@ impl Compiler {
                     {
                         it
                     } else {
-                        return Err(format!("undefined identifier: {}", ident.value))    
+                        return Err(format!(
+                            "undefined identifier: {}. at line: {}, at file: {}",
+                            ident.token.line, 
+                            ident.token.file, 
+                            ident.value
+                        ))    
                     };
 
                     self.emit(
@@ -268,7 +273,12 @@ impl Compiler {
 
                     Ok(())
                 } else {
-                    Err(format!("undefined variable '{}'", ident.value))
+                    return Err(format!(
+                        "undefined identifier: {}. at line: {}, at file: {}",
+                        ident.value,
+                        ident.token.line, 
+                        ident.token.file, 
+                    )) 
                 }
             }
 
