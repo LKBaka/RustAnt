@@ -45,7 +45,7 @@ impl IAntObject for AntArray {
 
     fn inspect(&self) -> String {
         format!(
-            "<CompiledFunction {}>",
+            "[{}]",
             self.items
                 .iter()
                 .map(|item| if item.get_type() != STRING {item.inspect()} else {format!("\"{}\"", item.inspect())})
