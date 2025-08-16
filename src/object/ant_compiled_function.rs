@@ -14,12 +14,6 @@ pub struct CompiledFunction {
     pub param_count: usize,
 }
 
-impl CompiledFunction {
-    fn from(instructions: Rc<RefCell<Instructions>>, local_count: usize, param_count: usize) -> Self {
-        Self { instructions, local_count, param_count }
-    }
-}
-
 impl Clone for CompiledFunction {
     fn clone(&self) -> Self {
         Self {

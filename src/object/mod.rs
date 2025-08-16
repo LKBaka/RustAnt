@@ -17,3 +17,4 @@ pub mod ant_class;
 pub mod type_hint;
 pub mod ant_array;
 pub mod ant_compiled_function;
+pub mod ant_closure;
