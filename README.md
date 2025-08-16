@@ -1,6 +1,6 @@
 # RustAnt
 
-[![Rust](https://img.shields.io/badge/Rust-1.70+-blue.svg)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.88+-blue.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/License-GPL3-green.svg)](LICENSE)
 
 **RustAnt** 是一个用 Rust 编写的编程语言解释器，实现了完整的编程语言功能栈，包括词法分析、语法分析、字节码编译和虚拟机执行。
@@ -18,7 +18,7 @@
 
 > **性能说明**: 当前版本性能有限，复杂计算（如斐波那契数列）可能需要较长时间
 
-> **兼容性**: 需要 Rust 1.70+ 和 Edition 2024，低版本可能无法编译
+> **兼容性**: 需要 Rust 1.88+ 和 Edition 2024，低版本可能无法编译
 
 ## 🏗️ 架构概览
 
@@ -45,7 +45,7 @@ RustAnt 采用经典的编译器架构设计，主要包含以下核心组件：
 
 > **重要**: 请确保满足以下要求，否则编译可能失败
 
-- Rust 1.70+ (Rust Edition 2024)
+- Rust 1.88+ (Rust Edition 2024)
 - Cargo
 
 > 🚨 **版本要求**: 
