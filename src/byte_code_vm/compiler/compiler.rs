@@ -2,7 +2,7 @@ use std::{any::{Any, TypeId}, cell::RefCell, mem, rc::Rc};
 
 use hashbrown::HashMap as HashBrownMap; 
 
-use crate::{ast::{ast::{ExpressionStatement, Node, Program}, expressions::{array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression}, statements::{block_statement::BlockStatement, let_statement::LetStatement, while_statement::WhileStatement}}, byte_code_vm::{code::code::{make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE}, compiler::{compile_handlers::{compile_call_expression::compile_call_expression, compile_function_expression::compile_function_expression, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement}, symbol_table::symbol_table::{SymbolScope, SymbolTable}}}, convert_type, object::{ant_int::AntInt, ant_string::AntString, object::Object}, rc_ref_cell, struct_type_id};
+use crate::{ast::{ast::{ExpressionStatement, Node, Program}, expressions::{array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression}, statements::{block_statement::BlockStatement, let_statement::LetStatement, while_statement::WhileStatement}}, byte_code_vm::{code::code::{make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE}, compiler::{compile_handlers::{compile_call_expression::compile_call_expression, compile_function_expression::compile_function_expression, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement}, symbol_table::symbol_table::{SymbolScope, SymbolTable}}}, convert_type, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object}, rc_ref_cell, struct_type_id};
 
 #[derive(Debug, Clone)]
 pub struct CompilationScope {
@@ -172,6 +172,17 @@ impl Compiler {
                 let integer: Object = Box::new(AntInt::from(mem::take(&mut integer_literal.value)));
 
                 let constant_index = self.add_constant(integer);
+                self.emit(OP_CONSTANTS, vec![constant_index as u16]);
+ 
+                Ok(())
+            }
+
+            id if id == struct_type_id!(DoubleLiteral) => {
+                let mut double_literal = convert_type!(DoubleLiteral, node);
+
+                let double: Object = Box::new(AntDouble::from(mem::take(&mut double_literal.value)));
+
+                let constant_index = self.add_constant(double);
                 self.emit(OP_CONSTANTS, vec![constant_index as u16]);
  
                 Ok(())
