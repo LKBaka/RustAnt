@@ -1,0 +1,79 @@
+// AntInt 和 AntDouble 互操作测试
+
+// 基本算术运算测试
+let int1 = 10;
+let double1 = 3.5;
+
+// 加法测试
+let result1 = int1 + double1;
+// 应该返回 13.5 (AntDouble)
+TestPrint result1;
+
+let result2 = double1 + int1;
+// 应该返回 13.5 (AntDouble)
+TestPrint result2;
+
+// 减法测试
+let result3 = int1 - double1;
+// 应该返回 6.5 (AntDouble)
+TestPrint result3;
+
+let result4 = double1 - int1;
+// 应该返回 -6.5 (AntDouble)
+TestPrint result4;
+
+// 乘法测试
+let result5 = int1 * double1;
+// 应该返回 35.0 (AntDouble)
+TestPrint result5;
+
+let result6 = double1 * int1;
+// 应该返回 35.0 (AntDouble)
+TestPrint result6;
+
+// 除法测试
+let result7 = int1 / double1;
+// 应该返回 2.857... (AntDouble)
+TestPrint result7;
+
+let result8 = double1 / int1;
+// 应该返回 0.35 (AntDouble)
+TestPrint result8;
+
+// 比较运算测试
+let result9 = int1 > double1;
+// 应该返回 true
+TestPrint result9;
+
+let result10 = double1 > int1;
+// 应该返回 false
+TestPrint result10;
+
+let result11 = int1 == double1;
+// 应该返回 false
+TestPrint result11;
+
+// 整数除法测试（应该返回整数）
+let int2 = 15;
+let int3 = 3;
+let result12 = int2 / int3;
+// 应该返回 5 (AntInt)
+TestPrint result12;
+
+// 浮点数除法测试（应该返回浮点数）
+let double2 = 15.0;
+let double3 = 3.0;
+let result13 = double2 / double3;
+// 应该返回 5.0 (AntDouble)
+TestPrint result13;
+
+// 混合类型除法测试
+let result14 = int2 / double3;
+// 应该返回 5.0 (AntDouble)
+TestPrint result14;
+
+let result15 = double2 / int3;
+// 应该返回 5.0 (AntDouble)
+TestPrint result15;
+
+TestPrint "所有测试完成！";
