@@ -127,30 +127,22 @@ impl Lexer {
     }
 
     fn read_comment(&mut self) -> String {
-        let start = self.pos + 1;
+        let start = self.pos + 2; // 跳过 "//"
         let start_line = self.line;
 
         loop {
             self.read_char();
 
-            if self.cur_char == NEW_LINE{
+            if self.cur_char == NEW_LINE || self.eof() {
                 let s = self.code_vec[start..self.pos]
                     .iter()
                     .map(|ch| {ch.to_string()})
                     .collect::<Vec<String>>()
                     .join("");
 
-                self.read_char();
                 return s
             }
-
-            if self.eof() {
-                self.errors.push(format!("unclosed string. file: <{}>. line: {}.", self.file, start_line));
-                break
-            }
         }
-
-        "".to_string()
     }
 
     fn next_token(&mut self) -> Token {
@@ -208,10 +200,10 @@ impl Lexer {
             '/' => {
                 let peek_char = self.peek_char();
                 if peek_char == '/' {
-                    token.token_type = TokenType::Comment;
-                    token.value = format!("//{}", self.read_comment());
-
-                    self.read_char();
+                    // 读取注释内容并跳过
+                    self.read_comment();
+                    // 递归调用 next_token 跳过注释，获取下一个有效token
+                    return self.next_token();
                 }
             }
 
