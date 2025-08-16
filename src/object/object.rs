@@ -23,6 +23,7 @@ pub const FUNCTION: &str = "Function";
 pub const ENVIRONMENT: &str = "Environment";
 pub const NATIVE_FUNCTION: &str = "NativeFunction";
 pub const COMPILED_FUNCTION: &str = "CompiledFunction";
+pub const CLOSURE: &str = "Closure";
 pub const ARRAY: &str = "Array";
 pub const RETURN_VALUE: &str = "__Return_Value__";
 
