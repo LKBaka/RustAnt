@@ -112,14 +112,14 @@ func add(a, b) {
 
 // 条件语句
 if x > 10 {
-    print("x is greater than 10");
+    TestPrint "x is greater than 10";
 } else {
-    print("x is 10 or less");
+    TestPrint "x is 10 or less";
 }
 
 // 循环
 while x > 0 {
-    print(x);
+    TestPrint x;
     x = x - 1;
 }
 ```
@@ -136,9 +136,11 @@ while x > 0 {
 
 > ⚠️ **开发中**: 面向对象功能正在开发中，当前版本不支持
 
-### 内置函数
+### 内置表达式
 
-> 🚨 **功能有限**: 当前内置函数较少，更多功能正在开发中
+> 🚨 **功能有限**: 当前内置表达式较少，更多功能正在开发中
+> 
+> **TestPrint**: 用于输出内容的表达式，语法为 `TestPrint xxx;`
 
 ## 🧪 测试
 
