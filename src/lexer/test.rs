@@ -85,3 +85,48 @@ fn test_lexer_3() {
     });
 }
 
+
+#[test]
+fn test_lexer_print_tokens() {
+    use super::lexer::Lexer;
+    
+    let file: &'static str = "__test_lexer_print_tokens__";
+
+    let code = "// 一个注释\n TestPrint 1;";
+    let mut lexer = Lexer::new(code.to_string(), file.into());
+    
+    let result = lexer.get_tokens();
+
+    println!("{result:?}")
+}
+
+#[test]
+fn test_lexer_comments() {
+    use super::lexer::Lexer;
+    use crate::token::token_type::TokenType;
+    use crate::utils::assert_eq;
+    use crate::token::utils::print_tokens;
+
+    let mut l = Lexer::new("let a = 1; // 这是一个注释\nlet b = 2;".to_string(), String::from("__test_lexer_comments__"));
+    let tokens = l.get_tokens();
+
+    let on_failure_function = || print_tokens(tokens.clone());
+    let expected_token_types = vec![
+        TokenType::Let,
+        TokenType::Ident,
+        TokenType::Assign,
+        TokenType::Integer,
+        TokenType::Semicolon,
+        TokenType::Let,
+        TokenType::Ident,
+        TokenType::Assign,
+        TokenType::Integer,
+        TokenType::Semicolon,
+    ];
+    
+    // 验证词法单元（注释应该被跳过）
+    assert_eq(tokens.len(), expected_token_types.len(), on_failure_function);
+    for i in 0..tokens.len() {
+        assert_eq(tokens[i].token_type, expected_token_types[i], on_failure_function);
+    }
+}
