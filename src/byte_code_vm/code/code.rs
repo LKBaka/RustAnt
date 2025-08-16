@@ -32,6 +32,7 @@ pub const OP_RETURN_VALUE: u8 = 21;
 pub const OP_RETURN: u8 = 22;
 pub const OP_GET_LOCAL: u8 = 23;
 pub const OP_SET_LOCAL: u8 = 24;
+pub const OP_CLOSURE: u8 = 25;
 pub const OP_TEST_PRINT: u8 = 254;
 pub const OP_NOP: u8 = 255;
 
@@ -95,6 +96,7 @@ lazy_static! {
         m.insert(OP_RETURN, Definition::new("OpReturn".into(), vec![]));
         m.insert(OP_GET_LOCAL, Definition::new("OpGetLocal".into(), vec![2]));
         m.insert(OP_SET_LOCAL, Definition::new("OpSetLocal".into(), vec![2]));
+        m.insert(OP_CLOSURE, Definition::new("OpClosure".into(), vec![2, 2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
@@ -232,6 +234,7 @@ pub fn fmt_instruction(def: &Definition, operands: &Vec<i32>) -> String {
     match operand_count {
         0 => def.name.clone(),
         1 => format!("{} {}", def.name, operands[0]),
+        2 => format!("{} {} {}", def.name, operands[0], operands[1]),
         _ => format!("ERROR: unhandled operandCount for {}\n", def.name),
     }
 }
