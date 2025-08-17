@@ -27,7 +27,7 @@ use crate::{
     },
     byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
@@ -38,7 +38,7 @@ use crate::{
                 compile_prefix_expression::compile_prefix_expression,
                 compile_while_statement::compile_while_statement,
             },
-            symbol_table::symbol_table::{SymbolScope, SymbolTable},
+            symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
     },
     convert_type,
@@ -271,13 +271,14 @@ impl Compiler {
             id if id == struct_type_id!(LetStatement) => {
                 let let_stmt = convert_type!(LetStatement, node);
 
+                let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
+                
                 let result = self.compile(let_stmt.value);
 
                 if let Err(msg) = result {
                     return Err(format!("error compile let statement: {}", msg));
                 }
 
-                let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
                 self.emit(
                     if symbol.scope == SymbolScope::Global {
                         OP_SET_GLOBAL
@@ -341,17 +342,10 @@ impl Compiler {
             id if id == struct_type_id!(Identifier) => {
                 let ident = convert_type!(Identifier, node);
 
-                let symbol = { self.symbol_table.borrow().resolve(&ident.value) };
+                let symbol = { self.symbol_table.borrow_mut().resolve(&ident.value) };
 
                 if let Some(symbol) = symbol {
-                    self.emit(
-                        if symbol.scope == SymbolScope::Global {
-                            OP_GET_GLOBAL
-                        } else {
-                            OP_GET_LOCAL
-                        },
-                        vec![symbol.index as u16],
-                    );
+                    self.load_symbol(&symbol);
 
                     Ok(())
                 } else {
@@ -430,6 +424,17 @@ impl Compiler {
                 }
             }
         }
+    }
+
+    #[inline]
+    pub fn load_symbol(&mut self, symbol: &Symbol) {
+        match symbol.scope {
+            SymbolScope::Global => self.emit(OP_GET_GLOBAL, vec![symbol.index as u16]),
+            SymbolScope::Local => self.emit(OP_GET_LOCAL, vec![symbol.index as u16]),
+            SymbolScope::Free => self.emit(OP_GET_FREE, vec![symbol.index as u16]),
+            SymbolScope::Function => self.emit(OP_CURRENT_CLOSURE, vec![]),
+            SymbolScope::Builtin => self.emit(OP_GET_BUILTIN, vec![symbol.index as u16]),
+        };
     }
 
     pub fn enter_scope(&mut self) {
