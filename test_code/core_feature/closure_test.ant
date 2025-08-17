@@ -1,0 +1,18 @@
+func o() {
+	let value = "only a string literal"
+
+	func i() {
+		value
+	}
+
+	i
+}
+
+func new_adder(a, b) {
+	func 我是棍木(c) {
+		a + b + c
+	}
+}
+
+let adder = new_adder(1, 2);
+TestPrint adder(8);
