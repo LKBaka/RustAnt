@@ -246,9 +246,126 @@ mod tests {
                 .into(),
                 big_dec!(1),
             ),
+            VmTestCase::new(
+                r#"
+                func counter(val) {
+                    if val > 100 {
+                        val
+                    } else {
+                        let big_num = 9999999999999999999999 * 999999999999999999999999999;
+                        counter(val + 1)
+                    }
+                }
+
+                counter(0)
+                "#
+                .into(),
+                big_dec!(101),
+            ),
         ];
 
         run_vm_tests(tests);
+    }
+
+    #[test]
+    fn test_closures() {
+        let tests = vec![
+            // 测试1: 基本闭包
+            VmTestCase::<BigDecimal>::new(
+                r#"
+                func new_adder(a, b) {
+                    func inner(c) {
+                        a + b + c
+                    }
+                }
+
+                let adder = new_adder(1, 2);
+                adder(8);
+                "#.into(),
+                big_dec!(11)
+            ),
+            
+            // 测试2: 带局部变量的闭包
+            VmTestCase::<BigDecimal>::new(
+                r#"
+                func new_adder(a, b) { 
+                    let c = a + b; 
+                    func inner(d) { c + d }; 
+                }; 
+                let adder = new_adder(1, 2); 
+                adder(8); 
+                "#.into(),
+                big_dec!(11)
+            ),
+
+            // 测试1: 多层闭包
+            VmTestCase::<BigDecimal>::new(
+                r#"
+                func new_adder_outer(a, b) { 
+                    let c = a + b; 
+                    func inner1(d) { 
+                        let e = d + c; 
+                        func inner2(f) { e + f; }; 
+                    }; 
+                }; 
+                let new_adder_inner = new_adder_outer(1, 2); 
+                let adder = new_adder_inner(3); 
+                adder(8); 
+                "#.into(),
+                big_dec!(14)
+            ),
+            
+            // 测试3: 多层变量捕获
+            VmTestCase::<BigDecimal>::new(
+                r#"
+                let a = 1; 
+                func new_adder_outer(b) { 
+                    func inner1(c) { 
+                        func inner2(d) { a + b + c + d }; 
+                    };  
+                }; 
+                let new_adder_inner = new_adder_outer(2); 
+                let adder = new_adder_inner(3); 
+                adder(8); 
+                "#.into(),
+                big_dec!(14)
+            ),
+            
+            // 测试4: 多个闭包组合
+            VmTestCase::<BigDecimal>::new(
+                r#"
+                func new_closure(a, b) { 
+                    func param1() { a; }; 
+                    func param2() { b; }; 
+                    func last_func() { param1() + param2(); }; 
+                }; 
+                let closure = new_closure(9, 90); 
+                closure(); 
+                "#.into(),
+                big_dec!(99)
+            ),
+            VmTestCase::new(
+                r#"
+                func tinyjoker() {
+                    func lengthdown(x) {
+                        if x == 0 {
+                            0
+                        } else {
+                            lengthdown(x - 1)
+                        }
+                    }
+
+                    lengthdown(101)
+                }
+
+                tinyjoker();
+                "#
+                .into(),
+                big_dec!(0),
+            ),
+        ];
+
+        run_vm_tests(tests)
     }
 
     fn run_vm_tests<T: Debug + Clone>(tests: Vec<VmTestCase<T>>) {
