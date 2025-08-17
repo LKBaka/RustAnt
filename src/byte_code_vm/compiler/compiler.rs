@@ -1,8 +1,50 @@
-use std::{any::{Any, TypeId}, cell::RefCell, mem, rc::Rc};
+use std::{
+    any::{Any, TypeId},
+    cell::RefCell,
+    mem,
+    rc::Rc,
+};
 
-use hashbrown::HashMap as HashBrownMap; 
+use hashbrown::HashMap as HashBrownMap;
 
-use crate::{ast::{ast::{ExpressionStatement, Node, Program}, expressions::{array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression}, statements::{block_statement::BlockStatement, let_statement::LetStatement, while_statement::WhileStatement}}, byte_code_vm::{code::code::{make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE}, compiler::{compile_handlers::{compile_call_expression::compile_call_expression, compile_function_expression::compile_function_expression, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement}, symbol_table::symbol_table::{SymbolScope, SymbolTable}}}, convert_type, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object}, rc_ref_cell, struct_type_id};
+use crate::{
+    ast::{
+        ast::{ExpressionStatement, Node, Program},
+        expressions::{
+            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression,
+            boolean_literal::BooleanLiteral, call_expression::CallExpression,
+            double_literal::DoubleLiteral, function_expression::FunctionExpression,
+            identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression,
+            infix_expression::InfixExpression, integer_literal::IntegerLiteral,
+            prefix_expression::PrefixExpression, return_expression::ReturnExpression,
+            string_literal::StringLiteral, test_print_expression::TestPrintExpression,
+            tuple_expression::TupleExpression,
+        },
+        statements::{
+            block_statement::BlockStatement, let_statement::LetStatement,
+            while_statement::WhileStatement,
+        },
+    },
+    byte_code_vm::{
+        code::code::{
+            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+        },
+        compiler::{
+            compile_handlers::{
+                compile_call_expression::compile_call_expression,
+                compile_function_expression::compile_function_expression,
+                compile_if_expression::compile_if_expression,
+                compile_infix_expression::compile_infix_expression,
+                compile_prefix_expression::compile_prefix_expression,
+                compile_while_statement::compile_while_statement,
+            },
+            symbol_table::symbol_table::{SymbolScope, SymbolTable},
+        },
+    },
+    convert_type,
+    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object},
+    rc_ref_cell, struct_type_id,
+};
 
 #[derive(Debug, Clone)]
 pub struct CompilationScope {
@@ -38,7 +80,7 @@ impl CompilationScope {
 #[derive(Debug, Clone, Copy)]
 pub struct EmittedInstruction {
     pub op: OpCode,
-    pub pos: usize
+    pub pos: usize,
 }
 
 impl Default for EmittedInstruction {
@@ -61,7 +103,10 @@ pub struct ByteCode {
 
 impl ByteCode {
     pub fn new(instructions: Instructions, constants: Vec<Object>) -> Self {
-        Self { instructions, constants }
+        Self {
+            instructions,
+            constants,
+        }
     }
 }
 
@@ -69,7 +114,7 @@ pub type CompileHandler = fn(&mut Compiler, Box<dyn Node>) -> Result<(), String>
 
 pub struct Compiler {
     constants: Rc<RefCell<Vec<Object>>>,
-    
+
     compile_map: HashBrownMap<TypeId, CompileHandler>,
     pub symbol_table: Rc<RefCell<SymbolTable>>,
 
@@ -82,7 +127,10 @@ impl Compiler {
         m.insert(struct_type_id!(InfixExpression), compile_infix_expression);
         m.insert(struct_type_id!(PrefixExpression), compile_prefix_expression);
         m.insert(struct_type_id!(IfExpression), compile_if_expression);
-        m.insert(struct_type_id!(FunctionExpression), compile_function_expression);
+        m.insert(
+            struct_type_id!(FunctionExpression),
+            compile_function_expression,
+        );
         m.insert(struct_type_id!(CallExpression), compile_call_expression);
         m.insert(struct_type_id!(WhileStatement), compile_while_statement);
     }
@@ -103,11 +151,14 @@ impl Compiler {
             compile_map: m,
             symbol_table: rc_ref_cell!(SymbolTable::new()),
             scope_index: 0,
-            scopes: vec![main_scope]
+            scopes: vec![main_scope],
         }
     }
 
-    pub fn with_state(symbol_table: Rc<RefCell<SymbolTable>>, constants: Rc<RefCell<Vec<Object>>>) -> Self {
+    pub fn with_state(
+        symbol_table: Rc<RefCell<SymbolTable>>,
+        constants: Rc<RefCell<Vec<Object>>>,
+    ) -> Self {
         let main_scope = CompilationScope::new(
             rc_ref_cell!(vec![]),
             EmittedInstruction::default(),
@@ -123,7 +174,7 @@ impl Compiler {
             compile_map: m,
             symbol_table,
             scope_index: 0,
-            scopes: vec![main_scope]
+            scopes: vec![main_scope],
         }
     }
 
@@ -136,9 +187,9 @@ impl Compiler {
 
                 for stmt in block.statements {
                     let result = self.compile(stmt);
-                    
+
                     if result.is_err() {
-                        return result
+                        return result;
                     }
                 }
 
@@ -150,7 +201,9 @@ impl Compiler {
 
                 if let Some(expr) = expr_stmt.expression {
                     let result = self.compile(expr);
-                    if result.is_err() {return result};
+                    if result.is_err() {
+                        return result;
+                    };
                 }
 
                 Ok(())
@@ -173,21 +226,22 @@ impl Compiler {
 
                 let constant_index = self.add_constant(integer);
                 self.emit(OP_CONSTANTS, vec![constant_index as u16]);
- 
+
                 Ok(())
             }
 
             id if id == struct_type_id!(DoubleLiteral) => {
                 let mut double_literal = convert_type!(DoubleLiteral, node);
 
-                let double: Object = Box::new(AntDouble::from(mem::take(&mut double_literal.value)));
+                let double: Object =
+                    Box::new(AntDouble::from(mem::take(&mut double_literal.value)));
 
                 let constant_index = self.add_constant(double);
                 self.emit(OP_CONSTANTS, vec![constant_index as u16]);
- 
+
                 Ok(())
             }
-            
+
             id if id == struct_type_id!(StringLiteral) => {
                 let str_literal = convert_type!(StringLiteral, node);
 
@@ -203,8 +257,12 @@ impl Compiler {
                 let boolean_literal = convert_type!(BooleanLiteral, node);
 
                 self.emit(
-                    if boolean_literal.value {OP_TRUE} else {OP_FALSE}, 
-                    vec![]
+                    if boolean_literal.value {
+                        OP_TRUE
+                    } else {
+                        OP_FALSE
+                    },
+                    vec![],
                 );
 
                 Ok(())
@@ -216,13 +274,17 @@ impl Compiler {
                 let result = self.compile(let_stmt.value);
 
                 if let Err(msg) = result {
-                    return Err(format!("error compile let statement: {}", msg))
+                    return Err(format!("error compile let statement: {}", msg));
                 }
 
                 let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
                 self.emit(
-                    if symbol.scope == SymbolScope::Global { OP_SET_GLOBAL } else { OP_SET_LOCAL }, 
-                    vec![symbol.index as u16]
+                    if symbol.scope == SymbolScope::Global {
+                        OP_SET_GLOBAL
+                    } else {
+                        OP_SET_LOCAL
+                    },
+                    vec![symbol.index as u16],
                 );
 
                 Ok(())
@@ -234,27 +296,43 @@ impl Compiler {
                 let result = self.compile(assign_expr.value);
 
                 if let Err(msg) = result {
-                    return Err(format!("error compile assignment expression: {}", msg))
+                    return Err(format!("error compile assignment expression: {}", msg));
                 }
 
-                if let Some(ident) = (assign_expr.left as Box<dyn Any>).downcast_ref::<Identifier>() {
-                    let symbol = if let Some(it) = 
-                        self.symbol_table.borrow_mut().resolve(&ident.value)
-                    {
-                        it
-                    } else {
-                        return Err(format!(
-                            "undefined identifier: {}. at line: {}, at file: {}",
-                            ident.token.line, 
-                            ident.token.file, 
-                            ident.value
-                        ))    
-                    };
+                let anyed_expr = assign_expr.left as Box<dyn Any>;
+
+                if let Some(ident) = anyed_expr.downcast_ref::<Identifier>()
+                {
+                    let symbol =
+                        if let Some(it) = self.symbol_table.borrow_mut().resolve(&ident.value) {
+                            it
+                        } else {
+                            return Err(format!(
+                                "undefined identifier: {}. at line: {}, at file: {}",
+                                ident.token.line, ident.token.file, ident.value
+                            ));
+                        };
 
                     self.emit(
-                        if symbol.scope == SymbolScope::Global { OP_SET_GLOBAL } else { OP_SET_LOCAL }, 
-                        vec![symbol.index as u16]
+                        if symbol.scope == SymbolScope::Global {
+                            OP_SET_GLOBAL
+                        } else {
+                            OP_SET_LOCAL
+                        },
+                        vec![symbol.index as u16],
                     );
+                } else if let Ok(index_expr) = anyed_expr
+                    .downcast::<IndexExpression>()
+                {
+                    if let Err(msg) = self.compile(index_expr.index) {
+                        return Err(format!("error compile index: {msg}"))
+                    }
+
+                    if let Err(msg) = self.compile(index_expr.expr) {
+                        return Err(format!("error compile index: {msg}"))
+                    }
+
+                    self.emit(OP_SET_INDEX, vec![]);
                 }
 
                 Ok(())
@@ -267,18 +345,20 @@ impl Compiler {
 
                 if let Some(symbol) = symbol {
                     self.emit(
-                        if symbol.scope == SymbolScope::Global { OP_GET_GLOBAL } else { OP_GET_LOCAL }, 
-                        vec![symbol.index as u16]
+                        if symbol.scope == SymbolScope::Global {
+                            OP_GET_GLOBAL
+                        } else {
+                            OP_GET_LOCAL
+                        },
+                        vec![symbol.index as u16],
                     );
 
                     Ok(())
                 } else {
                     return Err(format!(
                         "undefined identifier: {}. at line: {}, at file: {}",
-                        ident.value,
-                        ident.token.line, 
-                        ident.token.file, 
-                    )) 
+                        ident.value, ident.token.line, ident.token.file,
+                    ));
                 }
             }
 
@@ -288,9 +368,9 @@ impl Compiler {
                 let arr_len = arr.items.len();
 
                 for expr in arr.items {
-                    let compile_result =  self.compile(expr);
+                    let compile_result = self.compile(expr);
                     if let Err(msg) = compile_result {
-                        return Err(format!("error compile array item: {msg}"))
+                        return Err(format!("error compile array item: {msg}"));
                     }
                 }
 
@@ -303,11 +383,11 @@ impl Compiler {
                 let index_expr = convert_type!(IndexExpression, node);
 
                 if let Err(msg) = self.compile(index_expr.expr) {
-                    return Err(format!("error compile left expression: {msg}"))
+                    return Err(format!("error compile left expression: {msg}"));
                 }
 
                 if let Err(msg) = self.compile(index_expr.index) {
-                    return Err(format!("error compile index: {msg}"))
+                    return Err(format!("error compile index: {msg}"));
                 }
 
                 self.emit(OP_INDEX, vec![]);
@@ -319,7 +399,7 @@ impl Compiler {
                 let return_expr = convert_type!(ReturnExpression, node);
 
                 if let Err(msg) = self.compile(return_expr.value) {
-                    return Err(format!("error compile return value: {msg}"))
+                    return Err(format!("error compile return value: {msg}"));
                 }
 
                 self.emit(OP_RETURN_VALUE, vec![]);
@@ -331,7 +411,7 @@ impl Compiler {
                 let test_print_expr = convert_type!(TestPrintExpression, node);
 
                 if let Err(msg) = self.compile(test_print_expr.value) {
-                    return Err(format!("error compile return value: {msg}"))
+                    return Err(format!("error compile return value: {msg}"));
                 }
 
                 self.emit(OP_TEST_PRINT, vec![]);
@@ -343,9 +423,11 @@ impl Compiler {
                 if let Some(handler) = self.compile_map.get(&node_id) {
                     handler(self, node)
                 } else {
-                    Err(format!("no compile handler for node type: {}", node.type_name()))
+                    Err(format!(
+                        "no compile handler for node type: {}",
+                        node.type_name()
+                    ))
                 }
-
             }
         }
     }
@@ -367,12 +449,13 @@ impl Compiler {
 
         self.scope_index -= 1;
 
-        let outer = self.symbol_table
+        let outer = self
+            .symbol_table
             .borrow()
             .outer
             .clone()
             .expect("expected an outer");
-        
+
         self.symbol_table = outer;
 
         instructions
@@ -398,9 +481,8 @@ impl Compiler {
         let new_instruction = make(op, &[operand].to_vec());
         let len = new_instruction.len();
 
-        target[op_pos .. op_pos + len].copy_from_slice(new_instruction.as_slice());
+        target[op_pos..op_pos + len].copy_from_slice(new_instruction.as_slice());
     }
-
 
     pub fn last_instruction_is(&mut self, op: OpCode) -> bool {
         if self.current_instructions().borrow().is_empty() {
@@ -453,7 +535,10 @@ impl Compiler {
 
     pub fn add_instruction(&mut self, ins: Vec<u8>) -> usize {
         let pos_new_instruction = self.scopes[self.scope_index].instructions.borrow().len();
-        self.scopes[self.scope_index].instructions.borrow_mut().extend(ins);
+        self.scopes[self.scope_index]
+            .instructions
+            .borrow_mut()
+            .extend(ins);
 
         pos_new_instruction // return the position of the new instruction in the instructions vector
     }
@@ -461,9 +546,9 @@ impl Compiler {
     pub fn start_compile(&mut self, program: Program) -> Result<(), String> {
         for stmt in program.statements {
             let result = self.compile(stmt);
-            
+
             if result.is_err() {
-                return result
+                return result;
             }
         }
 
@@ -473,7 +558,7 @@ impl Compiler {
     pub fn bytecode(&mut self) -> ByteCode {
         ByteCode::new(
             self.current_instructions().borrow().clone(),
-            self.constants.borrow().clone()
+            self.constants.borrow().clone(),
         )
     }
 }
