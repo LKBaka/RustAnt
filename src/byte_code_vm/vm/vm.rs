@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     byte_code_vm::{
         code::code::{
-            read_uint16, read_uint8, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_FALSE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            read_uint16, read_uint8, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::compiler::ByteCode,
         constants::{FALSE, TRUE, UNINIT_OBJ},
@@ -384,12 +384,42 @@ impl Vm {
 
                 OP_CLOSURE => {
                     let const_index = read_uint16(&instructions.borrow()[ip + 1..]);
-                    let _free_count = read_uint16(&instructions.borrow()[ip + 3..]);
+                    let free_count = read_uint16(&instructions.borrow()[ip + 3..]);
 
                     self.current_frame().borrow_mut().ip += 4;
 
-                    if let Err(msg) = push_closure(self, const_index) {
+                    if let Err(msg) = push_closure(self, const_index, free_count) {
                         return Err(format!("error push closure: {msg}"))
+                    }
+                }
+
+                OP_GET_FREE => {
+                    let current_frame = self.current_frame();
+                    let mut frame_mut = current_frame.borrow_mut();
+
+                    let free_index = read_uint16(&instructions.borrow()[ip + 1..]);
+                    frame_mut.ip += 2;
+
+                    let current_closure = frame_mut.closure.clone(); 
+                    if let Err(msg) = self.push(
+                        rc_ref_cell!(current_closure.borrow().free.borrow()[free_index as usize].clone())
+                    ) {
+                        return Err(format!("error push free variable: {msg}"))
+                    }
+                }
+
+                OP_CURRENT_CLOSURE => {
+                    let current_frame = self.current_frame();
+                    let current_closure = current_frame
+                        .borrow()
+                        .closure
+                        .borrow()
+                        .clone();
+
+                    if let Err(msg) = self.push(
+                        rc_ref_cell!(Box::new(current_closure))
+                    ) {
+                        return Err(format!("error push current closure: {msg}"))
                     }
                 }
 
