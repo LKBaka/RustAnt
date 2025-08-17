@@ -7,7 +7,7 @@ impl Clone for Identifier {
     fn clone(&self) -> Self {
         Self {
             value: self.value.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -33,7 +33,5 @@ impl Expression for Identifier {}
 impl_node!(Identifier);
 
 pub fn create_identifier(token: Token, value: String) -> Identifier {
-    Identifier {
-        token, value
-    }
+    Identifier { token, value }
 }

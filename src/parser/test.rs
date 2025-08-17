@@ -39,7 +39,10 @@ fn test_statement_termination() {
 
     let program = parser.parse_program();
     println!("With semicolon: {}", program.to_string());
-    assert!(!parser.contains_error(), "Parser should not have errors with semicolon");
+    assert!(
+        !parser.contains_error(),
+        "Parser should not have errors with semicolon"
+    );
 
     // 测试换行符结束的语句
     let code_with_newline = "let a = 1\nlet b = 2\n";
@@ -50,7 +53,10 @@ fn test_statement_termination() {
 
     let program2 = parser2.parse_program();
     println!("With newline: {}", program2.to_string());
-    assert!(!parser2.contains_error(), "Parser should not have errors with newline");
+    assert!(
+        !parser2.contains_error(),
+        "Parser should not have errors with newline"
+    );
 
     // 测试混合情况
     let code_mixed = "let a = 1\nlet b = 2; let c = 3\n";
@@ -61,5 +67,8 @@ fn test_statement_termination() {
 
     let program3 = parser3.parse_program();
     println!("Mixed: {}", program3.to_string());
-    assert!(!parser3.contains_error(), "Parser should not have errors with mixed termination");
+    assert!(
+        !parser3.contains_error(),
+        "Parser should not have errors with mixed termination"
+    );
 }

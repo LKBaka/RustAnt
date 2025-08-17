@@ -1,7 +1,7 @@
-pub mod utils;
-pub mod constants;
-pub mod vm;
-pub mod run;
-pub mod compiler;
 pub mod code;
+pub mod compiler;
+pub mod constants;
+pub mod run;
 pub mod test;
+pub mod utils;
+pub mod vm;

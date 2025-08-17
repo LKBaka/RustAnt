@@ -1,4 +1,4 @@
-use phf::{phf_map};
+use phf::phf_map;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TokenType {
@@ -130,7 +130,7 @@ impl TokenType {
             TokenType::String => "String",
             TokenType::GetClassMember => "::",
             TokenType::TestPrint => "TestPrint",
-            TokenType::Comment => "Comment"
+            TokenType::Comment => "Comment",
         }
     }
 }

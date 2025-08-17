@@ -11,18 +11,24 @@ mod tests {
         use crate::token::token_type::TokenType;
 
         let nodes = vec![
-            create_expression_statement(
-                create_integer_literal(
-                    Token::new(TokenType::Integer, "91".to_string(), "__test_print_nodes__".to_string(), -1),
-                    BigDecimal::from(91)
-                )
-            ),
-            create_expression_statement(
-                create_integer_literal(
-                    Token::new(TokenType::Integer, "78".to_string(), "__test_print_nodes__".to_string(), -1),
-                    BigDecimal::from(78)
-                )
-            ),
+            create_expression_statement(create_integer_literal(
+                Token::new(
+                    TokenType::Integer,
+                    "91".to_string(),
+                    "__test_print_nodes__".to_string(),
+                    -1,
+                ),
+                BigDecimal::from(91),
+            )),
+            create_expression_statement(create_integer_literal(
+                Token::new(
+                    TokenType::Integer,
+                    "78".to_string(),
+                    "__test_print_nodes__".to_string(),
+                    -1,
+                ),
+                BigDecimal::from(78),
+            )),
         ];
 
         print_nodes(nodes);

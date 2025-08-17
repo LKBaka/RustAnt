@@ -1,8 +1,15 @@
-use crate::{ast::{ast::Node, expressions::infix_expression::InfixExpression}, byte_code_vm::{code::code::{INFIX_OPERATOR_TO_OPCODE, OP_GT}, compiler::compiler::Compiler}, convert_type};
+use crate::{
+    ast::{ast::Node, expressions::infix_expression::InfixExpression},
+    byte_code_vm::{
+        code::code::{INFIX_OPERATOR_TO_OPCODE, OP_GT},
+        compiler::compiler::Compiler,
+    },
+    convert_type,
+};
 
 pub fn compile_infix_expression(
     compiler: &mut Compiler,
-    node: Box<dyn Node>
+    node: Box<dyn Node>,
 ) -> Result<(), String> {
     let infix_expr = convert_type!(InfixExpression, node);
 
@@ -31,7 +38,8 @@ pub fn compile_infix_expression(
     let operator_opcode = INFIX_OPERATOR_TO_OPCODE.get(&infix_expr.operator);
 
     if let Some(op) = operator_opcode {
-        compiler.emit(*op, vec![]); Ok(())
+        compiler.emit(*op, vec![]);
+        Ok(())
     } else {
         Err(format!("unknown operator: {}", infix_expr.operator))
     }

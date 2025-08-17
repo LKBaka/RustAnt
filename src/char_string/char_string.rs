@@ -1,4 +1,4 @@
-use std::{ops, convert::TryFrom};
+use std::{convert::TryFrom, ops};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct CharString {
@@ -16,7 +16,10 @@ impl CharString {
     // --------------------- 核心构造方法 ---------------------
     pub fn from_chars_unchecked(chars: Vec<char>) -> Self {
         let byte_len = chars.iter().map(|c| c.len_utf8()).sum();
-        Self { inner: chars, byte_len }
+        Self {
+            inner: chars,
+            byte_len,
+        }
     }
 
     /// 预分配内存（适用于高频修改场景）
@@ -50,19 +53,17 @@ impl CharString {
     pub fn as_str(&self) -> &str {
         // 利用内存布局兼容性实现零拷贝
         unsafe {
-            std::str::from_utf8_unchecked(
-                std::slice::from_raw_parts(
-                    self.inner.as_ptr() as *const u8,
-                    self.byte_len
-                )
-            )
+            std::str::from_utf8_unchecked(std::slice::from_raw_parts(
+                self.inner.as_ptr() as *const u8,
+                self.byte_len,
+            ))
         }
-    }      
-    
+    }
+
     pub fn get(&self, i: usize) -> Option<char> {
         for tuple in self.inner.iter().enumerate() {
             if tuple.0 == i {
-                return Some(*tuple.1)
+                return Some(*tuple.1);
             }
         }
 
@@ -74,7 +75,10 @@ impl From<String> for CharString {
     fn from(s: String) -> Self {
         let byte_len = s.len();
         let chars = s.chars().collect();
-        Self { inner: chars, byte_len }
+        Self {
+            inner: chars,
+            byte_len,
+        }
     }
 }
 

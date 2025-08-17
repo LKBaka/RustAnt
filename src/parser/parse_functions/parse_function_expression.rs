@@ -8,7 +8,6 @@ use crate::ast::ast::Expression;
 use crate::ast::expressions::function_expression::create_function_expression;
 use crate::parser::parser::Parser;
 
-
 pub fn parse_function_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let token = parser.cur_token.clone();
 
@@ -27,37 +26,35 @@ pub fn parse_function_expression(parser: &mut Parser) -> Option<Box<dyn Expressi
     parser.next_token(); // 前进到左括号
 
     let params = parser.parse_expression_list(TokenType::RParen);
-    
+
     parser.next_token(); // 离开右括号 (正常应前进到左大括号)
 
     let block = parse_block_statement(parser);
 
-    match block { 
+    match block {
         Some(block) => {
-            let converted_block = 
-                (block.as_ref() as &dyn Any)
-                    .downcast_ref::<BlockStatement>()
-                    .expect(&format!(
-                        "expected block statement, got {:?}, ast to string: {}", 
-                        block.type_id(), 
-                        block.to_string()
-                    ))
-                    .clone();
+            let converted_block = (block.as_ref() as &dyn Any)
+                .downcast_ref::<BlockStatement>()
+                .expect(&format!(
+                    "expected block statement, got {:?}, ast to string: {}",
+                    block.type_id(),
+                    block.to_string()
+                ))
+                .clone();
 
             Some(Box::new(create_function_expression(
-                token, 
+                token,
                 name,
-                params, 
-                converted_block
+                params,
+                converted_block,
             )))
         }
         None => {
-            parser.errors.push(
-                format!(
-                    "missing function body. at file <{}>, line {}",
-                    parser.cur_token.file, parser.cur_token.line
-                )
-            ); None
+            parser.errors.push(format!(
+                "missing function body. at file <{}>, line {}",
+                parser.cur_token.file, parser.cur_token.line
+            ));
+            None
         }
     }
 }

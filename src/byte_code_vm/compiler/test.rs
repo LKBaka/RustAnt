@@ -1,25 +1,45 @@
 #[cfg(test)]
 mod tests {
-    use std::{any::{Any, TypeId}, fmt::Debug};
+    use std::{
+        any::{Any, TypeId},
+        fmt::Debug,
+    };
 
     use bigdecimal::BigDecimal;
     use colored::Colorize;
 
-    use crate::{big_dec, byte_code_vm::{code::code::{instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE}, compiler::compiler::Compiler}, convert_type_use_box, object::{ant_int::AntInt, ant_string::AntString, object::Object}, parser::utils::parse};
+    use crate::{
+        big_dec,
+        byte_code_vm::{
+            code::code::{
+                Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE,
+                OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY,
+                OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE, instruction_to_str, make,
+            },
+            compiler::compiler::Compiler,
+        },
+        convert_type_use_box,
+        object::{ant_int::AntInt, ant_string::AntString, object::Object},
+        parser::utils::parse,
+    };
 
     struct CompilerTestCase<T: Debug + Clone + 'static> {
         input: String,
         expected_constants: Vec<T>,
-        expected_instructions: Vec<Instructions>
+        expected_instructions: Vec<Instructions>,
     }
 
     impl<T: Debug + Clone> CompilerTestCase<T> {
         pub fn new(
             input: String,
             expected_constants: Vec<T>,
-            expected_instructions: Vec<Instructions>
+            expected_instructions: Vec<Instructions>,
         ) -> Self {
-            Self { input, expected_constants, expected_instructions }
+            Self {
+                input,
+                expected_constants,
+                expected_instructions,
+            }
         }
     }
 
@@ -31,10 +51,8 @@ mod tests {
                 vec![Box::new(big_dec!(1)), Box::new(big_dec!(2))],
                 vec![
                     make(OP_CONSTANTS, &vec![0u16]),
-                    
                     make(OP_CONSTANTS, &vec![1u16]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "1 + 2".into(),
@@ -43,8 +61,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_ADD, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "1 - 2".into(),
@@ -53,8 +70,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_SUBTRACT, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "1 * 2".into(),
@@ -63,8 +79,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_MULTIPLY, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "1 / 2".into(),
@@ -73,17 +88,12 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_DIVIDE, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
                 "-1".into(),
                 vec![Box::new(big_dec!(1))],
-                vec![
-                    make(OP_CONSTANTS, &vec![]),
-                    make(OP_MINUS, &vec![]),
-                    
-                ]
+                vec![make(OP_CONSTANTS, &vec![]), make(OP_MINUS, &vec![])],
             ),
         ];
 
@@ -104,16 +114,19 @@ mod tests {
                     // 0004
                     make(OP_CONSTANTS, &vec![0u16]),
                     // 0007
-                    
+
                     // 0008
                     make(OP_CONSTANTS, &vec![1u16]),
                     // 0011
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "if true { 10 } else { 20 }; 3333;".into(),
-                vec![Box::new(big_dec!(10)), Box::new(big_dec!(20)), Box::new(big_dec!(3333))],
+                vec![
+                    Box::new(big_dec!(10)),
+                    Box::new(big_dec!(20)),
+                    Box::new(big_dec!(3333)),
+                ],
                 vec![
                     // 0000
                     make(OP_TRUE, &vec![]),
@@ -126,16 +139,20 @@ mod tests {
                     // 0010
                     make(OP_CONSTANTS, &vec![1]),
                     // 0013
-                    
+
                     // 0014
                     make(OP_CONSTANTS, &vec![2]),
                     // 0017
-                    
                 ],
             ),
             CompilerTestCase::new(
                 "if true { 10 } else if false {20} else { 30 }; 3333;".into(),
-                vec![Box::new(big_dec!(10)), Box::new(big_dec!(20)), Box::new(big_dec!(30)), Box::new(big_dec!(3333))],
+                vec![
+                    Box::new(big_dec!(10)),
+                    Box::new(big_dec!(20)),
+                    Box::new(big_dec!(30)),
+                    Box::new(big_dec!(3333)),
+                ],
                 vec![
                     // 0000
                     make(OP_TRUE, &vec![]), // if condition
@@ -156,11 +173,11 @@ mod tests {
                     // 0020
                     make(OP_CONSTANTS, &vec![2]), // else body
                     // 0023
-                     // if expression all end
+                    // if expression all end
                     // 0024
                     make(OP_CONSTANTS, &vec![3]), // 3333
-                    // 0027
-                     // pop 3333
+                                                  // 0027
+                                                  // pop 3333
                 ],
             ),
         ];
@@ -174,18 +191,12 @@ mod tests {
             CompilerTestCase::<Box<BigDecimal>>::new(
                 "true".into(),
                 vec![],
-                vec![
-                    make(OP_TRUE, &vec![]),
-                    
-                ]
+                vec![make(OP_TRUE, &vec![])],
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
                 "false".into(),
                 vec![],
-                vec![
-                    make(OP_FALSE, &vec![]),
-                    
-                ]
+                vec![make(OP_FALSE, &vec![])],
             ),
             CompilerTestCase::new(
                 "1 > 2".into(),
@@ -194,8 +205,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_GT, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "1 < 2".into(),
@@ -204,8 +214,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_GT, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "1 == 2".into(),
@@ -214,8 +223,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_EQ, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::new(
                 "1 !=  2".into(),
@@ -224,8 +232,7 @@ mod tests {
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_NOTEQ, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
                 "true == false".into(),
@@ -234,8 +241,7 @@ mod tests {
                     make(OP_TRUE, &vec![]),
                     make(OP_FALSE, &vec![]),
                     make(OP_EQ, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
                 "true != false".into(),
@@ -244,17 +250,12 @@ mod tests {
                     make(OP_TRUE, &vec![]),
                     make(OP_FALSE, &vec![]),
                     make(OP_NOTEQ, &vec![]),
-                    
-                ]
+                ],
             ),
             CompilerTestCase::<Box<BigDecimal>>::new(
                 "!true".into(),
                 vec![],
-                vec![
-                    make(OP_TRUE, &vec![]),
-                    make(OP_BANG, &vec![]),
-                    
-                ]
+                vec![make(OP_TRUE, &vec![]), make(OP_BANG, &vec![])],
             ),
         ];
 
@@ -269,54 +270,46 @@ mod tests {
                 r#"
                 let one = 1;
                 let two = 2;
-                "#.into(),
-                vec![
-                    Box::new(big_dec!(1)),
-                    Box::new(big_dec!(2))
-                ],
+                "#
+                .into(),
+                vec![Box::new(big_dec!(1)), Box::new(big_dec!(2))],
                 vec![
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_SET_GLOBAL, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_SET_GLOBAL, &vec![1u16]),
-                ]
+                ],
             ),
-
             // 测试2: 声明后使用变量
             CompilerTestCase::new(
                 r#"
                 let one = 1;
                 one;
-                "#.into(),
-                vec![
-                    Box::new(big_dec!(1))
-                ],
+                "#
+                .into(),
+                vec![Box::new(big_dec!(1))],
                 vec![
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_SET_GLOBAL, &vec![0u16]),
                     make(OP_GET_GLOBAL, &vec![0u16]),
-                    
-                ]
+                ],
             ),
-
             // 测试3: 变量赋值给另一个变量
             CompilerTestCase::new(
                 r#"
                 let one = 1;
                 let two = one;
                 two;
-                "#.into(),
-                vec![
-                    Box::new(big_dec!(1))
-                ],
+                "#
+                .into(),
+                vec![Box::new(big_dec!(1))],
                 vec![
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_SET_GLOBAL, &vec![0u16]),
                     make(OP_GET_GLOBAL, &vec![0u16]),
                     make(OP_SET_GLOBAL, &vec![1u16]),
                     make(OP_GET_GLOBAL, &vec![1u16]),
-                    
-                ]
+                ],
             ),
         ];
 
@@ -329,28 +322,18 @@ mod tests {
             // 测试1: 简单字符串字面量
             CompilerTestCase::new(
                 "\"lava\"".into(),
-                vec![
-                    Box::new("lava".to_string())
-                ],
-                vec![
-                    make(OP_CONSTANTS, &vec![0u16]),
-                    
-                ]
+                vec![Box::new("lava".to_string())],
+                vec![make(OP_CONSTANTS, &vec![0u16])],
             ),
-
             // 测试2: 字符串拼接
             CompilerTestCase::new(
                 "\"la\" + \"va\"".into(),
-                vec![
-                    Box::new("la".to_string()),
-                    Box::new("va".to_string())
-                ],
+                vec![Box::new("la".to_string()), Box::new("va".to_string())],
                 vec![
                     make(OP_CONSTANTS, &vec![0u16]),
                     make(OP_CONSTANTS, &vec![1u16]),
                     make(OP_ADD, &vec![]),
-                    
-                ]
+                ],
             ),
         ];
 
@@ -359,52 +342,46 @@ mod tests {
 
     #[test]
     fn test_array_literal() {
-        let tests = vec![
-            CompilerTestCase::new(
-                "[1, 2, 3]".into(),
-                vec![
-                    Box::new(big_dec!(1)),
-                    Box::new(big_dec!(2)),
-                    Box::new(big_dec!(3)),
-                ],
-                vec![
-                    make(OP_CONSTANTS, &vec![0u16]),
-                    make(OP_CONSTANTS, &vec![1u16]),
-                    make(OP_CONSTANTS, &vec![2u16]),
-                    make(OP_ARRAY, &vec![3u16]),
-                    
-                ]
-            )
-        ];
+        let tests = vec![CompilerTestCase::new(
+            "[1, 2, 3]".into(),
+            vec![
+                Box::new(big_dec!(1)),
+                Box::new(big_dec!(2)),
+                Box::new(big_dec!(3)),
+            ],
+            vec![
+                make(OP_CONSTANTS, &vec![0u16]),
+                make(OP_CONSTANTS, &vec![1u16]),
+                make(OP_CONSTANTS, &vec![2u16]),
+                make(OP_ARRAY, &vec![3u16]),
+            ],
+        )];
 
         run_compiler_tests(tests);
     }
 
     #[test]
     fn test_index_expressions() {
-        let tests = vec![
-            CompilerTestCase::new(
-                "[1, 2, 3][1 + 1]".into(),
-                vec![
-                    Box::new(big_dec!(1)),
-                    Box::new(big_dec!(2)),
-                    Box::new(big_dec!(3)),
-                    Box::new(big_dec!(1)),
-                    Box::new(big_dec!(1)),
-                ],
-                vec![
-                    make(OP_CONSTANTS, &vec![0u16]),
-                    make(OP_CONSTANTS, &vec![1u16]),
-                    make(OP_CONSTANTS, &vec![2u16]),
-                    make(OP_ARRAY, &vec![3u16]),
-                    make(OP_CONSTANTS, &vec![3u16]),
-                    make(OP_CONSTANTS, &vec![4u16]),
-                    make(OP_ADD, &vec![]),
-                    make(OP_INDEX, &vec![]),
-                    
-                ]
-            )
-        ];
+        let tests = vec![CompilerTestCase::new(
+            "[1, 2, 3][1 + 1]".into(),
+            vec![
+                Box::new(big_dec!(1)),
+                Box::new(big_dec!(2)),
+                Box::new(big_dec!(3)),
+                Box::new(big_dec!(1)),
+                Box::new(big_dec!(1)),
+            ],
+            vec![
+                make(OP_CONSTANTS, &vec![0u16]),
+                make(OP_CONSTANTS, &vec![1u16]),
+                make(OP_CONSTANTS, &vec![2u16]),
+                make(OP_ARRAY, &vec![3u16]),
+                make(OP_CONSTANTS, &vec![3u16]),
+                make(OP_CONSTANTS, &vec![4u16]),
+                make(OP_ADD, &vec![]),
+                make(OP_INDEX, &vec![]),
+            ],
+        )];
 
         run_compiler_tests(tests);
     }
@@ -422,7 +399,9 @@ mod tests {
             }
 
             let bytecode = compiler.bytecode();
-            if let Err(msg) = test_instructions(test_case.expected_instructions, bytecode.instructions) {
+            if let Err(msg) =
+                test_instructions(test_case.expected_instructions, bytecode.instructions)
+            {
                 panic!("testInstructions failed: {msg}")
             }
 
@@ -432,26 +411,24 @@ mod tests {
         }
     }
 
-
-    fn test_instructions(
-        expected: Vec<Instructions>,
-        actual: Instructions
-    ) -> Result<(), String> {
+    fn test_instructions(expected: Vec<Instructions>, actual: Instructions) -> Result<(), String> {
         let concatted = concat_instructions(expected);
 
         if actual.len() != concatted.len() {
             return Err(format!(
                 "wrong instructions length.\nwant = {}\ngot = {}",
-                instruction_to_str(&concatted), instruction_to_str(&actual)
-            ))
+                instruction_to_str(&concatted),
+                instruction_to_str(&actual)
+            ));
         }
 
         for (i, ins) in concatted.iter().enumerate() {
             if actual[i] != *ins {
                 return Err(format!(
                     "wrong instruction at {i}.\nwant = {}\ngot = {}",
-                    instruction_to_str(&concatted), instruction_to_str(&actual)
-                ))
+                    instruction_to_str(&concatted),
+                    instruction_to_str(&actual)
+                ));
             }
         }
 
@@ -472,31 +449,40 @@ mod tests {
 
     fn test_constants<T: Debug + Clone + 'static>(
         expected: Vec<T>,
-        actual: Vec<Object>
+        actual: Vec<Object>,
     ) -> Result<(), String> {
         if expected.len() != actual.len() {
-            return Err(format!("wrong number of constants. want = {}, got = {}", expected.len(), actual.len()))
+            return Err(format!(
+                "wrong number of constants. want = {}, got = {}",
+                expected.len(),
+                actual.len()
+            ));
         }
 
         for (i, constant) in expected.iter().enumerate() {
             match constant.type_id() {
                 id if id == TypeId::of::<BigDecimal>() => {
                     let result = test_integer_object(
-                        convert_type_use_box!(BigDecimal, constant.clone()), actual[i].clone()
+                        convert_type_use_box!(BigDecimal, constant.clone()),
+                        actual[i].clone(),
                     );
 
                     if let Err(msg) = result {
-                        return Err(format!("constant {} - testIntegerObject failed: {}", i, msg))
+                        return Err(format!(
+                            "constant {} - testIntegerObject failed: {}",
+                            i, msg
+                        ));
                     }
                 }
 
                 id if id == TypeId::of::<String>() => {
                     let result = test_string_object(
-                        convert_type_use_box!(String, constant.clone()), actual[i].clone()
+                        convert_type_use_box!(String, constant.clone()),
+                        actual[i].clone(),
                     );
 
                     if let Err(msg) = result {
-                        return Err(format!("constant {} - testStringObject failed: {}", i, msg))
+                        return Err(format!("constant {} - testStringObject failed: {}", i, msg));
                     }
                 }
 
@@ -504,10 +490,10 @@ mod tests {
             }
         }
 
-        return Ok(())
+        return Ok(());
     }
 
-    fn test_integer_object(expected: BigDecimal, actual: Object) -> Result<(), String>  {
+    fn test_integer_object(expected: BigDecimal, actual: Object) -> Result<(), String> {
         let int_obj = convert_type_use_box!(AntInt, actual.clone());
 
         if int_obj.value != expected {
@@ -520,7 +506,7 @@ mod tests {
         }
     }
 
-    fn test_string_object(expected: String, actual: Object) -> Result<(), String>  {
+    fn test_string_object(expected: String, actual: Object) -> Result<(), String> {
         let str_obj = convert_type_use_box!(AntString, actual.clone());
 
         if str_obj.value != expected {
@@ -534,7 +520,10 @@ mod tests {
     }
 
     fn scope_index_wrong_err_print(want: usize, got: usize) {
-        panic!("{}", format!("scopeIndex wrong. want: {want}, got: {got}").red())
+        panic!(
+            "{}",
+            format!("scopeIndex wrong. want: {want}, got: {got}").red()
+        )
     }
 
     #[test]
@@ -556,20 +545,36 @@ mod tests {
 
         compiler.emit(OP_SUBTRACT, vec![]);
 
-        if compiler.scopes[compiler.scope_index].instructions.borrow().len() != 1 {
-            panic!("{}", format!(
-                "instructions length wrong, got: {}",
-                compiler.scopes[compiler.scope_index].instructions.borrow().len()
-            ).red())
+        if compiler.scopes[compiler.scope_index]
+            .instructions
+            .borrow()
+            .len()
+            != 1
+        {
+            panic!(
+                "{}",
+                format!(
+                    "instructions length wrong, got: {}",
+                    compiler.scopes[compiler.scope_index]
+                        .instructions
+                        .borrow()
+                        .len()
+                )
+                .red()
+            )
         }
 
         let last = compiler.scopes[compiler.scope_index].last_instruction;
 
         if last.op != OP_SUBTRACT {
-            panic!("{}", format!(
-                "lastInstruction opcode wrong. want: {}, got: {}",
-                OP_SUBTRACT, last.op
-            ).red())
+            panic!(
+                "{}",
+                format!(
+                    "lastInstruction opcode wrong. want: {}, got: {}",
+                    OP_SUBTRACT, last.op
+                )
+                .red()
+            )
         }
 
         if compiler.symbol_table.borrow().outer != Some(global_symbol_table) {
@@ -584,28 +589,48 @@ mod tests {
 
         compiler.emit(OP_ADD, vec![]);
 
-        if compiler.scopes[compiler.scope_index].instructions.borrow().len() != 2 {
-            panic!("{}", format!(
-                "instructions length wrong, got: {}",
-                compiler.scopes[compiler.scope_index].instructions.borrow().len()
-            ).red())
+        if compiler.scopes[compiler.scope_index]
+            .instructions
+            .borrow()
+            .len()
+            != 2
+        {
+            panic!(
+                "{}",
+                format!(
+                    "instructions length wrong, got: {}",
+                    compiler.scopes[compiler.scope_index]
+                        .instructions
+                        .borrow()
+                        .len()
+                )
+                .red()
+            )
         }
 
         let last = compiler.scopes[compiler.scope_index].last_instruction;
 
         if last.op != OP_ADD {
-            panic!("{}", format!(
-                "lastInstruction opcode wrong. want: {}, got: {}",
-                OP_ADD, last.op
-            ).red())
+            panic!(
+                "{}",
+                format!(
+                    "lastInstruction opcode wrong. want: {}, got: {}",
+                    OP_ADD, last.op
+                )
+                .red()
+            )
         }
 
         let previous = compiler.scopes[compiler.scope_index].previous_instruction;
         if previous.op != OP_MULTIPLY {
-            panic!("{}", format!(
-                "previousInstruction opcode wrong. want: {}, got: {}",
-                OP_MULTIPLY, last.op
-            ).red())
+            panic!(
+                "{}",
+                format!(
+                    "previousInstruction opcode wrong. want: {}, got: {}",
+                    OP_MULTIPLY, last.op
+                )
+                .red()
+            )
         }
-    } 
+    }
 }

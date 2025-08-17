@@ -6,12 +6,12 @@ use uuid::Uuid;
 
 use crate::impl_object;
 use crate::object::ant_compiled_function::CompiledFunction;
-use crate::object::object::{IAntObject, Object, ObjectType, CLOSURE};
+use crate::object::object::{CLOSURE, IAntObject, Object, ObjectType};
 
 #[derive(Clone)]
 pub struct Closure {
     pub func: Rc<RefCell<CompiledFunction>>,
-    pub free: Rc<RefCell<Vec<Object>>>
+    pub free: Rc<RefCell<Vec<Object>>>,
 }
 
 impl IAntObject for Closure {
@@ -20,9 +20,7 @@ impl IAntObject for Closure {
     }
 
     fn get_value(&self) -> Box<dyn Any> {
-        Box::new(
-            self.func.borrow().instructions.clone()
-        )
+        Box::new(self.func.borrow().instructions.clone())
     }
 
     fn get_base(&self) -> Option<Object> {
@@ -42,12 +40,12 @@ impl IAntObject for Closure {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.get_id() || if let Some(it) = other
-            .as_any()
-            .downcast_ref::<Closure>() 
-        {
-            it.func == self.func && it.free == self.free
-        } else {false}
+        other.get_id() == self.get_id()
+            || if let Some(it) = other.as_any().downcast_ref::<Closure>() {
+                it.func == self.func && it.free == self.free
+            } else {
+                false
+            }
     }
 
     fn as_any(&self) -> &dyn Any {

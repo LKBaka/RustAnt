@@ -9,9 +9,7 @@ impl<K: Clone, V: Clone> Clone for Map<K, V> {
     fn clone(&self) -> Self {
         let pairs: Vec<Pair<K, V>> = self.pairs.clone();
 
-        Self {
-            pairs
-        }
+        Self { pairs }
     }
 }
 
@@ -32,13 +30,13 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
         let pos = self.pairs.iter().position(|pair| &pair.key == k);
 
         if pos.is_some() {
-            return Some(self.pairs[pos.unwrap()].value.clone())
+            return Some(self.pairs[pos.unwrap()].value.clone());
         }
 
         None
     }
 
-    pub fn remove(&mut self, k: K){
+    pub fn remove(&mut self, k: K) {
         let pos = self.pairs.iter().position(|pair| pair.key == k);
 
         if pos.is_some() {
@@ -75,7 +73,7 @@ impl<K: Clone + Eq, V: Clone + Eq> Map<K, V> {
     pub fn contains_key(&self, k: &K) -> bool {
         for key in self.keys() {
             if k == &key {
-                return true
+                return true;
             }
         }
 
@@ -108,7 +106,7 @@ impl<K: Clone, V: Clone> Iterator for MapIterator<K, V> {
             None
         }
     }
-} 
+}
 
 impl<K: Clone, V: Clone> IntoIterator for Map<K, V> {
     type Item = Pair<K, V>;
@@ -117,10 +115,10 @@ impl<K: Clone, V: Clone> IntoIterator for Map<K, V> {
     fn into_iter(self) -> Self::IntoIter {
         MapIterator {
             pairs: vec![],
-            pair_index: 0
+            pair_index: 0,
         }
     }
-}   
+}
 
 #[macro_export]
 macro_rules! map {
@@ -133,12 +131,12 @@ macro_rules! map {
         {
             use crate::map::pair::Pair;
             use crate::map::map::Map;
-            
+
             let mut m = Map::new();
             $(
                 m.pairs.push(Pair::new($key, $value));
             )*
-            
+
             m
         }
     };

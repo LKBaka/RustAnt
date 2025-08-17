@@ -8,7 +8,7 @@ impl Clone for PrefixExpression {
         Self {
             operator: self.operator.clone(),
             expression: self.expression.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -34,8 +34,14 @@ impl Expression for PrefixExpression {}
 
 impl_node!(PrefixExpression);
 
-pub fn create_prefix_expression(token: Token, operator: String, expression: Box<dyn Expression>) -> PrefixExpression {
+pub fn create_prefix_expression(
+    token: Token,
+    operator: String,
+    expression: Box<dyn Expression>,
+) -> PrefixExpression {
     PrefixExpression {
-        token, operator, expression
+        token,
+        operator,
+        expression,
     }
 }

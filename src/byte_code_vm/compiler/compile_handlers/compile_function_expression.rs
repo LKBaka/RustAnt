@@ -1,7 +1,10 @@
 use crate::{
-    ast::{ast::Node, expressions::{function_expression::FunctionExpression, identifier::Identifier}},
+    ast::{
+        ast::Node,
+        expressions::{function_expression::FunctionExpression, identifier::Identifier},
+    },
     byte_code_vm::{
-        code::code::{OP_CONSTANTS, OP_RETURN_VALUE, OP_SET_GLOBAL},
+        code::code::{OP_CLOSURE, OP_CONSTANTS, OP_RETURN_VALUE, OP_SET_GLOBAL},
         compiler::compiler::Compiler,
     },
     convert_type,
@@ -23,14 +26,17 @@ pub fn compile_function_expression(
 
     compiler.enter_scope();
 
-    let param_vec: Vec<&Identifier> = func_expr.params
+    let param_vec: Vec<&Identifier> = func_expr
+        .params
         .iter()
-        .map(|expr| 
-            (expr.as_ref() as &dyn std::any::Any).downcast_ref::<Identifier>().expect(&format!(
-                "expected an identifier, got: {}",
-                expr.type_name()
-            ))
-        )
+        .map(|expr| {
+            (expr.as_ref() as &dyn std::any::Any)
+                .downcast_ref::<Identifier>()
+                .expect(&format!(
+                    "expected an identifier, got: {}",
+                    expr.type_name()
+                ))
+        })
         .collect();
 
     for param in param_vec {
@@ -41,7 +47,7 @@ pub fn compile_function_expression(
     if let Err(msg) = compile_body_result {
         return Err(format!("error compile function body: {msg}"));
     }
-    
+
     compiler.add_instruction(vec![OP_RETURN_VALUE]);
 
     let local_count = compiler.symbol_table.borrow().num_definitions;
@@ -57,7 +63,7 @@ pub fn compile_function_expression(
 
     let constant_index = compiler.add_constant(Box::new(compiled_function)) as u16;
 
-    compiler.emit(OP_CONSTANTS, vec![constant_index]);
+    compiler.emit(OP_CLOSURE, vec![constant_index, 0]);
 
     if func_expr.name.is_some() {
         compiler.emit(OP_SET_GLOBAL, vec![symbol_index.unwrap()]);

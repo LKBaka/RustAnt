@@ -1,5 +1,5 @@
-pub mod utils;
+mod parse_functions;
 pub mod parser;
 mod precedence;
-mod parse_functions;
 mod test;
+pub mod utils;

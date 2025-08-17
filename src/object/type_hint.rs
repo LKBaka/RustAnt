@@ -53,7 +53,7 @@ impl TypeHintMap {
 
     pub fn push_hint(&self, key: String, hint: TypeHint) -> Self {
         let mut map = self.map.clone();
-        
+
         map.insert(key, hint);
 
         Self { map }
@@ -77,7 +77,7 @@ impl IntoIterator for &'static TypeHintMap {
     type IntoIter = TypeHintIterator;
 
     fn into_iter(self) -> Self::IntoIter {
-        TypeHintIterator::new(self) 
+        TypeHintIterator::new(self)
     }
 }
 
@@ -99,7 +99,7 @@ impl Iterator for TypeHintIterator {
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.next().map(|(k, v)| (k.clone(), v.clone()))
     }
-}   
+}
 
 #[macro_export]
 macro_rules! type_hint {

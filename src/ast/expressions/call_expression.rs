@@ -1,9 +1,7 @@
-
 use crate::ast::ast::{Expression, Node};
 
-use crate::token::token::Token;
 use crate::impl_node;
-
+use crate::token::token::Token;
 
 impl Clone for CallExpression {
     fn clone(&self) -> Self {

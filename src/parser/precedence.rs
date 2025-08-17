@@ -1,19 +1,17 @@
-use std::collections::HashMap;
-use std::ops::Sub;
 use lazy_static::lazy_static;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::ops::Sub;
 
 use crate::token::token_type::TokenType;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-#[derive(TryFromPrimitive)]
-#[derive(IntoPrimitive)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, TryFromPrimitive, IntoPrimitive)]
 #[repr(i32)]
 pub enum Precedence {
     Lowest,
-    Assignment, // a = 1
-    AndOr,      // Or | And
+    Assignment,  // a = 1
+    AndOr,       // Or | And
     Equals,      // ==
     LessGreater, // > | <
     Sum,         // +
@@ -48,7 +46,6 @@ lazy_static! {
     };
 }
 
-
 impl Sub<i32> for Precedence {
     type Output = Precedence;
 
@@ -60,11 +57,7 @@ impl Sub<i32> for Precedence {
 
 pub fn get_token_precedence(token_type: TokenType) -> Precedence {
     match TOKEN_PRECEDENCES.get(&token_type.clone()).cloned() {
-        None => {
-            Precedence::Lowest
-        }
-        Some(it) => {
-            it
-        }
+        None => Precedence::Lowest,
+        Some(it) => it,
     }
 }

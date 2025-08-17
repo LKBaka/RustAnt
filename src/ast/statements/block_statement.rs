@@ -3,8 +3,8 @@ use std::ops::Deref;
 use crate::ast::ast::{Node, Statement};
 use crate::constants::NEW_LINE;
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for BlockStatement {
     fn clone(&self) -> Self {
@@ -18,7 +18,7 @@ impl Clone for BlockStatement {
 #[derive(Debug)]
 pub struct BlockStatement {
     pub token: Token,
-    pub statements: Vec<Box<dyn Statement>>
+    pub statements: Vec<Box<dyn Statement>>,
 }
 
 impl Node for BlockStatement {
@@ -46,8 +46,5 @@ impl_node!(BlockStatement);
 impl Statement for BlockStatement {}
 
 pub fn create_block_statement(token: Token, statements: Vec<Box<dyn Statement>>) -> BlockStatement {
-    BlockStatement {
-        token,
-        statements
-    }
+    BlockStatement { token, statements }
 }

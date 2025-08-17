@@ -1,4 +1,3 @@
-
 #[test]
 fn test_import_module() {
     use crate::module_system::import_module::ModuleImporter;
@@ -10,13 +9,10 @@ fn test_import_module() {
     };
 
     let result = module_importer.import();
-    assert_eq(
-        result.is_ok(), 
-        true, 
-        || {
-            println!("module import failed: {:?}", result.clone().err()); println!("{:?}", module_importer.module_paths)
-        }
-    );
+    assert_eq(result.is_ok(), true, || {
+        println!("module import failed: {:?}", result.clone().err());
+        println!("{:?}", module_importer.module_paths)
+    });
 
     println!("module imported successfully");
 }

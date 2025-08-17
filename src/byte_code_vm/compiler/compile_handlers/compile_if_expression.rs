@@ -1,14 +1,22 @@
-use crate::{ast::{ast::Node, expressions::if_expression::{ElseIfExpression, IfExpression}}, byte_code_vm::{code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_POP}, compiler::compiler::Compiler, constants::FAKE_OFFSET_JUMP}, convert_type};
+use crate::{
+    ast::{
+        ast::Node,
+        expressions::if_expression::{ElseIfExpression, IfExpression},
+    },
+    byte_code_vm::{
+        code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_POP},
+        compiler::compiler::Compiler,
+        constants::FAKE_OFFSET_JUMP,
+    },
+    convert_type,
+};
 
-pub fn compile_if_expression(
-    compiler: &mut Compiler,
-    node: Box<dyn Node>
-) -> Result<(), String> {
+pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Result<(), String> {
     let if_expr = convert_type!(IfExpression, node);
 
     let condition_result = compiler.compile(if_expr.condition);
     if let Err(msg) = condition_result {
-        return Err(format!("error compile condition: {}", msg))
+        return Err(format!("error compile condition: {}", msg));
     }
 
     // 先插入一个 OpJumpNotTruthy, 后面再修改他的操作数
@@ -16,7 +24,7 @@ pub fn compile_if_expression(
 
     let consequence_result = compiler.compile(if_expr.consequence);
     if let Err(msg) = consequence_result {
-        return Err(format!("error compile consequence: {}", msg))
+        return Err(format!("error compile consequence: {}", msg));
     }
 
     if compiler.last_instruction_is(OP_POP) {
@@ -24,22 +32,19 @@ pub fn compile_if_expression(
     }
 
     // 只有 if
-    if (&if_expr.alternative).is_none() && 
-        (if_expr.else_if_expressions.as_ref()).is_none_or(|exprs| (&exprs).is_empty()) {
+    if (&if_expr.alternative).is_none()
+        && (if_expr.else_if_expressions.as_ref()).is_none_or(|exprs| (&exprs).is_empty())
+    {
         // 回到 OpJumpNotTruthy 纪元 并且修改它的操作数
 
         // after_all_pos: 指向在编译完 所有的 if 和 else if 块之后的指令坐标
-        let after_all_pos = compiler
-            .current_instructions()
-            .borrow()
-            .len();
+        let after_all_pos = compiler.current_instructions().borrow().len();
 
         compiler.change_operand(jump_not_truthy_command_pos, after_all_pos as u16);
 
-        return Ok(())
+        return Ok(());
     }
-    
-    
+
     // jump_to_end_command_pos: 指向在编译完 所有的东西之后 (比如 else, else if) 的指令坐标
     let jump_to_end_command_pos = compiler.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
 
@@ -51,7 +56,7 @@ pub fn compile_if_expression(
     };
 
     compiler.change_operand(jump_not_truthy_command_pos, instructions_length);
-    
+
     if let Some(expressions) = if_expr.else_if_expressions {
         for else_if in expressions {
             let else_if = convert_type!(ElseIfExpression, else_if);
@@ -86,7 +91,7 @@ pub fn compile_if_expression(
                 let len = compiler.current_instructions().borrow().len();
                 len as u16
             };
-            
+
             compiler.change_operand(else_if_jump_pos, instructions_length);
         }
     }
@@ -97,18 +102,15 @@ pub fn compile_if_expression(
 
         let alternative_result = compiler.compile(alternative);
         if let Err(msg) = alternative_result {
-            return Err(format!("error compile alternative: {}", msg))
+            return Err(format!("error compile alternative: {}", msg));
         }
 
         if compiler.last_instruction_is(OP_POP) {
             compiler.remove_last_pop();
         }
 
-        let end_pos = compiler
-            .current_instructions()
-            .borrow()
-            .len();
-        
+        let end_pos = compiler.current_instructions().borrow().len();
+
         compiler.change_operand(jump_to_end_command_pos, end_pos as u16);
 
         // 回填 else if 无条件跳转
@@ -122,10 +124,7 @@ pub fn compile_if_expression(
     // 有 if 和 else if 但是没有 else
 
     // 回填 else if 无条件跳转
-    let end_pos = compiler
-        .current_instructions()
-        .borrow()
-        .len();
+    let end_pos = compiler.current_instructions().borrow().len();
 
     for pos in else_if_jump_to_end_command_pos {
         compiler.change_operand(pos, end_pos as u16);

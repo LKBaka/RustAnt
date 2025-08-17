@@ -7,7 +7,7 @@ impl Clone for TestPrintExpression {
     fn clone(&self) -> Self {
         Self {
             value: self.value.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -32,8 +32,9 @@ impl Expression for TestPrintExpression {}
 
 impl_node!(TestPrintExpression);
 
-pub fn create_test_print_expression(token: Token, value: Box<dyn Expression>) -> TestPrintExpression {
-    TestPrintExpression {
-        token, value
-    }
+pub fn create_test_print_expression(
+    token: Token,
+    value: Box<dyn Expression>,
+) -> TestPrintExpression {
+    TestPrintExpression { token, value }
 }

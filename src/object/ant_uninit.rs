@@ -1,8 +1,8 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::object::object::{IAntObject, Object, ObjectType, UNINIT};
 use crate::impl_object;
+use crate::object::object::{IAntObject, Object, ObjectType, UNINIT};
 
 pub struct AntUninit {
     id: Uuid,
@@ -10,17 +10,13 @@ pub struct AntUninit {
 
 impl AntUninit {
     pub fn new() -> Object {
-        let obj = Box::new(Self {
-            id: Uuid::new_v4(),
-        });
+        let obj = Box::new(Self { id: Uuid::new_v4() });
 
         obj
     }
 
     pub fn create() -> Self {
-        Self { 
-            id: Uuid::new_v4(),
-        }
+        Self { id: Uuid::new_v4() }
     }
 }
 
@@ -49,17 +45,19 @@ impl IAntObject for AntUninit {
         self
     }
 
-    
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == UNINIT {true} else {false}
+        other.get_id() == self.id
+            || if other.get_type() == UNINIT {
+                true
+            } else {
+                false
+            }
     }
 }
 
 impl Clone for AntUninit {
     fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-        }
+        Self { id: self.id }
     }
 }
 

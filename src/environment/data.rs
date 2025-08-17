@@ -10,12 +10,17 @@ pub struct Data {
 impl Data {
     pub fn new(data: Object, data_info: DataInfo) -> Data {
         Data {
-            data, info: data_info,
+            data,
+            info: data_info,
         }
     }
 
     pub fn to_string(&self) -> String {
-        format!("Data(data: {}, data_info: {})", self.data.inspect(), self.info.to_string())
+        format!(
+            "Data(data: {}, data_info: {})",
+            self.data.inspect(),
+            self.info.to_string()
+        )
     }
 }
 

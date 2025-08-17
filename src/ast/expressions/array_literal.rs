@@ -1,8 +1,7 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::token::token::Token;
 use crate::impl_node;
-
+use crate::token::token::Token;
 
 impl Clone for ArrayLiteral {
     fn clone(&self) -> Self {
@@ -39,9 +38,6 @@ impl_node!(ArrayLiteral);
 
 impl Expression for ArrayLiteral {}
 
-pub fn create_array_literal(
-    token: Token,
-    items: Vec<Box<dyn Expression>>,
-) -> ArrayLiteral {
+pub fn create_array_literal(token: Token, items: Vec<Box<dyn Expression>>) -> ArrayLiteral {
     ArrayLiteral { token, items }
 }

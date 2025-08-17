@@ -1,13 +1,10 @@
-use std::any::Any;
 use bigdecimal::BigDecimal;
+use std::any::Any;
 use uuid::Uuid;
 
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::{IAntObject, Object, ObjectType, DOUBLE};
-
-
-
+use crate::object::object::{DOUBLE, IAntObject, Object, ObjectType};
 
 pub struct AntDouble {
     id: Uuid,
@@ -67,18 +64,22 @@ impl IAntObject for AntDouble {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == DOUBLE {
-            other.as_any().downcast_ref::<AntDouble>().unwrap().value == self.value
-        } else if other.get_type() == "INT" {
-            // 支持与 AntInt 的比较
-            if let Some(int_obj) = other.as_any().downcast_ref::<crate::object::ant_int::AntInt>() {
-                &int_obj.value == &self.value
+        other.get_id() == self.id
+            || if other.get_type() == DOUBLE {
+                other.as_any().downcast_ref::<AntDouble>().unwrap().value == self.value
+            } else if other.get_type() == "INT" {
+                // 支持与 AntInt 的比较
+                if let Some(int_obj) = other
+                    .as_any()
+                    .downcast_ref::<crate::object::ant_int::AntInt>()
+                {
+                    &int_obj.value == &self.value
+                } else {
+                    false
+                }
             } else {
                 false
             }
-        } else {
-            false
-        }
     }
 
     fn as_any(&self) -> &dyn Any {

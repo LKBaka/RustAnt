@@ -13,15 +13,13 @@ pub fn parse_prefix_expression(parser: &mut Parser) -> Option<Box<dyn Expression
         match parser.parse_expression(Precedence::Prefix) {
             Some(expr) => expr,
             None => {
-                parser.errors.push(format!("expected expression after '{}'", operator));
+                parser
+                    .errors
+                    .push(format!("expected expression after '{}'", operator));
                 return None;
             }
         }
     };
 
-    Some(Box::new(create_prefix_expression(
-        token,
-        operator,
-        right,
-    )))
+    Some(Box::new(create_prefix_expression(token, operator, right)))
 }

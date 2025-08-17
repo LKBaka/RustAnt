@@ -1,12 +1,12 @@
 use crate::ast::ast::{Expression, Node};
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for TupleExpression {
     fn clone(&self) -> Self {
         Self {
             expressions: self.expressions.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -23,7 +23,9 @@ impl Node for TupleExpression {
     }
 
     fn to_string(&self) -> String {
-        let expressions_str: Vec<String> = self.expressions.iter()
+        let expressions_str: Vec<String> = self
+            .expressions
+            .iter()
             .map(|expr| expr.to_string())
             .collect();
 
@@ -35,8 +37,9 @@ impl Expression for TupleExpression {}
 
 impl_node!(TupleExpression);
 
-pub fn create_tuple_expression(token: Token, expressions: Vec<Box<dyn Expression>>) -> TupleExpression {
-    TupleExpression {
-        token, expressions
-    }
+pub fn create_tuple_expression(
+    token: Token,
+    expressions: Vec<Box<dyn Expression>>,
+) -> TupleExpression {
+    TupleExpression { token, expressions }
 }

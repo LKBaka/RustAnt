@@ -24,7 +24,5 @@ pub fn parse_block_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
 
     // WARNING: 有需要离开右括号的情况自行处理
 
-    Some(Box::new(
-        create_block_statement(token, statements)
-    ))
+    Some(Box::new(create_block_statement(token, statements)))
 }

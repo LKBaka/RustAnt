@@ -2,18 +2,24 @@
 mod test {
     use colored::Colorize;
 
-    use crate::{byte_code_vm::compiler::symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable}, map, rc_ref_cell, utils::assert_eq};
+    use crate::{
+        byte_code_vm::compiler::symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
+        map, rc_ref_cell,
+        utils::assert_eq,
+    };
 
     struct TestCase {
         pub table: SymbolTable,
-        pub expected_symbols: Vec<Symbol>
+        pub expected_symbols: Vec<Symbol>,
     }
 
     #[test]
     fn test_define() {
         let expected = map![
-            "a", Symbol::new("a".into(), SymbolScope::Global, 0),
-            "b", Symbol::new("b".into(), SymbolScope::Global, 1),
+            "a",
+            Symbol::new("a".into(), SymbolScope::Global, 0),
+            "b",
+            Symbol::new("b".into(), SymbolScope::Global, 1),
         ];
 
         let mut global = SymbolTable::new();
@@ -25,7 +31,14 @@ mod test {
             let result = global.define(name);
 
             if result != expected_symbol {
-                panic!("{}", format!("expected {name} = {:?} got {name} = {:?}", expected_symbol, result).red())
+                panic!(
+                    "{}",
+                    format!(
+                        "expected {name} = {:?} got {name} = {:?}",
+                        expected_symbol, result
+                    )
+                    .red()
+                )
             }
         }
     }
@@ -47,13 +60,22 @@ mod test {
         for expected_symbol in expected {
             let result = global.resolve(&expected_symbol.name);
             match result {
-                Some(symbol) => if symbol != expected_symbol {
-                    panic!("{}", format!(
-                        "expected {} to resolve to {:?}, got = {:?}",
-                        expected_symbol.name, expected_symbol, symbol
-                    ).red())
+                Some(symbol) => {
+                    if symbol != expected_symbol {
+                        panic!(
+                            "{}",
+                            format!(
+                                "expected {} to resolve to {:?}, got = {:?}",
+                                expected_symbol.name, expected_symbol, symbol
+                            )
+                            .red()
+                        )
+                    }
                 }
-                None => panic!("{}", format!("name {} not resolvable", expected_symbol.name).red())
+                None => panic!(
+                    "{}",
+                    format!("name {} not resolvable", expected_symbol.name).red()
+                ),
             }
         }
     }
@@ -87,18 +109,26 @@ mod test {
         for expected_symbol in local_symbols {
             let result = local.resolve(&expected_symbol.name);
             match result {
-                Some(symbol) => if symbol != expected_symbol {
-                    panic!("{}", format!(
-                        "expected {} to resolve to {:?}, got = {:?}",
-                        expected_symbol.name, expected_symbol, symbol
-                    ).red())
+                Some(symbol) => {
+                    if symbol != expected_symbol {
+                        panic!(
+                            "{}",
+                            format!(
+                                "expected {} to resolve to {:?}, got = {:?}",
+                                expected_symbol.name, expected_symbol, symbol
+                            )
+                            .red()
+                        )
+                    }
                 }
-                None => panic!("{}", format!("name {} not resolvable", expected_symbol.name).red())
+                None => panic!(
+                    "{}",
+                    format!("name {} not resolvable", expected_symbol.name).red()
+                ),
             }
         }
     }
 
-    
     #[test]
     fn test_define_local() {
         let mut global = SymbolTable::new();
@@ -111,10 +141,14 @@ mod test {
         for expected_symbol in &global_symbols {
             let symbol = global.define(&expected_symbol.name);
             if &symbol != expected_symbol {
-                panic!("{}", format!(
-                    "expected {} to resolve to {:?}, got = {:?}",
-                    expected_symbol.name, expected_symbol, symbol
-                ).red())
+                panic!(
+                    "{}",
+                    format!(
+                        "expected {} to resolve to {:?}, got = {:?}",
+                        expected_symbol.name, expected_symbol, symbol
+                    )
+                    .red()
+                )
             }
         }
 
@@ -128,10 +162,14 @@ mod test {
         for expected_symbol in &local_symbols {
             let symbol = local.define(&expected_symbol.name);
             if &symbol != expected_symbol {
-                panic!("{}", format!(
-                    "expected {} to resolve to {:?}, got = {:?}",
-                    expected_symbol.name, expected_symbol, symbol
-                ).red())
+                panic!(
+                    "{}",
+                    format!(
+                        "expected {} to resolve to {:?}, got = {:?}",
+                        expected_symbol.name, expected_symbol, symbol
+                    )
+                    .red()
+                )
             }
         }
 
@@ -145,10 +183,14 @@ mod test {
         for expected_symbol in &second_local_symbols {
             let symbol = second_local.define(&expected_symbol.name);
             if &symbol != expected_symbol {
-                panic!("{}", format!(
-                    "expected {} to resolve to {:?}, got = {:?}",
-                    expected_symbol.name, expected_symbol, symbol
-                ).red())
+                panic!(
+                    "{}",
+                    format!(
+                        "expected {} to resolve to {:?}, got = {:?}",
+                        expected_symbol.name, expected_symbol, symbol
+                    )
+                    .red()
+                )
             }
         }
     }
@@ -159,17 +201,17 @@ mod test {
         let mut global = SymbolTable::new();
         global.define("a");
         global.define("b");
-        
+
         // 第一层局部符号表（嵌套在全局下）
         let mut first_local = SymbolTable::with_outer(rc_ref_cell!(global));
         first_local.define("c");
         first_local.define("d");
-        
+
         // 第二层局部符号表（嵌套在第一层下）
         let mut second_local = SymbolTable::with_outer(rc_ref_cell!(first_local.clone()));
         second_local.define("e");
         second_local.define("f");
-        
+
         // 定义测试用例
         let test_cases = vec![
             TestCase {
@@ -191,24 +233,32 @@ mod test {
                 ],
             },
         ];
-        
+
         // 遍历测试用例
         for case in test_cases {
             for expected_symbol in &case.expected_symbols {
                 match case.table.resolve(&expected_symbol.name) {
-                    Some(actual_symbol) => {
-                        assert_eq(expected_symbol, &actual_symbol, ||
-                            println!(
-                                "{}", format!(
-                                    "expected {} to resolve to {:?}, got = {:?}",
-                                    expected_symbol.name, expected_symbol, actual_symbol
-                                ).red()
-                            ) 
+                    Some(actual_symbol) => assert_eq(expected_symbol, &actual_symbol, || {
+                        println!(
+                            "{}",
+                            format!(
+                                "expected {} to resolve to {:?}, got = {:?}",
+                                expected_symbol.name, expected_symbol, actual_symbol
+                            )
+                            .red()
                         )
-                    }
-                    None => panic!("{}", format!("name {} not resolvable", expected_symbol.name).red())
+                    }),
+                    None => panic!(
+                        "{}",
+                        format!("name {} not resolvable", expected_symbol.name).red()
+                    ),
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_resolve_unresolvable_free() {
+        
     }
 }

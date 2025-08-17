@@ -33,9 +33,10 @@ pub const OP_RETURN: u8 = 22;
 pub const OP_GET_LOCAL: u8 = 23;
 pub const OP_SET_LOCAL: u8 = 24;
 pub const OP_CLOSURE: u8 = 25;
+pub const OP_GET_FREE: u8 = 26;
+pub const OP_SET_INDEX: u8 = 27;
 pub const OP_TEST_PRINT: u8 = 254;
 pub const OP_NOP: u8 = 255;
-
 
 pub const INFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_map! {
     "+" => OP_ADD,
@@ -52,18 +53,17 @@ pub const PREFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_m
     "!" => OP_BANG,
 };
 
-
 #[derive(Debug, Clone)]
 pub struct Definition {
     pub name: String,
-    pub operand_widths: Vec<i32>
+    pub operand_widths: Vec<i32>,
 }
 
 impl Definition {
     pub fn new(name: String, operand_widths: Vec<i32>) -> Self {
         Definition {
             name,
-            operand_widths
+            operand_widths,
         }
     }
 }
@@ -86,17 +86,31 @@ lazy_static! {
         m.insert(OP_MINUS, Definition::new("OpMinus".into(), vec![]));
         m.insert(OP_BANG, Definition::new("OpBang".into(), vec![]));
         m.insert(OP_JUMP, Definition::new("OpJump".into(), vec![2]));
-        m.insert(OP_JUMP_NOT_TRUTHY, Definition::new("OpJumpNotTruthy".into(), vec![2]));
-        m.insert(OP_GET_GLOBAL, Definition::new("OpGetGlobal".into(), vec![2]));
-        m.insert(OP_SET_GLOBAL, Definition::new("OpSetGlobal".into(), vec![2]));
+        m.insert(
+            OP_JUMP_NOT_TRUTHY,
+            Definition::new("OpJumpNotTruthy".into(), vec![2]),
+        );
+        m.insert(
+            OP_GET_GLOBAL,
+            Definition::new("OpGetGlobal".into(), vec![2]),
+        );
+        m.insert(
+            OP_SET_GLOBAL,
+            Definition::new("OpSetGlobal".into(), vec![2]),
+        );
         m.insert(OP_ARRAY, Definition::new("OpArray".into(), vec![2]));
         m.insert(OP_INDEX, Definition::new("OpIndex".into(), vec![]));
         m.insert(OP_CALL, Definition::new("OpCall".into(), vec![1]));
-        m.insert(OP_RETURN_VALUE, Definition::new("OpReturnValue".into(), vec![]));
+        m.insert(
+            OP_RETURN_VALUE,
+            Definition::new("OpReturnValue".into(), vec![]),
+        );
         m.insert(OP_RETURN, Definition::new("OpReturn".into(), vec![]));
         m.insert(OP_GET_LOCAL, Definition::new("OpGetLocal".into(), vec![2]));
         m.insert(OP_SET_LOCAL, Definition::new("OpSetLocal".into(), vec![2]));
         m.insert(OP_CLOSURE, Definition::new("OpClosure".into(), vec![2, 2]));
+        m.insert(OP_GET_FREE, Definition::new("OpGetFree".into(), vec![2]));
+        m.insert(OP_SET_INDEX, Definition::new("OpSetIndex".into(), vec![]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
@@ -110,10 +124,9 @@ pub fn lookup(op: u8) -> Result<Definition, String> {
 
     match definition {
         Some(it) => Ok(it.clone()),
-        None => Err(format!("opcode {op} undefined"))
+        None => Err(format!("opcode {op} undefined")),
     }
 }
-
 
 pub fn make(op: OpCode, operands: &Vec<u16>) -> Vec<u8> {
     let definition = definitions.get(&op);
@@ -150,8 +163,8 @@ pub fn make(op: OpCode, operands: &Vec<u16>) -> Vec<u8> {
             }
 
             instruction
-        },
-        None => vec![]
+        }
+        None => vec![],
     }
 }
 
@@ -215,7 +228,11 @@ pub fn instruction_to_str_with_indent(ins: &Instructions, indent: &str) -> Strin
         let operands = result.0;
         let read = result.1;
 
-        s.push_str(&format!("{indent}{:04} {}\n", i, fmt_instruction(&def, &operands)));
+        s.push_str(&format!(
+            "{indent}{:04} {}\n",
+            i,
+            fmt_instruction(&def, &operands)
+        ));
 
         i += 1 + read
     }
@@ -223,12 +240,15 @@ pub fn instruction_to_str_with_indent(ins: &Instructions, indent: &str) -> Strin
     s
 }
 
-
 pub fn fmt_instruction(def: &Definition, operands: &Vec<i32>) -> String {
     let operand_count = def.operand_widths.len();
 
     if operands.len() != operand_count {
-        return format!("ERROR: operand len {} does not match defined {}\n", operands.len(), operand_count)
+        return format!(
+            "ERROR: operand len {} does not match defined {}\n",
+            operands.len(),
+            operand_count
+        );
     }
 
     match operand_count {
@@ -277,4 +297,3 @@ pub fn read_uint16(ins: &[u8]) -> u16 {
 pub fn read_uint8(ins: &[u8]) -> u8 {
     ins[0]
 }
-

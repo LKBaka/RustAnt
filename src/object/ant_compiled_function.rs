@@ -4,9 +4,9 @@ use std::rc::Rc;
 
 use uuid::Uuid;
 
-use crate::byte_code_vm::code::code::{instruction_to_str, Instructions};
+use crate::byte_code_vm::code::code::{Instructions, instruction_to_str};
 use crate::impl_object;
-use crate::object::object::{IAntObject, Object, ObjectType, COMPILED_FUNCTION};
+use crate::object::object::{COMPILED_FUNCTION, IAntObject, Object, ObjectType};
 
 pub struct CompiledFunction {
     pub instructions: Rc<RefCell<Instructions>>,
@@ -19,7 +19,7 @@ impl Clone for CompiledFunction {
         Self {
             instructions: self.instructions.clone(),
             local_count: self.local_count,
-            param_count: self.param_count
+            param_count: self.param_count,
         }
     }
 }
@@ -30,9 +30,7 @@ impl IAntObject for CompiledFunction {
     }
 
     fn get_value(&self) -> Box<dyn Any> {
-        Box::new(
-            self.instructions.clone()
-        )
+        Box::new(self.instructions.clone())
     }
 
     fn get_base(&self) -> Option<Object> {
@@ -45,20 +43,20 @@ impl IAntObject for CompiledFunction {
 
     fn inspect(&self) -> String {
         format!(
-            "<CompiledFunction locals_count: {} param_count: {} {}>", 
-            self.local_count, 
+            "<CompiledFunction locals_count: {} param_count: {} {}>",
+            self.local_count,
             self.param_count,
             instruction_to_str(&self.instructions.borrow().clone())
         )
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.get_id() || if let Some(compiled_func) = other
-            .as_any()
-            .downcast_ref::<CompiledFunction>() 
-        {
-            compiled_func.instructions == self.instructions
-        } else {false}
+        other.get_id() == self.get_id()
+            || if let Some(compiled_func) = other.as_any().downcast_ref::<CompiledFunction>() {
+                compiled_func.instructions == self.instructions
+            } else {
+                false
+            }
     }
 
     fn as_any(&self) -> &dyn Any {

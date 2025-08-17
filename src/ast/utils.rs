@@ -25,7 +25,7 @@ pub fn print_expressions_with_box(expressions: Vec<Box<dyn Expression>>) {
 }
 
 pub fn expressions_to_string(expressions: &Vec<Box<dyn Expression>>, separator: &str) -> String {
-    let mut strings =  vec![];
+    let mut strings = vec![];
 
     for expression in expressions {
         strings.push(expression.to_string())

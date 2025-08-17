@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::{IAntObject, Object, ObjectType, ERROR};
+use crate::object::object::{ERROR, IAntObject, Object, ObjectType};
 
 pub struct AntError {
     pub id: Uuid,

@@ -21,10 +21,7 @@ pub fn import_all_modules(env: &mut Environment) {
             .to_string()
     }];
 
-    let modules = vec![
-        "result",
-        "option",
-    ];
+    let modules = vec!["result", "option"];
 
     for module in modules {
         let mut module_importer = ModuleImporter::new(module.to_string(), module_path.clone());
@@ -40,9 +37,6 @@ pub fn import_all_modules(env: &mut Environment) {
             continue;
         }
 
-        env.create(
-            module,
-            Data::new(m.unwrap(), DataInfo::new(false)),
-        );
+        env.create(module, Data::new(m.unwrap(), DataInfo::new(false)));
     }
 }

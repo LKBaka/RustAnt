@@ -1,16 +1,14 @@
-
 use crate::ast::ast::{Expression, Node};
 
-use crate::token::token::Token;
 use crate::impl_node;
-
+use crate::token::token::Token;
 
 impl Clone for AssignmentExpression {
     fn clone(&self) -> Self {
         Self {
             left: self.left.clone(),
             value: self.value.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -36,8 +34,10 @@ impl_node!(AssignmentExpression);
 
 impl Expression for AssignmentExpression {}
 
-pub fn create_assignment_expression(token: Token, left: Box<dyn Expression>, value: Box<dyn Expression>) -> AssignmentExpression {
-    AssignmentExpression {
-        token, left, value
-    }
+pub fn create_assignment_expression(
+    token: Token,
+    left: Box<dyn Expression>,
+    value: Box<dyn Expression>,
+) -> AssignmentExpression {
+    AssignmentExpression { token, left, value }
 }

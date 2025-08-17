@@ -5,9 +5,7 @@ pub struct DataInfo {
 
 impl DataInfo {
     pub fn new(readonly: bool) -> DataInfo {
-        DataInfo {
-            readonly,
-        }
+        DataInfo { readonly }
     }
 
     pub fn to_string(&self) -> String {

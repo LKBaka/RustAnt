@@ -1,11 +1,11 @@
-use std::any::Any;
 use bigdecimal::BigDecimal;
+use std::any::Any;
 use uuid::Uuid;
 
 use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::ant_double::AntDouble;
-use crate::object::object::{IAntObject, Object, ObjectType, INT};
+use crate::object::object::{IAntObject, INT, Object, ObjectType};
 
 pub struct AntInt {
     id: Uuid,
@@ -45,11 +45,14 @@ impl IAntObject for AntInt {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == INT {
-            other.as_any().downcast_ref::<AntInt>().unwrap().value == self.value
-        } else if let Some(double_obj) = other.as_any().downcast_ref::<AntDouble>() {
-            &double_obj.value == &self.value
-        } else {false}
+        other.get_id() == self.id
+            || if other.get_type() == INT {
+                other.as_any().downcast_ref::<AntInt>().unwrap().value == self.value
+            } else if let Some(double_obj) = other.as_any().downcast_ref::<AntDouble>() {
+                &double_obj.value == &self.value
+            } else {
+                false
+            }
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -61,20 +64,20 @@ impl_object!(AntInt);
 
 impl From<i32> for AntInt {
     fn from(value: i32) -> Self {
-        AntInt { 
-            id: Uuid::new_v4(), 
-            env: Environment::new(), 
-            value: BigDecimal::from(value) 
+        AntInt {
+            id: Uuid::new_v4(),
+            env: Environment::new(),
+            value: BigDecimal::from(value),
         }
     }
 }
 
 impl From<BigDecimal> for AntInt {
     fn from(value: BigDecimal) -> Self {
-        AntInt { 
-            id: Uuid::new_v4(), 
-            env: Environment::new(), 
-            value
+        AntInt {
+            id: Uuid::new_v4(),
+            env: Environment::new(),
+            value,
         }
     }
 }

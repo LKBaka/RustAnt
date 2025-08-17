@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::{IAntObject, Object, ObjectType, NATIVE_FUNCTION};
+use crate::object::object::{IAntObject, NATIVE_FUNCTION, Object, ObjectType};
 
 use super::type_hint::TypeHintMap;
 
@@ -51,9 +51,19 @@ impl IAntObject for AntNativeFunction {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == NATIVE_FUNCTION {
-            std::ptr::fn_addr_eq(other.as_any().downcast_ref::<AntNativeFunction>().unwrap().function, self.function)
-        } else {false}
+        other.get_id() == self.id
+            || if other.get_type() == NATIVE_FUNCTION {
+                std::ptr::fn_addr_eq(
+                    other
+                        .as_any()
+                        .downcast_ref::<AntNativeFunction>()
+                        .unwrap()
+                        .function,
+                    self.function,
+                )
+            } else {
+                false
+            }
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -62,22 +72,20 @@ impl IAntObject for AntNativeFunction {
 }
 
 pub fn create_ant_native_function(
-    param_env: Environment, 
-    type_hint_map: Option<TypeHintMap>, 
-    function: NativeFunction
+    param_env: Environment,
+    type_hint_map: Option<TypeHintMap>,
+    function: NativeFunction,
 ) -> Object {
     let env = Environment::new();
     let id = Uuid::new_v4();
 
-    Box::new(
-        AntNativeFunction {
-            id,
-            env,
-            param_env,
-            type_hint_map,
-            function
-        }
-    )
+    Box::new(AntNativeFunction {
+        id,
+        env,
+        param_env,
+        type_hint_map,
+        function,
+    })
 }
 
 impl_object!(AntNativeFunction);

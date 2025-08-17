@@ -1,8 +1,12 @@
-use crate::{ast::{ast::Node, expressions::prefix_expression::PrefixExpression}, byte_code_vm::{code::code::PREFIX_OPERATOR_TO_OPCODE, compiler::compiler::Compiler}, convert_type};
+use crate::{
+    ast::{ast::Node, expressions::prefix_expression::PrefixExpression},
+    byte_code_vm::{code::code::PREFIX_OPERATOR_TO_OPCODE, compiler::compiler::Compiler},
+    convert_type,
+};
 
 pub fn compile_prefix_expression(
     compiler: &mut Compiler,
-    node: Box<dyn Node>
+    node: Box<dyn Node>,
 ) -> Result<(), String> {
     let prefix_expr = convert_type!(PrefixExpression, node);
 

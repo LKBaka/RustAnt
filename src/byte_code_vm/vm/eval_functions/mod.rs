@@ -1,3 +1,4 @@
+pub mod eval_set_index;
 pub mod eval_array_literal_utils;
 pub mod eval_index_expression;
 pub mod eval_infix_operator;

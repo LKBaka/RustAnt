@@ -1,6 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use crate::byte_code_vm::code::code::{instruction_to_str, lookup, make, read_operands, OpCode, OP_ADD, OP_CALL, OP_CLOSURE, OP_CONSTANTS};
+    use crate::byte_code_vm::code::code::{
+        OP_ADD, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OpCode, instruction_to_str, lookup, make,
+        read_operands,
+    };
 
     #[test]
     fn test_make() {
@@ -21,7 +24,6 @@ mod tests {
                 operands: vec![255],
                 expected: vec![OP_CALL as u8, 255],
             },
-            
             TestCase {
                 op: OP_CLOSURE,
                 operands: vec![0, 0],
@@ -37,7 +39,7 @@ mod tests {
 
         for tt in tests {
             let instruction = make(tt.op, &tt.operands);
-            
+
             assert_eq!(
                 instruction.len(),
                 tt.expected.len(),
@@ -45,7 +47,7 @@ mod tests {
                 tt.expected.len(),
                 instruction.len()
             );
-            
+
             for (i, &expected_byte) in tt.expected.iter().enumerate() {
                 assert_eq!(
                     instruction[i], expected_byte,
@@ -82,7 +84,11 @@ mod tests {
         }
 
         if instruction_to_str(&concatted) != expected {
-            panic!("instructions wrongly formatted.\nwant = {}\ngot = {}", expected, instruction_to_str(&concatted))
+            panic!(
+                "instructions wrongly formatted.\nwant = {}\ngot = {}",
+                expected,
+                instruction_to_str(&concatted)
+            )
         }
     }
 
@@ -95,12 +101,12 @@ mod tests {
         }
 
         impl ReadOperandsTestCase {
-            pub fn new(
-                op: OpCode,
-                operands: Vec<u16>,
-                bytes_read: i32,
-            ) -> Self {
-                Self { op, operands, bytes_read }
+            pub fn new(op: OpCode, operands: Vec<u16>, bytes_read: i32) -> Self {
+                Self {
+                    op,
+                    operands,
+                    bytes_read,
+                }
             }
         }
 
@@ -128,7 +134,10 @@ mod tests {
             let offset = result.1;
 
             if offset != test_case.bytes_read as usize {
-                panic!("offset wrong. want = {}, got = {}", test_case.bytes_read, offset)
+                panic!(
+                    "offset wrong. want = {}, got = {}",
+                    test_case.bytes_read, offset
+                )
             }
 
             for (i, want) in test_case.operands.iter().enumerate() {

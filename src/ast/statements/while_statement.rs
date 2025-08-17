@@ -1,7 +1,7 @@
 use crate::ast::ast::{Expression, Node, Statement};
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 use super::block_statement::BlockStatement;
 
@@ -10,7 +10,7 @@ impl Clone for WhileStatement {
         Self {
             token: self.token.clone(),
             condition: self.condition.clone(),
-            block: self.block.clone()
+            block: self.block.clone(),
         }
     }
 }
@@ -28,7 +28,11 @@ impl Node for WhileStatement {
     }
 
     fn to_string(&self) -> String {
-        format!("while {} {{{}}}", self.condition.to_string(), self.block.to_string())
+        format!(
+            "while {} {{{}}}",
+            self.condition.to_string(),
+            self.block.to_string()
+        )
     }
 }
 
@@ -36,10 +40,14 @@ impl Statement for WhileStatement {}
 
 impl_node!(WhileStatement);
 
-pub fn create_while_statement(token: Token, condition: Box<dyn Expression>, block: BlockStatement) -> WhileStatement {
+pub fn create_while_statement(
+    token: Token,
+    condition: Box<dyn Expression>,
+    block: BlockStatement,
+) -> WhileStatement {
     WhileStatement {
         token,
         condition,
-        block
+        block,
     }
 }

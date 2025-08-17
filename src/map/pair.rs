@@ -1,4 +1,3 @@
-
 #[derive(PartialEq, Eq)]
 pub struct Pair<K, V> {
     pub key: K,
@@ -9,7 +8,7 @@ impl<K: Clone, V: Clone> Clone for Pair<K, V> {
     fn clone(&self) -> Self {
         Self {
             key: self.key.clone(),
-            value: self.value.clone()
+            value: self.value.clone(),
         }
     }
 }

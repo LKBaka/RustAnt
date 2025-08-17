@@ -17,12 +17,10 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
     // 条件
     let condition = parser.parse_expression(Precedence::Lowest);
     if let Option::None = condition {
-        parser.errors.push(
-            format!(
-                "missing condition. at file <{}>, line {}",
-                parser.cur_token.file, parser.cur_token.line
-            )
-        );
+        parser.errors.push(format!(
+            "missing condition. at file <{}>, line {}",
+            parser.cur_token.file, parser.cur_token.line
+        ));
 
         return None;
     }
@@ -35,20 +33,19 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
 
     let block = parse_block_statement(parser);
     if block.is_none() {
-        parser.errors.push(
-            format!(
-                "missing while body. at file <{}>, line {}",
-                parser.cur_token.file, parser.cur_token.line
-            )
-        );
+        parser.errors.push(format!(
+            "missing while body. at file <{}>, line {}",
+            parser.cur_token.file, parser.cur_token.line
+        ));
         return None;
     }
 
-    Some(Box::new(
-        create_while_statement(
-            token, 
-            condition.unwrap(), 
-            (block.unwrap() as Box<dyn Any>).downcast_ref::<BlockStatement>().expect("").clone()
-        )
-    ))
+    Some(Box::new(create_while_statement(
+        token,
+        condition.unwrap(),
+        (block.unwrap() as Box<dyn Any>)
+            .downcast_ref::<BlockStatement>()
+            .expect("")
+            .clone(),
+    )))
 }

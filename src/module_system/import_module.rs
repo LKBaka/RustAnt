@@ -23,30 +23,29 @@ impl ModuleImporter {
 
     pub fn import(&mut self) -> Result<Object, String> {
         if self.module_paths.is_empty() {
-            let current_dir = std::env::current_dir()
-                .unwrap_or_else(|_| Path::new(".").to_path_buf());
+            let current_dir =
+                std::env::current_dir().unwrap_or_else(|_| Path::new(".").to_path_buf());
 
             self.module_paths = vec![
-                current_dir.to_str().expect(
-                    "failed to convert current directory to string"
-                ).to_string()
+                current_dir
+                    .to_str()
+                    .expect("failed to convert current directory to string")
+                    .to_string(),
             ];
         }
 
         let module_file = self.find_module_file();
         match module_file {
-            Ok(file) => {
-                self.import_module(file)
-            }
+            Ok(file) => self.import_module(file),
             Err(e) => return Err(e),
         }
-    }       
+    }
 
     fn import_module(&self, module_file: String) -> Result<Object, String> {
         // 读取模块文件内容
         let code = std::fs::read_to_string(&module_file)
             .map_err(|e| format!("failed to read module file '{}': {}", module_file, e));
-        
+
         if code.is_err() {
             return Err(code.err().unwrap());
         }
@@ -63,7 +62,7 @@ impl ModuleImporter {
                 return Err(it.inspect());
             }
         }
-        
+
         Ok(Box::new(AntObject {
             id: Uuid::new_v4(),
             env,
@@ -79,11 +78,10 @@ impl ModuleImporter {
             module_file.set_extension("ant");
 
             if Path::new(&module_file).exists() {
-                return Ok(
-                    module_file.to_str()
-                        .expect("failed to convert module file path to string")
-                        .to_string()
-                );
+                return Ok(module_file
+                    .to_str()
+                    .expect("failed to convert module file path to string")
+                    .to_string());
             }
         }
 

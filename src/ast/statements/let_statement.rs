@@ -1,15 +1,15 @@
 use crate::ast::ast::{Expression, Node, Statement};
 use crate::ast::expressions::identifier::Identifier;
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for LetStatement {
     fn clone(&self) -> Self {
         Self {
             token: self.token.clone(),
             name: self.name.clone(),
-            value: self.value.clone()
+            value: self.value.clone(),
         }
     }
 }
@@ -18,7 +18,7 @@ impl Clone for LetStatement {
 pub struct LetStatement {
     pub token: Token,
     pub name: Identifier,
-    pub value: Box<dyn Expression>
+    pub value: Box<dyn Expression>,
 }
 
 impl Node for LetStatement {
@@ -35,10 +35,10 @@ impl_node!(LetStatement);
 
 impl Statement for LetStatement {}
 
-pub fn create_let_statement(token: Token, name: Identifier, value: Box<dyn Expression>) -> LetStatement {
-    LetStatement {
-        token,
-        name,
-        value
-    }
+pub fn create_let_statement(
+    token: Token,
+    name: Identifier,
+    value: Box<dyn Expression>,
+) -> LetStatement {
+    LetStatement { token, name, value }
 }

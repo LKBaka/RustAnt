@@ -14,7 +14,7 @@ pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
 
     // 检查当前词法单元是否为标识符
     if !parser.expect_cur(Ident) {
-        return None
+        return None;
     }
 
     // 设置标识符
@@ -34,10 +34,12 @@ pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
     }
 
     if let Some(value) = temp_value {
-        return Some(Box::new(create_let_statement(token, ident, value)))
+        return Some(Box::new(create_let_statement(token, ident, value)));
     }
 
-    parser.errors.push(
-        format!("missing expression. at file <{}>, line {}", token.file, token.line)
-    ); None
+    parser.errors.push(format!(
+        "missing expression. at file <{}>, line {}",
+        token.file, token.line
+    ));
+    None
 }

@@ -8,7 +8,7 @@ pub fn parse(code: String, file: String) -> Result<Program, ()> {
 
     if code_lexer.contains_error() {
         code_lexer.print_errors();
-        return Err(())
+        return Err(());
     }
 
     let mut parser: Parser = Parser::new(tokens.clone());
@@ -16,7 +16,7 @@ pub fn parse(code: String, file: String) -> Result<Program, ()> {
 
     if parser.contains_error() {
         parser.print_errors();
-        return Err(())
+        return Err(());
     }
 
     Ok(program)

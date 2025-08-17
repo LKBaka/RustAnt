@@ -1,13 +1,13 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for StringLiteral {
     fn clone(&self) -> Self {
         Self {
             value: self.value.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -33,7 +33,5 @@ impl Expression for StringLiteral {}
 impl_node!(StringLiteral);
 
 pub fn create_string_literal(token: Token, value: String) -> StringLiteral {
-    StringLiteral {
-        token, value
-    }
+    StringLiteral { token, value }
 }

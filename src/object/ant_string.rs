@@ -4,7 +4,6 @@ use uuid::Uuid;
 use crate::impl_object;
 use crate::object::object::{IAntObject, Object, ObjectType, STRING};
 
-
 pub struct AntString {
     id: Uuid,
     pub(crate) value: String,
@@ -23,7 +22,7 @@ impl AntString {
     pub fn new(s: String) -> Self {
         Self {
             id: Uuid::new_v4(),
-            value: s
+            value: s,
         }
     }
 }
@@ -50,9 +49,12 @@ impl IAntObject for AntString {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == STRING {
-            other.as_any().downcast_ref::<AntString>().unwrap().value == self.value
-        } else {false}
+        other.get_id() == self.id
+            || if other.get_type() == STRING {
+                other.as_any().downcast_ref::<AntString>().unwrap().value == self.value
+            } else {
+                false
+            }
     }
 
     fn as_any(&self) -> &dyn Any {

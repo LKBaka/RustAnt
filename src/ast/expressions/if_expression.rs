@@ -1,7 +1,7 @@
 use crate::ast::ast::{Expression, Node, Statement};
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for IfExpression {
     fn clone(&self) -> Self {
@@ -10,7 +10,7 @@ impl Clone for IfExpression {
             condition: self.condition.clone(),
             consequence: self.consequence.clone(),
             alternative: self.alternative.clone(),
-            else_if_expressions: self.else_if_expressions.clone()
+            else_if_expressions: self.else_if_expressions.clone(),
         }
     }
 }
@@ -18,10 +18,10 @@ impl Clone for IfExpression {
 #[derive(Debug)]
 pub struct IfExpression {
     pub token: Token,
-    pub condition: Box<dyn Expression>, // 条件
-    pub consequence: Box<dyn Statement>, // 默认块
+    pub condition: Box<dyn Expression>,          // 条件
+    pub consequence: Box<dyn Statement>,         // 默认块
     pub alternative: Option<Box<dyn Statement>>, // Else 分支块
-    pub else_if_expressions: Option<Vec<Box<dyn Expression>>> // ElseIf 分支块
+    pub else_if_expressions: Option<Vec<Box<dyn Expression>>>, // ElseIf 分支块
 }
 
 impl Node for IfExpression {
@@ -44,21 +44,24 @@ impl Node for IfExpression {
             }
 
             s
-        } else {"".to_string()};
+        } else {
+            "".to_string()
+        };
 
         let mut result = format!(
             "if ({}) {{{}}}",
-            self.condition.to_string(), self.consequence.to_string()
+            self.condition.to_string(),
+            self.consequence.to_string()
         );
-        
+
         if !else_if_string.is_empty() {
             result.push_str(&format!(" {}", else_if_string));
         }
-        
+
         if !alternative_string.is_empty() {
             result.push_str(&format!(" else {{{}}}", alternative_string));
         }
-        
+
         result
     }
 }
@@ -77,9 +80,9 @@ pub fn create_if_expression(
         condition,
         consequence,
         alternative,
-        else_if_expressions
+        else_if_expressions,
     }
-} 
+}
 
 impl Clone for ElseIfExpression {
     fn clone(&self) -> Self {
@@ -94,7 +97,7 @@ impl Clone for ElseIfExpression {
 #[derive(Debug)]
 pub struct ElseIfExpression {
     pub token: Token,
-    pub condition: Box<dyn Expression>, // 条件
+    pub condition: Box<dyn Expression>,  // 条件
     pub consequence: Box<dyn Statement>, // 默认块
 }
 
@@ -106,7 +109,8 @@ impl Node for ElseIfExpression {
     fn to_string(&self) -> String {
         format!(
             "else if ({}) {{{}}}",
-            self.condition.to_string(), self.consequence.to_string()
+            self.condition.to_string(),
+            self.consequence.to_string()
         )
     }
 }
@@ -123,7 +127,7 @@ pub fn create_else_if_expression(
         condition,
         consequence,
     }
-} 
+}
 
 impl_node!(IfExpression);
-impl_node!(ElseIfExpression); 
+impl_node!(ElseIfExpression);

@@ -1,6 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{byte_code_vm::compiler::{compiler::{ByteCode, Compiler}, symbol_table::symbol_table::SymbolTable}, object::object::Object, parser::utils::parse};
+use crate::{
+    byte_code_vm::compiler::{
+        compiler::{ByteCode, Compiler},
+        symbol_table::symbol_table::SymbolTable,
+    },
+    object::object::Object,
+    parser::utils::parse,
+};
 
 pub fn compile_it(code: String, file: String) -> Result<ByteCode, String> {
     let program = parse(code, file);
@@ -12,18 +19,18 @@ pub fn compile_it(code: String, file: String) -> Result<ByteCode, String> {
 
         return match result {
             Ok(_) => Ok(compiler.bytecode()),
-            Err(msg) => Err(msg)
-        }
+            Err(msg) => Err(msg),
+        };
     }
 
     Err(String::from("parse failed!"))
 }
 
 pub fn compile_with_state(
-    code: String, 
-    file: String, 
+    code: String,
+    file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
-    constants: Rc<RefCell<Vec<Object>>>
+    constants: Rc<RefCell<Vec<Object>>>,
 ) -> Result<ByteCode, String> {
     let program = parse(code, file);
 
@@ -34,8 +41,8 @@ pub fn compile_with_state(
 
         return match result {
             Ok(_) => Ok(compiler.bytecode()),
-            Err(msg) => Err(msg)
-        }
+            Err(msg) => Err(msg),
+        };
     }
 
     Err(String::from("parse failed!"))

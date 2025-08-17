@@ -1,10 +1,9 @@
-
 use crate::ast::ast::{Expression, Node};
 use crate::ast::statements::block_statement::BlockStatement;
 use crate::ast::utils::expressions_to_string;
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for FunctionExpression {
     fn clone(&self) -> Self {
@@ -33,9 +32,7 @@ impl Node for FunctionExpression {
     fn to_string(&self) -> String {
         format!(
             "func {}({}) {{{}}}",
-            if let Some(it) = &self.name {
-                it
-            } else { "" },
+            if let Some(it) = &self.name { it } else { "" },
             expressions_to_string(&self.params, ", "),
             self.block.to_string()
         )
@@ -46,11 +43,16 @@ impl_node!(FunctionExpression);
 
 impl Expression for FunctionExpression {}
 
-pub fn create_function_expression(token: Token, name: Option<String>, params: Vec<Box<dyn Expression>>, block: BlockStatement) -> FunctionExpression {
+pub fn create_function_expression(
+    token: Token,
+    name: Option<String>,
+    params: Vec<Box<dyn Expression>>,
+    block: BlockStatement,
+) -> FunctionExpression {
     FunctionExpression {
         token,
         name,
         params,
-        block
+        block,
     }
 }

@@ -19,7 +19,7 @@ pub fn test_byte_code_rust_ant_main() {
 
     let symbol_table = rc_ref_cell!(SymbolTable::new());
     let constants = rc_ref_cell!(vec![]);
-    let globals = rc_ref_cell!(vec![uninit[0].clone(); GLOBALS_SIZE as usize]);    
+    let globals = rc_ref_cell!(vec![uninit[0].clone(); GLOBALS_SIZE as usize]);
 
     loop {
         code = String::new();
@@ -29,16 +29,22 @@ pub fn test_byte_code_rust_ant_main() {
 
         let flush_result = io::stdout().flush(); // 刷新缓冲区（重要！）
         match flush_result {
-            Ok(_) => {},
-            Err(e) => {eprintln!("{}", e.to_string()); continue;}
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("{}", e.to_string());
+                continue;
+            }
         }
 
         let read_line_result = io::stdin().read_line(&mut code);
         match read_line_result {
-            Err(e) => {eprintln!("{}", e.to_string()); continue;},
+            Err(e) => {
+                eprintln!("{}", e.to_string());
+                continue;
+            }
             Ok(_) => {}
         }
-        
+
         #[cfg(feature = "get_code_run_seconds")]
         use std::time::Instant;
 
@@ -48,9 +54,13 @@ pub fn test_byte_code_rust_ant_main() {
         let start = Instant::now();
 
         let result = run(
-            code.clone(), file.clone(), symbol_table.clone(), constants.clone(), globals.clone()
+            code.clone(),
+            file.clone(),
+            symbol_table.clone(),
+            constants.clone(),
+            globals.clone(),
         );
-        
+
         if let Err(err_enum) = result {
             use crate::byte_code_vm::run::RunError;
 
@@ -69,9 +79,12 @@ pub fn test_byte_code_rust_ant_main() {
 
         #[cfg(feature = "get_code_run_seconds")]
         println!(
-            "{}", format!(
-                "(Use Compiler And VM (ByteCode)) Code run time: {} seconds, {} milliseconds, {} nanoseconds", 
-                start.elapsed().as_secs_f64(), start.elapsed().as_millis(), start.elapsed().as_nanos()
+            "{}",
+            format!(
+                "(Use Compiler And VM (ByteCode)) Code run time: {} seconds, {} milliseconds, {} nanoseconds",
+                start.elapsed().as_secs_f64(),
+                start.elapsed().as_millis(),
+                start.elapsed().as_nanos()
             )
         );
     }

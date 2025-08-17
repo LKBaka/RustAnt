@@ -8,7 +8,7 @@ use crate::object::object::{IAntObject, Object, ObjectType, RETURN_VALUE};
 pub struct AntReturnValue {
     id: Uuid,
     env: Environment,
-    pub value: Object
+    pub value: Object,
 }
 
 impl IAntObject for AntReturnValue {
@@ -33,11 +33,17 @@ impl IAntObject for AntReturnValue {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == RETURN_VALUE {
-            other.as_any().downcast_ref::<AntReturnValue>().unwrap().value == self.value.clone()
-        } else {
-            false
-        }
+        other.get_id() == self.id
+            || if other.get_type() == RETURN_VALUE {
+                other
+                    .as_any()
+                    .downcast_ref::<AntReturnValue>()
+                    .unwrap()
+                    .value
+                    == self.value.clone()
+            } else {
+                false
+            }
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -50,7 +56,7 @@ impl Clone for AntReturnValue {
         Self {
             id: self.id,
             env: self.env.clone(),
-            value: self.value.clone()
+            value: self.value.clone(),
         }
     }
 }

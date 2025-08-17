@@ -1,5 +1,7 @@
-use std::{io, process::{Command, ExitStatus, Stdio}};
-
+use std::{
+    io,
+    process::{Command, ExitStatus, Stdio},
+};
 
 #[cfg(test)]
 use std::fmt::Debug;
@@ -7,20 +9,21 @@ use std::fmt::Debug;
 #[cfg(test)]
 pub fn assert_eq<T, F>(left: T, right: T, on_failure: F)
 where
-    T: PartialEq + Debug,        // 允许比较和格式化输出
-    F: FnOnce(),                 // 接受无参闭包/函数指针
+    T: PartialEq + Debug, // 允许比较和格式化输出
+    F: FnOnce(),          // 接受无参闭包/函数指针
 {
     if left != right {
-        on_failure();            // 断言失败时调用回调函数
-        panic!("assertion failed: left != right\n  left: `{:?}`,\n right: `{:?}`", left, right);
+        on_failure(); // 断言失败时调用回调函数
+        panic!(
+            "assertion failed: left != right\n  left: `{:?}`,\n right: `{:?}`",
+            left, right
+        );
     }
 }
 
 #[macro_export]
 macro_rules! struct_type_id {
-    ($t:ty) => {{
-        std::any::TypeId::of::<$t>()
-    }};
+    ($t:ty) => {{ std::any::TypeId::of::<$t>() }};
 }
 
 pub fn run_command(command: &str) -> io::Result<ExitStatus> {
@@ -30,7 +33,7 @@ pub fn run_command(command: &str) -> io::Result<ExitStatus> {
     } else {
         ("/bin/sh", "-c")
     };
-    
+
     // 构建并执行命令
     let status = Command::new(shell)
         .arg(flag)
@@ -43,7 +46,7 @@ pub fn run_command(command: &str) -> io::Result<ExitStatus> {
             eprintln!("run '{}' failed: {}", command, e);
             e
         });
-    
+
     status
 }
 

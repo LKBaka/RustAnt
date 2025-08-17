@@ -31,12 +31,10 @@ pub fn parse_class_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
         parser.next_token(); // 离开冒号
 
         if !parser.expect_cur(TokenType::Ident) {
-            parser.errors.push(
-                format!(
-                    "missing parent class name. at file <{}>, line {}",
-                    parser.cur_token.file, parser.cur_token.line
-                )
-            );
+            parser.errors.push(format!(
+                "missing parent class name. at file <{}>, line {}",
+                parser.cur_token.file, parser.cur_token.line
+            ));
             return None;
         }
 
@@ -49,37 +47,32 @@ pub fn parse_class_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
         parser.next_token(); // 离开父类标识符 (正常应前进到左大括号)
     }
 
-
     let block = parse_block_statement(parser);
-    
+
     match block {
         Some(block) => {
             let class_ident = if let Some(ident) = class_ident {
                 ident
             } else {
-                parser.errors.push(
-                    format!(
-                        "missing class name. at file <{}>, line {}",
-                        parser.cur_token.file, parser.cur_token.line
-                    )
-                );
-                
+                parser.errors.push(format!(
+                    "missing class name. at file <{}>, line {}",
+                    parser.cur_token.file, parser.cur_token.line
+                ));
+
                 return None;
             };
 
-            if let Some(block) = (block as Box<dyn Any>)
-                .downcast_ref::<BlockStatement>() 
-            {
-                Some(Box::new(
-                    create_class_statement(
-                        token, 
-                        class_ident, 
-                        parent_class_ident, 
-                        block.clone()
-                    )
-                ))
-            } else { None }
-        },
+            if let Some(block) = (block as Box<dyn Any>).downcast_ref::<BlockStatement>() {
+                Some(Box::new(create_class_statement(
+                    token,
+                    class_ident,
+                    parent_class_ident,
+                    block.clone(),
+                )))
+            } else {
+                None
+            }
+        }
         None => None,
     }
 }

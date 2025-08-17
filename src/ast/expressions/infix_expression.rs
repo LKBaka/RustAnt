@@ -1,7 +1,7 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for InfixExpression {
     fn clone(&self) -> Self {
@@ -9,7 +9,7 @@ impl Clone for InfixExpression {
             left: self.left.clone(),
             right: self.right.clone(),
             operator: self.operator.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -28,7 +28,12 @@ impl Node for InfixExpression {
     }
 
     fn to_string(&self) -> String {
-        format!("({} {} {})", self.left.to_string(), self.operator, self.right.to_string())
+        format!(
+            "({} {} {})",
+            self.left.to_string(),
+            self.operator,
+            self.right.to_string()
+        )
     }
 }
 
@@ -36,8 +41,16 @@ impl_node!(InfixExpression);
 
 impl Expression for InfixExpression {}
 
-pub fn create_infix_expression(token: Token, left: Box<dyn Expression>, right: Box<dyn Expression>, operator: String) -> InfixExpression {
+pub fn create_infix_expression(
+    token: Token,
+    left: Box<dyn Expression>,
+    right: Box<dyn Expression>,
+    operator: String,
+) -> InfixExpression {
     InfixExpression {
-        token, left, right, operator
+        token,
+        left,
+        right,
+        operator,
     }
 }

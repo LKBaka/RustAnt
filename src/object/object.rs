@@ -1,8 +1,8 @@
+use dyn_clone::{DynClone, clone_trait_object};
 use std::any::Any;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use uuid::Uuid;
-use dyn_clone::{clone_trait_object, DynClone};
 
 use crate::environment::environment::Environment;
 use crate::impl_object;
@@ -27,7 +27,11 @@ pub const CLOSURE: &str = "Closure";
 pub const ARRAY: &str = "Array";
 pub const RETURN_VALUE: &str = "__Return_Value__";
 
-pub trait IAntObject: DynClone + Sync + Send + Any + Debug {
+pub trait AsAnyMut {
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+pub trait IAntObject: DynClone + Sync + Send + Any + Debug + AsAnyMut {
     fn get_type(&self) -> ObjectType;
     fn get_value(&self) -> Box<dyn Any>;
     fn get_base(&self) -> Option<Object>;
@@ -52,7 +56,6 @@ impl Hash for dyn IAntObject {
         self.get_id().hash(state);
     }
 }
-
 
 pub struct AntObject {
     pub id: Uuid,

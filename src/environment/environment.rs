@@ -6,7 +6,7 @@ use std::rc::Rc;
 use crate::environment::data::Data;
 use crate::map;
 use crate::map::map::Map;
-use crate::object::object::{Object, FUNCTION};
+use crate::object::object::{FUNCTION, Object};
 use crate::object::utils::{create_error, create_error_with_name};
 
 #[derive(Clone)]
@@ -60,9 +60,10 @@ impl Environment {
 
     pub fn create(&mut self, key: &str, value: Data) -> Option<Object> {
         if self.map.contains_key(&key.to_string()) {
-            return Some(
-                create_error_with_name("NameError", format!("identifier '{}' already exists", key))
-            );
+            return Some(create_error_with_name(
+                "NameError",
+                format!("identifier '{}' already exists", key),
+            ));
         }
 
         if value.data.get_type() != FUNCTION {
@@ -73,7 +74,7 @@ impl Environment {
         if self.func_map.contains_key(&key.to_string()) {
             let mut data_array = self.func_map.get(&key.to_string()).unwrap().clone();
             data_array.push(value);
-            
+
             self.func_map.set(key.to_string(), data_array);
         } else {
             self.func_map.add(key.to_string(), vec![value]);
@@ -86,27 +87,29 @@ impl Environment {
         if self.map.contains_key(&key.to_string()) {
             if self.map.get(&key.to_string()).unwrap().info.readonly {
                 return Some(create_error_with_name(
-                    "ReadOnlyError", format!("'{}' is readonly", key)
-                ))
+                    "ReadOnlyError",
+                    format!("'{}' is readonly", key),
+                ));
             }
 
             self.map.set(key.to_string(), value);
             return None;
         }
 
-        Some(
-            create_error(format!("cannot find variable '{}'", key))
-        )
+        Some(create_error(format!("cannot find variable '{}'", key)))
     }
 
     pub fn set_value(&mut self, key: &str, value: Object) -> Option<Object> {
         if self.map.contains_key(&key.to_string()) {
             let data = self.get_data(key);
 
-            if let Some(it) = &data && it.info.readonly {
+            if let Some(it) = &data
+                && it.info.readonly
+            {
                 return Some(create_error_with_name(
-                    "ReadOnlyError", format!("'{}' is readonly", key)
-                ))
+                    "ReadOnlyError",
+                    format!("'{}' is readonly", key),
+                ));
             } else if let Some(mut it) = data {
                 it.data = value;
 
@@ -116,22 +119,20 @@ impl Environment {
             return None;
         }
 
-        Some(
-            create_error(format!("cannot find variable '{}'", key))
-        )
+        Some(create_error(format!("cannot find variable '{}'", key)))
     }
 
     pub fn get_data(&self, key: &str) -> Option<Data> {
         if self.map.contains_key(&key.to_string()) {
-            return self.map.get(&key.to_string())
+            return self.map.get(&key.to_string());
         }
 
         if self.func_map.contains_key(&key.to_string()) {
-            return Option::from(self.func_map.get(&key.to_string()).unwrap()[0].clone())
+            return Option::from(self.func_map.get(&key.to_string()).unwrap()[0].clone());
         }
 
         if let Some(outer) = &self.outer {
-            return outer.borrow().get_data(key)
+            return outer.borrow().get_data(key);
         }
 
         None
@@ -139,7 +140,7 @@ impl Environment {
 
     pub fn get_values(&self, key: &str) -> Option<Vec<Object>> {
         if self.map.contains_key(&key.to_string()) {
-            return Some(vec![self.map.get(&key.to_string()).unwrap().data.clone()])
+            return Some(vec![self.map.get(&key.to_string()).unwrap().data.clone()]);
         }
 
         if self.func_map.contains_key(&key.to_string()) {
@@ -150,11 +151,11 @@ impl Environment {
                 values.push(data.data.clone());
             }
 
-            return Some(values)
+            return Some(values);
         }
 
         if let Some(outer) = &self.outer {
-            return outer.borrow().get_values(key)
+            return outer.borrow().get_values(key);
         }
 
         None
@@ -162,17 +163,16 @@ impl Environment {
 
     pub fn get(&self, key: &str) -> Option<Object> {
         if self.map.contains_key(&key.to_string()) {
-            return Some(self.map.get(&key.to_string()).unwrap().data.clone())
+            return Some(self.map.get(&key.to_string()).unwrap().data.clone());
         }
 
         if self.func_map.contains_key(&key.to_string()) {
-            return Some(self.func_map.get(&key.to_string()).unwrap()[0].data.clone())
+            return Some(self.func_map.get(&key.to_string()).unwrap()[0].data.clone());
         }
 
         if let Some(outer) = &self.outer {
-            return outer.borrow().get(key)
+            return outer.borrow().get(key);
         }
-
 
         None
     }

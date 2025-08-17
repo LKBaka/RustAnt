@@ -1,16 +1,14 @@
-
 use crate::ast::ast::{Expression, Node};
 
-use crate::token::token::Token;
 use crate::impl_node;
-
+use crate::token::token::Token;
 
 impl Clone for ObjectMemberExpression {
     fn clone(&self) -> Self {
         Self {
             left: self.left.clone(),
             right: self.right.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -36,8 +34,10 @@ impl Expression for ObjectMemberExpression {}
 
 impl_node!(ObjectMemberExpression);
 
-pub fn create_object_member_expression(token: Token, left: Box<dyn Expression>, right: Box<dyn Expression>) -> ObjectMemberExpression {
-    ObjectMemberExpression {
-        token, left, right
-    }
+pub fn create_object_member_expression(
+    token: Token,
+    left: Box<dyn Expression>,
+    right: Box<dyn Expression>,
+) -> ObjectMemberExpression {
+    ObjectMemberExpression { token, left, right }
 }

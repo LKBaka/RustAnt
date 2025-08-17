@@ -1,13 +1,13 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::token::token::Token;
 use crate::impl_node;
+use crate::token::token::Token;
 
 impl Clone for BooleanLiteral {
     fn clone(&self) -> Self {
         Self {
             value: self.value.clone(),
-            token: self.token.clone()
+            token: self.token.clone(),
         }
     }
 }
@@ -33,7 +33,5 @@ impl Expression for BooleanLiteral {}
 impl_node!(BooleanLiteral);
 
 pub fn create_boolean_literal(token: Token, value: bool) -> BooleanLiteral {
-    BooleanLiteral {
-        token, value
-    }
+    BooleanLiteral { token, value }
 }

@@ -7,7 +7,6 @@ use crate::token::token_type::TokenType;
 use crate::ast::ast::Expression;
 use crate::parser::parser::Parser;
 
-
 pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let token = parser.cur_token.clone();
 
@@ -16,27 +15,24 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let condition = match parser.parse_expression(Precedence::Lowest) {
         Some(expr) => expr,
         None => {
-            parser.errors.push(
-                format!(
-                    "missing condition. at file <{}>, line {}",
-                    parser.cur_token.file, parser.cur_token.line
-                )
-            );
+            parser.errors.push(format!(
+                "missing condition. at file <{}>, line {}",
+                parser.cur_token.file, parser.cur_token.line
+            ));
             return None;
         }
     };
 
     parser.next_token(); // 离开表达式 (正常应跳转到左大括号)
 
-    let consequence = match parse_block_statement(parser) { 
+    let consequence = match parse_block_statement(parser) {
         Some(block) => block,
         None => {
-            parser.errors.push(
-                format!(
-                    "missing if body. at file <{}>, line {}",
-                    parser.cur_token.file, parser.cur_token.line
-                )
-            ); return None;
+            parser.errors.push(format!(
+                "missing if body. at file <{}>, line {}",
+                parser.cur_token.file, parser.cur_token.line
+            ));
+            return None;
         }
     };
 
@@ -50,7 +46,7 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
             let else_if_expression = parse_else_if_expression(parser);
             if let Some(else_if_expression) = else_if_expression {
-                else_if_expressions.push(else_if_expression); 
+                else_if_expressions.push(else_if_expression);
             }
 
             continue;
@@ -59,15 +55,14 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
         // 处理 else
         parser.next_token(); // 前进到左大括号
 
-        let else_block = match parse_block_statement(parser) { 
+        let else_block = match parse_block_statement(parser) {
             Some(block) => block,
             None => {
-                parser.errors.push(
-                    format!(
-                        "missing else body. at file <{}>, line {}",
-                        parser.cur_token.file, parser.cur_token.line
-                    )
-                ); return None;
+                parser.errors.push(format!(
+                    "missing else body. at file <{}>, line {}",
+                    parser.cur_token.file, parser.cur_token.line
+                ));
+                return None;
             }
         };
 
@@ -75,7 +70,7 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
             token,
             condition,
             consequence,
-            Some(else_block), 
+            Some(else_block),
             Some(else_if_expressions),
         )));
     }
@@ -84,7 +79,7 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
         token,
         condition,
         consequence,
-        None, 
+        None,
         Some(else_if_expressions),
     )))
 }

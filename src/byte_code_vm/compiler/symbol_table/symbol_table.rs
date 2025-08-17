@@ -5,27 +5,21 @@ use hashbrown::HashMap;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum SymbolScope {
-    Global, Local
+    Global,
+    Local,
+    Free
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Symbol {
     pub name: String,
     pub scope: SymbolScope,
-    pub index: usize
+    pub index: usize,
 }
 
 impl Symbol {
-    pub fn new(
-        name: String,
-        scope: SymbolScope,
-        index: usize
-    ) -> Self {
-        Self {
-            name,
-            scope,
-            index,
-        }
+    pub fn new(name: String, scope: SymbolScope, index: usize) -> Self {
+        Self { name, scope, index }
     }
 }
 
@@ -39,11 +33,11 @@ pub struct SymbolTable {
 
 impl SymbolTable {
     pub fn new() -> Self {
-        Self { 
+        Self {
             outer: None,
             store: HashMap::new(),
             func_store: HashMap::new(),
-            num_definitions: 0
+            num_definitions: 0,
         }
     }
 
@@ -52,7 +46,7 @@ impl SymbolTable {
             outer: Some(outer),
             store: HashMap::new(),
             func_store: HashMap::new(),
-            num_definitions: 0
+            num_definitions: 0,
         }
     }
 
@@ -66,9 +60,13 @@ impl SymbolTable {
 
     pub fn define(&mut self, name: &str) -> Symbol {
         let symbol = Symbol::new(
-            name.into(), 
-            if self.outer.is_some() { SymbolScope::Local } else { SymbolScope::Global }, 
-            self.num_definitions
+            name.into(),
+            if self.outer.is_some() {
+                SymbolScope::Local
+            } else {
+                SymbolScope::Global
+            },
+            self.num_definitions,
         );
 
         self.store.insert(name.into(), symbol.clone());

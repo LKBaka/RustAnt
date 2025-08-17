@@ -6,7 +6,7 @@ use crate::environment::data::Data;
 use crate::environment::data_info::DataInfo;
 use crate::environment::environment::Environment;
 use crate::impl_object;
-use crate::object::object::{IAntObject, ObjectType, BOOLEAN};
+use crate::object::object::{BOOLEAN, IAntObject, ObjectType};
 
 use super::object::Object;
 
@@ -51,7 +51,7 @@ impl AntBoolean {
                 Box::new(Self {
                     id: Uuid::new_v4(),
                     env,
-                    value: boolean.clone()
+                    value: boolean.clone(),
                 })
             }
         }
@@ -80,9 +80,12 @@ impl IAntObject for AntBoolean {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id || if other.get_type() == BOOLEAN {
-            other.as_any().downcast_ref::<AntBoolean>().unwrap().value == self.value
-        } else {false}
+        other.get_id() == self.id
+            || if other.get_type() == BOOLEAN {
+                other.as_any().downcast_ref::<AntBoolean>().unwrap().value == self.value
+            } else {
+                false
+            }
     }
 
     fn as_any(&self) -> &dyn Any {

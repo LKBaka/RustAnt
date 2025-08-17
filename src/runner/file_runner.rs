@@ -7,20 +7,17 @@ use crate::byte_code_vm::constants::UNINIT_OBJ;
 use crate::byte_code_vm::run::run;
 use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
 use crate::object::object::ERROR;
-use crate::{arg_structure::arg_structure::Args, object::object::Object};
 use crate::rc_ref_cell;
-
+use crate::{arg_structure::arg_structure::Args, object::object::Object};
 
 pub struct FileRunner {
     file_path: String,
-    args: Args
+    args: Args,
 }
 
 impl FileRunner {
     pub fn new(file_path: String, args: Args) -> Self {
-        FileRunner{
-            file_path, args
-        }
+        FileRunner { file_path, args }
     }
 
     pub fn run(&self) {
@@ -38,15 +35,15 @@ impl FileRunner {
 
                 let symbol_table = rc_ref_cell!(SymbolTable::new());
                 let constants = rc_ref_cell!(vec![]);
-                let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);    
+                let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);
 
                 let result = run(
                     contents,
                     self.file_path.clone(),
                     symbol_table,
                     constants,
-                    globals
-                );         
+                    globals,
+                );
 
                 if let Err(err_enum) = result {
                     use crate::byte_code_vm::run::RunError;
@@ -60,25 +57,30 @@ impl FileRunner {
 
                         eprintln!("{}", err.inspect().red());
                     }
-                } else if 
-                    let Ok(Some(result)) = result &&
-                    result.get_type() == ERROR
+                } else if let Ok(Some(result)) = result
+                    && result.get_type() == ERROR
                 {
                     eprintln!("{}", result.inspect().red());
-                }   
+                }
 
                 #[cfg(feature = "get_code_run_seconds")]
                 let start_elapsed = start.elapsed();
-                
+
                 #[cfg(feature = "get_code_run_seconds")]
                 println!(
-                    "{}", format!(
-                        "Code run time: {} seconds, {} milliseconds, {} nanoseconds", 
-                        start_elapsed.as_secs_f64(), start_elapsed.as_millis(), start_elapsed.as_nanos()
+                    "{}",
+                    format!(
+                        "Code run time: {} seconds, {} milliseconds, {} nanoseconds",
+                        start_elapsed.as_secs_f64(),
+                        start_elapsed.as_millis(),
+                        start_elapsed.as_nanos()
                     )
                 );
             }
-            Err(e) => {eprintln!("{}", e.to_string()); return;}
+            Err(e) => {
+                eprintln!("{}", e.to_string());
+                return;
+            }
         }
     }
 }
