@@ -35,6 +35,8 @@ pub const OP_SET_LOCAL: u8 = 24;
 pub const OP_CLOSURE: u8 = 25;
 pub const OP_GET_FREE: u8 = 26;
 pub const OP_SET_INDEX: u8 = 27;
+pub const OP_GET_BUILTIN: u8 = 28;
+pub const OP_CURRENT_CLOSURE: u8 = 29;
 pub const OP_TEST_PRINT: u8 = 254;
 pub const OP_NOP: u8 = 255;
 
@@ -111,6 +113,8 @@ lazy_static! {
         m.insert(OP_CLOSURE, Definition::new("OpClosure".into(), vec![2, 2]));
         m.insert(OP_GET_FREE, Definition::new("OpGetFree".into(), vec![2]));
         m.insert(OP_SET_INDEX, Definition::new("OpSetIndex".into(), vec![]));
+        m.insert(OP_GET_BUILTIN, Definition::new("OpGetBuiltin".into(), vec![2]));
+        m.insert(OP_CURRENT_CLOSURE, Definition::new("OpCurrentClosure".into(), vec![]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
