@@ -72,6 +72,16 @@ impl From<i32> for AntInt {
     }
 }
 
+impl From<usize> for AntInt {
+    fn from(value: usize) -> Self {
+        AntInt {
+            id: Uuid::new_v4(),
+            env: Environment::new(),
+            value: BigDecimal::from(value as u128),
+        }
+    }
+}
+
 impl From<BigDecimal> for AntInt {
     fn from(value: BigDecimal) -> Self {
         AntInt {
