@@ -258,6 +258,51 @@ mod test {
     }
 
     #[test]
+    fn test_define_resolve_builtins() {
+        // 创建全局符号表
+        let global = SymbolTable::new();
+
+        // 第一层局部符号表（嵌套在全局下）
+        let first_local = SymbolTable::with_outer(rc_ref_cell!(global));
+
+        // 第二层局部符号表（嵌套在第一层下）
+        let mut second_local = SymbolTable::with_outer(rc_ref_cell!(first_local.clone()));
+
+        let test_cases = vec![
+            Symbol::new("a".into(), SymbolScope::Builtin, 0),
+            Symbol::new("b".into(), SymbolScope::Builtin, 1),
+            Symbol::new("c".into(), SymbolScope::Builtin, 2),
+            Symbol::new("d".into(), SymbolScope::Builtin, 3),
+        ];
+
+        for case in &test_cases {
+            second_local.define_builtin(case.index, &case.name);
+        }
+
+        // 遍历测试用例
+        for expected_symbol in test_cases {
+            match second_local.resolve(&expected_symbol.name) {
+                Some(actual_symbol) => assert_eq(
+                    &expected_symbol, &actual_symbol,
+                    || {
+                    println!(
+                        "{}",
+                        format!(
+                            "expected {} to resolve to {:?}, got = {:?}",
+                            expected_symbol.name, expected_symbol, actual_symbol
+                        )
+                        .red()
+                    )
+                }),
+                None => panic!(
+                    "{}",
+                    format!("name {} not resolvable", expected_symbol.name).red()
+                ),
+            }
+        }
+    }
+
+    #[test]
     fn test_resolve_unresolvable_free() {
         // 创建全局符号表
         let mut global = SymbolTable::new();
@@ -280,33 +325,33 @@ mod test {
         ];
 
         for expected in expected_symbols {
-            let result = second_local.resolve(&expected.name)
+            let result = second_local
+                .resolve(&expected.name)
                 .expect(&format!("name '{}' not resolvable", expected.name));
 
-            assert_eq(
-                &result, &expected,
-                || panic!("{}", format!(
-                    "expected {} to resolve to {:?}, got = {:?}", 
-                    expected.name, expected, result
-                ).red())
-            );
+            assert_eq(&result, &expected, || {
+                panic!(
+                    "{}",
+                    format!(
+                        "expected {} to resolve to {:?}, got = {:?}",
+                        expected.name, expected, result
+                    )
+                    .red()
+                )
+            });
         }
 
-        let expected_unresolvable: Vec<String> = vec![
-            "b".into(),
-            "d".into(),
-        ];
+        let expected_unresolvable: Vec<String> = vec!["b".into(), "d".into()];
 
         for expected in expected_unresolvable {
             let result = second_local.resolve(&expected);
 
-            assert_eq(
-                result.is_none(), true,
-                || panic!("{}", format!(
-                    "name {} resolved, but was expected not to",
-                    expected
-                ).red())
-            );
+            assert_eq(result.is_none(), true, || {
+                panic!(
+                    "{}",
+                    format!("name {} resolved, but was expected not to", expected).red()
+                )
+            });
         }
     }
 
@@ -316,17 +361,20 @@ mod test {
         global.define_function_name("a");
 
         let expected = Symbol::new("a".into(), SymbolScope::Function, 0);
-        let result = global.resolve(&expected.name)
+        let result = global
+            .resolve(&expected.name)
             .expect(&format!("function name '{}' not resolvable", expected.name).red());
 
-        assert_eq(
-            &result,
-            &expected,
-            || panic!("{}", format!(
-                "expected {} to reslove to {:?}, got = {:?}",
-                &expected.name, expected, result
-            ).red())
-        );
+        assert_eq(&result, &expected, || {
+            panic!(
+                "{}",
+                format!(
+                    "expected {} to reslove to {:?}, got = {:?}",
+                    &expected.name, expected, result
+                )
+                .red()
+            )
+        });
     }
 
     #[test]
@@ -336,16 +384,19 @@ mod test {
         global.define("a");
 
         let expected = Symbol::new("a".into(), SymbolScope::Global, 0);
-        let result = global.resolve(&expected.name)
+        let result = global
+            .resolve(&expected.name)
             .expect(&format!("function name '{}' not resolvable", expected.name).red());
 
-        assert_eq(
-            &result,
-            &expected,
-            || panic!("{}", format!(
-                "expected {} to reslove to {:?}, got = {:?}",
-                &expected.name, expected, result
-            ).red())
-        );
+        assert_eq(&result, &expected, || {
+            panic!(
+                "{}",
+                format!(
+                    "expected {} to reslove to {:?}, got = {:?}",
+                    &expected.name, expected, result
+                )
+                .red()
+            )
+        });
     }
 }
