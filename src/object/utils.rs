@@ -100,6 +100,23 @@ macro_rules! convert_type_use_box {
 }
 
 #[macro_export]
+macro_rules! convert_type_to_owned {
+    ($t:ty, $value:expr) => {{
+        let value_format = format!("{:?}", $value);
+
+        let value = $value as Box<dyn std::any::Any>;
+
+        let converted = value.downcast::<$t>().expect(&format!(
+            "cannot convert '{}' to type '{}'",
+            value_format,
+            std::any::type_name::<$t>()
+        ));
+
+        *converted
+    }};
+}
+
+#[macro_export]
 macro_rules! convert_type {
     ($t:ty, $value:expr) => {{
         use std::any::Any;
