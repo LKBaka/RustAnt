@@ -474,8 +474,6 @@ impl Compiler {
 
         self.symbol_table = outer;
 
-        self.symbol_table.borrow_mut().outer = None;
-
         instructions
     }
 
