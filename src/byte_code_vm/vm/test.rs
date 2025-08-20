@@ -10,7 +10,7 @@ mod tests {
     use colored::Colorize;
 
     use crate::{
-        big_dec,
+        big_dec, big_dec_from_str,
         byte_code_vm::{compiler::utils::compile_it, vm::vm::Vm},
         convert_type, convert_type_use_box,
         object::{
@@ -143,7 +143,18 @@ mod tests {
         let tests = vec![
             VmTestCase::<BigDecimal>::new("[1, 2, 3][1]".into(), big_dec!(2)),
             VmTestCase::<BigDecimal>::new("[1, 2, 3][0 + 2]".into(), big_dec!(3)),
+            VmTestCase::<BigDecimal>::new("[-1, -2, -3][-1]".into(), big_dec!(-3)),
+            VmTestCase::<BigDecimal>::new("[-10, 0, 10][-3]".into(), big_dec!(-10)),
+            VmTestCase::<BigDecimal>::new("[-0.5, -1.5, -2.5][-2]".into(), big_dec_from_str!(-1.5)),
+            VmTestCase::<BigDecimal>::new("[100, -200, 300][-2]".into(), big_dec!(-200)),
+            VmTestCase::<BigDecimal>::new("[-999, -888, -777][-3]".into(), big_dec!(-999)),
+            VmTestCase::<BigDecimal>::new("[0.1, -0.2, 0.3][-1]".into(), big_dec_from_str!(0.3)),
+            VmTestCase::<BigDecimal>::new("[-42][-1]".into(), big_dec!(-42)),
+            VmTestCase::<BigDecimal>::new("[-1, 2, -3, 4, -5][-4]".into(), big_dec!(2)),
+            VmTestCase::<BigDecimal>::new("[1.23, -4.56, 7.89][-2]".into(), big_dec_from_str!(-4.56)),
+            VmTestCase::<BigDecimal>::new("[-1000, 2000, -3000][-1]".into(), big_dec!(-3000)),
             VmTestCase::<BigDecimal>::new("[[1, 1, 1]][0][0]".into(), big_dec!(1)),
+            VmTestCase::<BigDecimal>::new("[[1, 4, 7]][-1][-1]".into(), big_dec!(7)),
         ];
 
         run_vm_tests(tests);
