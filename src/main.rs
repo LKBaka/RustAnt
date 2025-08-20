@@ -6,7 +6,6 @@ mod constants;
 mod environment;
 mod lexer;
 mod map;
-mod module_system;
 mod object;
 mod parser;
 mod runner;

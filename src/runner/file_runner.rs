@@ -2,7 +2,6 @@ use std::{cell::RefCell, fs, rc::Rc};
 
 use colored::Colorize;
 
-use crate::builtin::builtin_map::BUILTIN_MAP_INDEX;
 use crate::byte_code_vm::compiler::compiler::Compiler;
 use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
 use crate::byte_code_vm::constants::UNINIT_OBJ;

@@ -7,7 +7,6 @@ pub mod constants;
 pub mod environment;
 pub mod lexer;
 pub mod map;
-pub mod module_system;
 pub mod object;
 pub mod parser;
 pub mod runner;
