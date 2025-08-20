@@ -1,5 +1,3 @@
-use bigdecimal::BigDecimal;
-
 use num_traits::Signed;
 use num_traits::cast::ToPrimitive;
 
@@ -23,10 +21,10 @@ fn eval_array_index_expression(arr: &AntArray, index: &AntInt) -> Result<Object,
         return Err(format!("index too big! index: {}", absolute_index));
     }
 
-    if absolute_index >= &big_dec!(arr.items.len() as u128) || index.value < big_dec!(0) {
+    if absolute_index >= &big_dec!(arr.items.len() as u128) || absolute_index < &big_dec!(0) {
         return Err(format!(
             "index out of range, index: {}, array length: {}",
-            absolute_index,
+            index.value,
             arr.items.len()
         ));
     }

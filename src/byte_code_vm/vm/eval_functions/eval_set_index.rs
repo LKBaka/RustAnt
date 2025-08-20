@@ -45,13 +45,13 @@ fn eval_set_index_array(
     };
 
     if absolute_index >= &big_dec!(usize::MAX as u128) {
-        return Err(format!("index too big! index: {}", absolute_index));
+        return Err(format!("index too big! index: {}", index));
     }
 
-    if absolute_index >= &big_dec!(casted_target.items.len() as u128) || *index < big_dec!(0) {
+    if absolute_index >= &big_dec!(casted_target.items.len() as u128) || absolute_index < &big_dec!(0) {
         return Err(format!(
             "index out of range, index: {}, array length: {}",
-            absolute_index,
+            index,
             casted_target.items.len()
         ));
     }
