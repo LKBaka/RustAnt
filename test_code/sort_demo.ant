@@ -1,0 +1,131 @@
+// 冒泡排序示例
+
+func bubble_sort(arr) {
+    let n = len(arr);
+    let i = 0;
+    while i < n {
+        let j = 0;
+        while j < n - i - 1 {
+            if arr[j] > arr[j + 1] {
+                let tmp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = tmp;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return arr;
+}
+
+let data = [5, 1, 4, 2, 8, 0, 3, 7, 6, 9];
+print("before:");
+print(data);
+
+let sorted = bubble_sort(data);
+print("after:");
+print(sorted);
+
+
+// 插入排序
+func insertion_sort(arr) {
+    let n = len(arr);
+    let i = 1;
+    while i < n {
+        let key = arr[i];
+        let j = i - 1;
+        let pos = 0;
+        while j > -1 {
+            if arr[j] > key {
+                arr[j + 1] = arr[j];
+                j = j - 1;
+            } else {
+                pos = j + 1;
+                j = -1;
+            }
+        }
+        arr[pos] = key;
+        i = i + 1;
+    }
+    return arr;
+}
+
+// 选择排序
+func selection_sort(arr) {
+    let n = len(arr);
+    let i = 0;
+    while i < n {
+        let min_idx = i;
+        let j = i + 1;
+        while j < n {
+            if arr[j] < arr[min_idx] {
+                min_idx = j;
+            }
+            j = j + 1;
+        }
+        if min_idx != i {
+            let tmp = arr[i];
+            arr[i] = arr[min_idx];
+            arr[min_idx] = tmp;
+        }
+        i = i + 1;
+    }
+    return arr;
+}
+
+// 快速排序（Lomuto 分区）
+func partition(arr, low, high) {
+    let pivot = arr[high];
+    let i = low - 1;
+    let j = low;
+    while j < high {
+        if arr[j] < pivot {
+            i = i + 1;
+            let tmp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = tmp;
+        }
+        j = j + 1;
+    }
+    let tmp2 = arr[i + 1];
+    arr[i + 1] = arr[high];
+    arr[high] = tmp2;
+    return i + 1;
+}
+
+func quick_sort_range(arr, low, high) {
+    if low < high {
+        let pi = partition(arr, low, high);
+        quick_sort_range(arr, low, pi - 1);
+        quick_sort_range(arr, pi + 1, high);
+    }
+}
+
+func quick_sort(arr) {
+    let n = len(arr);
+    quick_sort_range(arr, 0, n - 1);
+    return arr;
+}
+
+// 演示插入/选择/快速排序
+let data_ins = [5, 1, 4, 2, 8, 0, 3, 7, 6, 9];
+print("insertion before:");
+print(data_ins);
+let sorted_ins = insertion_sort(data_ins);
+print("insertion after:");
+print(sorted_ins);
+
+let data_sel = [5, 1, 4, 2, 8, 0, 3, 7, 6, 9];
+print("selection before:");
+print(data_sel);
+let sorted_sel = selection_sort(data_sel);
+print("selection after:");
+print(sorted_sel);
+
+let data_quick = [5, 1, 4, 2, 8, 0, 3, 7, 6, 9];
+print("quick before:");
+print(data_quick);
+let sorted_quick = quick_sort(data_quick);
+print("quick after:");
+print(sorted_quick);
+
