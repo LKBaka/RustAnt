@@ -139,3 +139,12 @@ macro_rules! big_dec {
         bigdecimal::BigDecimal::from($value)
     };
 }
+
+#[macro_export]
+macro_rules! big_dec_from_str {
+    ($value:expr) => {{
+        use std::str::FromStr;
+        
+        bigdecimal::BigDecimal::from_str(stringify!($value)).unwrap()
+    }};
+}
