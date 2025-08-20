@@ -29,8 +29,7 @@ impl Symbol {
 pub struct SymbolTable {
     pub outer: Option<Rc<RefCell<SymbolTable>>>,
     pub free_symbols: Vec<Symbol>,
-    store: hashbrown::HashMap<String, Symbol>,
-    func_store: hashbrown::HashMap<String, Vec<Symbol>>,
+    pub store: hashbrown::HashMap<String, Symbol>,
     pub num_definitions: usize,
     pub num_func_definitions: usize,
 }
@@ -41,7 +40,6 @@ impl SymbolTable {
             outer: None,
             free_symbols: vec![],
             store: HashMap::new(),
-            func_store: HashMap::new(),
             num_definitions: 0,
             num_func_definitions: 0,
         }
@@ -52,18 +50,9 @@ impl SymbolTable {
             outer: Some(outer),
             free_symbols: vec![],
             store: HashMap::new(),
-            func_store: HashMap::new(),
             num_definitions: 0,
             num_func_definitions: 0,
         }
-    }
-
-    pub fn store(&self) -> hashbrown::HashMap<String, Symbol> {
-        self.store.clone()
-    }
-
-    pub fn func_store(&self) -> hashbrown::HashMap<String, Vec<Symbol>> {
-        self.func_store.clone()
     }
 
     pub fn define(&mut self, name: &str) -> Symbol {
@@ -89,10 +78,6 @@ impl SymbolTable {
             return Some(it.clone());
         }
 
-        if let Some(vec) = self.func_store.get(name) {
-            return Some(vec[0].clone());
-        }
-
         if let Some(outer) = self.outer.clone() {
             let mut borrow_outer = outer.borrow_mut();
             let result = match borrow_outer.resolve(name) {
@@ -105,7 +90,7 @@ impl SymbolTable {
             }
 
             let free = self.define_free(result);
-            return Some(free)
+            return Some(free);
         }
 
         None
@@ -118,7 +103,13 @@ impl SymbolTable {
         symbol.index = self.free_symbols.len() - 1;
         symbol.scope = SymbolScope::Free;
 
-        self.store.insert(symbol.name.clone(), symbol.clone());
+        if self.store.contains_key(&symbol.name) {
+            self.store.remove(&symbol.name);
+            self.store.insert(symbol.name.clone(), symbol.clone());
+        } else {
+            self.store.insert(symbol.name.clone(), symbol.clone());
+        }
+
         symbol
     }
 
@@ -132,6 +123,18 @@ impl SymbolTable {
         self.store.insert(func_name.into(), symbol.clone());
 
         self.num_func_definitions += 1;
+
+        symbol
+    }
+
+    pub fn define_builtin(&mut self, index: usize, name: &str) -> Symbol {
+        let symbol = Symbol::new(
+            name.into(),
+            SymbolScope::Builtin,
+            index,
+        );
+
+        self.store.insert(name.into(), symbol.clone());
 
         symbol
     }
