@@ -15,17 +15,15 @@ use crate::{
             boolean_literal::BooleanLiteral, call_expression::CallExpression,
             double_literal::DoubleLiteral, function_expression::FunctionExpression,
             identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression,
-            infix_expression::InfixExpression, integer_literal::IntegerLiteral,
-            prefix_expression::PrefixExpression, return_expression::ReturnExpression,
-            string_literal::StringLiteral, test_print_expression::TestPrintExpression,
-            tuple_expression::TupleExpression,
+            infix_expression::InfixExpression, integer_literal::IntegerLiteral, prefix_expression::PrefixExpression,
+            return_expression::ReturnExpression, string_literal::StringLiteral,
+            test_print_expression::TestPrintExpression, tuple_expression::TupleExpression,
         },
         statements::{
-            block_statement::BlockStatement, let_statement::LetStatement,
-            while_statement::WhileStatement,
+            block_statement::BlockStatement,
+            let_statement::LetStatement, while_statement::WhileStatement,
         },
-    },
-    byte_code_vm::{
+    }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
             make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
@@ -38,12 +36,10 @@ use crate::{
                 compile_prefix_expression::compile_prefix_expression,
                 compile_while_statement::compile_while_statement,
             },
+            constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-    },
-    convert_type,
-    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object},
-    rc_ref_cell, struct_type_id,
+    }, convert_type_to_owned, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object}, rc_ref_cell, struct_type_id
 };
 
 #[derive(Debug, Clone)]
@@ -135,6 +131,12 @@ impl Compiler {
         m.insert(struct_type_id!(WhileStatement), compile_while_statement);
     }
 
+    pub fn init_builtin_map(table: Rc<RefCell<SymbolTable>>) {
+        for (i, name) in BUILTIN_MAP_INDEX.iter().enumerate() {
+            table.borrow_mut().define_builtin(i, name);
+        }
+    }
+
     pub fn new() -> Self {
         let main_scope = CompilationScope::new(
             rc_ref_cell!(vec![]),
@@ -144,12 +146,15 @@ impl Compiler {
 
         let mut m: HashBrownMap<TypeId, CompileHandler> = HashBrownMap::with_capacity(8);
 
+        let symbol_table = rc_ref_cell!(SymbolTable::new());
+
+        Self::init_builtin_map(symbol_table.clone());
         Self::init_compile_map(&mut m);
 
         Self {
             constants: rc_ref_cell!(vec![]),
             compile_map: m,
-            symbol_table: rc_ref_cell!(SymbolTable::new()),
+            symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
         }
@@ -166,7 +171,7 @@ impl Compiler {
         );
 
         let mut m: HashBrownMap<TypeId, CompileHandler> = HashBrownMap::with_capacity(8);
-
+        
         Self::init_compile_map(&mut m);
 
         Self {
@@ -183,7 +188,7 @@ impl Compiler {
 
         match node_id {
             id if id == struct_type_id!(BlockStatement) => {
-                let block = convert_type!(BlockStatement, node);
+                let block = convert_type_to_owned!(BlockStatement, node);
 
                 for stmt in block.statements {
                     let result = self.compile(stmt);
@@ -197,7 +202,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(ExpressionStatement) => {
-                let expr_stmt = convert_type!(ExpressionStatement, node);
+                let expr_stmt = convert_type_to_owned!(ExpressionStatement, node);
 
                 if let Some(expr) = expr_stmt.expression {
                     let result = self.compile(expr);
@@ -210,7 +215,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(TupleExpression) => {
-                let mut tuple_expr = convert_type!(TupleExpression, node);
+                let mut tuple_expr = convert_type_to_owned!(TupleExpression, node);
 
                 if tuple_expr.expressions.len() == 1 {
                     return self.compile(tuple_expr.expressions.remove(0));
@@ -220,9 +225,18 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(IntegerLiteral) => {
-                let mut integer_literal = convert_type!(IntegerLiteral, node);
+                let mut integer_literal = convert_type_to_owned!(IntegerLiteral, node);
 
-                let integer: Object = Box::new(AntInt::from(mem::take(&mut integer_literal.value)));
+                use num_traits::ToPrimitive;
+
+                // 常量池优化
+                let integer: Object = if &integer_literal.value > &big_dec!(0)
+                    && &integer_literal.value < &big_dec!(257)
+                {
+                    CONSTANT_POOL_0_256[integer_literal.value.to_usize().unwrap()].clone()
+                } else {
+                    Box::new(AntInt::from(mem::take(&mut integer_literal.value)))
+                };
 
                 let constant_index = self.add_constant(integer);
                 self.emit(OP_CONSTANTS, vec![constant_index as u16]);
@@ -231,7 +245,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(DoubleLiteral) => {
-                let mut double_literal = convert_type!(DoubleLiteral, node);
+                let mut double_literal = convert_type_to_owned!(DoubleLiteral, node);
 
                 let double: Object =
                     Box::new(AntDouble::from(mem::take(&mut double_literal.value)));
@@ -243,7 +257,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(StringLiteral) => {
-                let str_literal = convert_type!(StringLiteral, node);
+                let str_literal = convert_type_to_owned!(StringLiteral, node);
 
                 let string: Object = Box::new(AntString::new(str_literal.value));
 
@@ -254,7 +268,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(BooleanLiteral) => {
-                let boolean_literal = convert_type!(BooleanLiteral, node);
+                let boolean_literal = convert_type_to_owned!(BooleanLiteral, node);
 
                 self.emit(
                     if boolean_literal.value {
@@ -269,10 +283,10 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(LetStatement) => {
-                let let_stmt = convert_type!(LetStatement, node);
+                let let_stmt = convert_type_to_owned!(LetStatement, node);
 
                 let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
-                
+
                 let result = self.compile(let_stmt.value);
 
                 if let Err(msg) = result {
@@ -292,7 +306,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(AssignmentExpression) => {
-                let assign_expr = convert_type!(AssignmentExpression, node);
+                let assign_expr = convert_type_to_owned!(AssignmentExpression, node);
 
                 let result = self.compile(assign_expr.value);
 
@@ -302,8 +316,7 @@ impl Compiler {
 
                 let anyed_expr = assign_expr.left as Box<dyn Any>;
 
-                if let Some(ident) = anyed_expr.downcast_ref::<Identifier>()
-                {
+                if let Some(ident) = anyed_expr.downcast_ref::<Identifier>() {
                     let symbol =
                         if let Some(it) = self.symbol_table.borrow_mut().resolve(&ident.value) {
                             it
@@ -322,15 +335,13 @@ impl Compiler {
                         },
                         vec![symbol.index as u16],
                     );
-                } else if let Ok(index_expr) = anyed_expr
-                    .downcast::<IndexExpression>()
-                {
+                } else if let Ok(index_expr) = anyed_expr.downcast::<IndexExpression>() {
                     if let Err(msg) = self.compile(index_expr.index) {
-                        return Err(format!("error compile index: {msg}"))
+                        return Err(format!("error compile index: {msg}"));
                     }
 
                     if let Err(msg) = self.compile(index_expr.expr) {
-                        return Err(format!("error compile index: {msg}"))
+                        return Err(format!("error compile index: {msg}"));
                     }
 
                     self.emit(OP_SET_INDEX, vec![]);
@@ -340,9 +351,9 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(Identifier) => {
-                let ident = convert_type!(Identifier, node);
+                let ident = convert_type_to_owned!(Identifier, node);
 
-                let symbol = { self.symbol_table.borrow_mut().resolve(&ident.value) };
+                let symbol = self.symbol_table.borrow_mut().resolve(&ident.value);
 
                 if let Some(symbol) = symbol {
                     self.load_symbol(&symbol);
@@ -357,7 +368,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(ArrayLiteral) => {
-                let arr = convert_type!(ArrayLiteral, node);
+                let arr = convert_type_to_owned!(ArrayLiteral, node);
 
                 let arr_len = arr.items.len();
 
@@ -374,7 +385,7 @@ impl Compiler {
             }
 
             id if id == TypeId::of::<IndexExpression>() => {
-                let index_expr = convert_type!(IndexExpression, node);
+                let index_expr = convert_type_to_owned!(IndexExpression, node);
 
                 if let Err(msg) = self.compile(index_expr.expr) {
                     return Err(format!("error compile left expression: {msg}"));
@@ -390,7 +401,7 @@ impl Compiler {
             }
 
             id if id == TypeId::of::<ReturnExpression>() => {
-                let return_expr = convert_type!(ReturnExpression, node);
+                let return_expr = convert_type_to_owned!(ReturnExpression, node);
 
                 if let Err(msg) = self.compile(return_expr.value) {
                     return Err(format!("error compile return value: {msg}"));
@@ -402,7 +413,7 @@ impl Compiler {
             }
 
             id if id == TypeId::of::<TestPrintExpression>() => {
-                let test_print_expr = convert_type!(TestPrintExpression, node);
+                let test_print_expr = convert_type_to_owned!(TestPrintExpression, node);
 
                 if let Err(msg) = self.compile(test_print_expr.value) {
                     return Err(format!("error compile return value: {msg}"));
@@ -462,6 +473,8 @@ impl Compiler {
             .expect("expected an outer");
 
         self.symbol_table = outer;
+
+        self.symbol_table.borrow_mut().outer = None;
 
         instructions
     }

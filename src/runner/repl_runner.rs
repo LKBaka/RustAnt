@@ -6,6 +6,8 @@ use std::rc::Rc;
 use colored::Colorize;
 
 use crate::arg_structure::arg_structure::Args;
+use crate::builtin::builtin_map::BUILTIN_MAP_INDEX;
+use crate::byte_code_vm::compiler::compiler::Compiler;
 use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
 use crate::byte_code_vm::constants::UNINIT_OBJ;
 use crate::byte_code_vm::run::{RunError, run};
@@ -30,6 +32,8 @@ impl REPLRunner {
         let symbol_table = rc_ref_cell!(SymbolTable::new());
         let constants = rc_ref_cell!(vec![]);
         let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);
+
+        Compiler::init_builtin_map(symbol_table.clone());
 
         loop {
             let mut code: String = String::new();

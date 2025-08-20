@@ -2,6 +2,8 @@ use std::{cell::RefCell, fs, rc::Rc};
 
 use colored::Colorize;
 
+use crate::builtin::builtin_map::BUILTIN_MAP_INDEX;
+use crate::byte_code_vm::compiler::compiler::Compiler;
 use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
 use crate::byte_code_vm::constants::UNINIT_OBJ;
 use crate::byte_code_vm::run::run;
@@ -36,6 +38,8 @@ impl FileRunner {
                 let symbol_table = rc_ref_cell!(SymbolTable::new());
                 let constants = rc_ref_cell!(vec![]);
                 let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);
+
+                Compiler::init_builtin_map(symbol_table.clone());
 
                 let result = run(
                     contents,

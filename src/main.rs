@@ -12,6 +12,7 @@ mod parser;
 mod runner;
 mod token;
 mod utils;
+mod builtin;
 // mod lg_ir_gen;
 
 extern crate lazy_static;

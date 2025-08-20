@@ -7,7 +7,7 @@ use crate::{
         code::code::{OP_CLOSURE, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
         compiler::compiler::Compiler,
     },
-    convert_type,
+    convert_type_to_owned,
     object::ant_compiled_function::CompiledFunction,
     rc_ref_cell,
 };
@@ -16,13 +16,9 @@ pub fn compile_function_expression(
     compiler: &mut Compiler,
     node: Box<dyn Node>,
 ) -> Result<(), String> {
+    let is_closure = compiler.symbol_table.borrow().outer.is_some();
 
-    let is_closure = compiler.symbol_table
-        .borrow()
-        .outer
-        .is_some();
-
-    let func_expr = convert_type!(FunctionExpression, node);
+    let func_expr = convert_type_to_owned!(FunctionExpression, node);
 
     let symbol_index = if let Some(name) = &func_expr.name {
         Some(compiler.symbol_table.borrow_mut().define(name).index as u16)
@@ -31,9 +27,15 @@ pub fn compile_function_expression(
     };
 
     compiler.enter_scope();
-    
+
     if let Some(name) = &func_expr.name {
-        Some(compiler.symbol_table.borrow_mut().define_function_name(name).index as u16);
+        Some(
+            compiler
+                .symbol_table
+                .borrow_mut()
+                .define_function_name(name)
+                .index as u16,
+        );
     }
 
     let param_vec: Vec<&Identifier> = func_expr
@@ -60,10 +62,7 @@ pub fn compile_function_expression(
 
     compiler.add_instruction(vec![OP_RETURN_VALUE]);
 
-    let free_symbols = compiler.symbol_table
-        .borrow()
-        .free_symbols
-        .clone();
+    let free_symbols = compiler.symbol_table.borrow().free_symbols.clone();
 
     let local_count = compiler.symbol_table.borrow().num_definitions;
     let param_count = func_expr.params.len();
@@ -86,8 +85,12 @@ pub fn compile_function_expression(
 
     if func_expr.name.is_some() {
         compiler.emit(
-            if is_closure { OP_SET_LOCAL } else { OP_SET_GLOBAL }, 
-            vec![symbol_index.unwrap()]
+            if is_closure {
+                OP_SET_LOCAL
+            } else {
+                OP_SET_GLOBAL
+            },
+            vec![symbol_index.unwrap()],
         );
     }
 

@@ -1,14 +1,14 @@
 use crate::{
     ast::{ast::Node, expressions::prefix_expression::PrefixExpression},
     byte_code_vm::{code::code::PREFIX_OPERATOR_TO_OPCODE, compiler::compiler::Compiler},
-    convert_type,
+    convert_type_to_owned,
 };
 
 pub fn compile_prefix_expression(
     compiler: &mut Compiler,
     node: Box<dyn Node>,
 ) -> Result<(), String> {
-    let prefix_expr = convert_type!(PrefixExpression, node);
+    let prefix_expr = convert_type_to_owned!(PrefixExpression, node);
 
     let result = compiler.compile(prefix_expr.expression);
     if result.is_err() {

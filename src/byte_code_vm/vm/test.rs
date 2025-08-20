@@ -281,10 +281,10 @@ mod tests {
 
                 let adder = new_adder(1, 2);
                 adder(8);
-                "#.into(),
-                big_dec!(11)
+                "#
+                .into(),
+                big_dec!(11),
             ),
-            
             // 测试2: 带局部变量的闭包
             VmTestCase::<BigDecimal>::new(
                 r#"
@@ -294,10 +294,10 @@ mod tests {
                 }; 
                 let adder = new_adder(1, 2); 
                 adder(8); 
-                "#.into(),
-                big_dec!(11)
+                "#
+                .into(),
+                big_dec!(11),
             ),
-
             // 测试1: 多层闭包
             VmTestCase::<BigDecimal>::new(
                 r#"
@@ -311,10 +311,10 @@ mod tests {
                 let new_adder_inner = new_adder_outer(1, 2); 
                 let adder = new_adder_inner(3); 
                 adder(8); 
-                "#.into(),
-                big_dec!(14)
+                "#
+                .into(),
+                big_dec!(14),
             ),
-            
             // 测试3: 多层变量捕获
             VmTestCase::<BigDecimal>::new(
                 r#"
@@ -327,10 +327,10 @@ mod tests {
                 let new_adder_inner = new_adder_outer(2); 
                 let adder = new_adder_inner(3); 
                 adder(8); 
-                "#.into(),
-                big_dec!(14)
+                "#
+                .into(),
+                big_dec!(14),
             ),
-            
             // 测试4: 多个闭包组合
             VmTestCase::<BigDecimal>::new(
                 r#"
@@ -341,8 +341,9 @@ mod tests {
                 }; 
                 let closure = new_closure(9, 90); 
                 closure(); 
-                "#.into(),
-                big_dec!(99)
+                "#
+                .into(),
+                big_dec!(99),
             ),
             VmTestCase::new(
                 r#"
@@ -394,7 +395,7 @@ mod tests {
                             .expect("No value popped from stack")
                             .borrow()
                             .clone();
-                        
+
                         if last_popped.get_type() == INT {
                             test_integer_object(
                                 convert_type_use_box!(BigDecimal, test_case.expected.clone()),

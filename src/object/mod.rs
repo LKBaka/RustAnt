@@ -4,7 +4,6 @@ pub mod ant_class;
 pub mod ant_closure;
 pub mod ant_compiled_function;
 pub mod ant_double;
-pub mod ant_env;
 pub mod ant_error;
 pub mod ant_function;
 pub mod ant_int;

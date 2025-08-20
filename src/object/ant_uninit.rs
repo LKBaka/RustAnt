@@ -10,9 +10,7 @@ pub struct AntUninit {
 
 impl AntUninit {
     pub fn new() -> Object {
-        let obj = Box::new(Self { id: Uuid::new_v4() });
-
-        obj
+        Box::new(Self { id: Uuid::new_v4() })
     }
 
     pub fn create() -> Self {

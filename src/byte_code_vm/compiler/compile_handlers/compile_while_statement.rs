@@ -5,13 +5,13 @@ use crate::{
         compiler::compiler::Compiler,
         constants::FAKE_OFFSET_JUMP,
     },
-    convert_type,
+    convert_type_to_owned,
 };
 
 pub fn compile_while_statement(compiler: &mut Compiler, node: Box<dyn Node>) -> Result<(), String> {
     let start_ip = compiler.current_instructions().borrow().len();
 
-    let while_stmt = convert_type!(WhileStatement, node);
+    let while_stmt = convert_type_to_owned!(WhileStatement, node);
 
     if let Err(msg) = compiler.compile(while_stmt.condition) {
         return Err(format!("error compile while loop condition: {msg}"));

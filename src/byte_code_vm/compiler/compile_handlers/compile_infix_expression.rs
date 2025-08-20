@@ -4,14 +4,14 @@ use crate::{
         code::code::{INFIX_OPERATOR_TO_OPCODE, OP_GT},
         compiler::compiler::Compiler,
     },
-    convert_type,
+    convert_type_to_owned,
 };
 
 pub fn compile_infix_expression(
     compiler: &mut Compiler,
     node: Box<dyn Node>,
 ) -> Result<(), String> {
-    let infix_expr = convert_type!(InfixExpression, node);
+    let infix_expr = convert_type_to_owned!(InfixExpression, node);
 
     if infix_expr.operator == "<" {
         if let Err(right_err) = compiler.compile(infix_expr.right) {

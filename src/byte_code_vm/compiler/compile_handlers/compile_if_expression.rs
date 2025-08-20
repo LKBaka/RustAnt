@@ -8,11 +8,11 @@ use crate::{
         compiler::compiler::Compiler,
         constants::FAKE_OFFSET_JUMP,
     },
-    convert_type,
+    convert_type_to_owned,
 };
 
 pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Result<(), String> {
-    let if_expr = convert_type!(IfExpression, node);
+    let if_expr = convert_type_to_owned!(IfExpression, node);
 
     let condition_result = compiler.compile(if_expr.condition);
     if let Err(msg) = condition_result {
@@ -59,7 +59,7 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Re
 
     if let Some(expressions) = if_expr.else_if_expressions {
         for else_if in expressions {
-            let else_if = convert_type!(ElseIfExpression, else_if);
+            let else_if = convert_type_to_owned!(ElseIfExpression, else_if);
 
             // 编译else if条件
             let cond_result = compiler.compile(else_if.condition);

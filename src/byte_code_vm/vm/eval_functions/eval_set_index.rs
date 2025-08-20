@@ -3,7 +3,14 @@ use std::{cell::RefCell, rc::Rc};
 use bigdecimal::Signed;
 use num_traits::ToPrimitive;
 
-use crate::{big_dec, object::{ant_array::AntArray, ant_int::AntInt, object::{Object, ARRAY, INT}}};
+use crate::{
+    big_dec,
+    object::{
+        ant_array::AntArray,
+        ant_int::AntInt,
+        object::{ARRAY, INT, Object},
+    },
+};
 
 fn eval_set_index_array(
     value: Object,
@@ -16,7 +23,7 @@ fn eval_set_index_array(
         .as_any()
         .downcast_ref::<AntInt>()
         .expect(&format!("expected an integer, but got: {:?}", index));
-    
+
     let mut target_borrow_mut = target.borrow_mut();
 
     let casted_target = target_borrow_mut
@@ -60,7 +67,7 @@ pub fn eval_set_index(
     target: Rc<RefCell<Object>>,
 ) -> Result<(), String> {
     if target.borrow().get_type() == ARRAY && index.borrow().get_type() == INT {
-        return eval_set_index_array(value, index, target)
+        return eval_set_index_array(value, index, target);
     }
 
     Err(format!("cannot set index of object {:?}", target.borrow()))

@@ -1,9 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    byte_code_vm::{
+    builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
-            read_uint16, read_uint8, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            read_uint16, read_uint8, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::compiler::ByteCode,
         constants::{FALSE, TRUE, UNINIT_OBJ},
@@ -14,16 +14,15 @@ use crate::{
                 eval_infix_operator::eval_infix_operator,
                 eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index,
             },
-            frame::Frame, function_utils::{self, push_closure},
+            frame::Frame,
+            function_utils::{self, push_closure},
         },
-    },
-    object::{
+    }, object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
         object::{Object, UNINIT},
         utils::is_truthy,
-    },
-    rc_ref_cell,
+    }, rc_ref_cell
 };
 
 pub const STACK_SIZE: u16 = 2048;
@@ -118,9 +117,13 @@ impl Vm {
 
         let mut op;
 
-        while self.current_frame().borrow().ip
-            < self.current_frame().borrow().instructions().borrow().len() as isize - 1
-        {
+        while {
+            let current_frame = self.current_frame();
+            let current_frame_borrow = current_frame.borrow();
+
+            current_frame_borrow.ip
+                < current_frame_borrow.instructions().borrow().len() as isize - 1
+        } {
             self.current_frame().borrow_mut().ip += 1;
 
             ip = self.current_frame().borrow().ip as usize;
@@ -134,9 +137,8 @@ impl Vm {
                     let const_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
                     self.current_frame().borrow_mut().ip += 2;
 
-                    let result = self.push(
-                        rc_ref_cell!(self.constants[const_index as usize].clone())
-                    );
+                    let result =
+                        self.push(rc_ref_cell!(self.constants[const_index as usize].clone()));
 
                     if result.is_err() {
                         return result;
@@ -163,7 +165,9 @@ impl Vm {
                     let right_obj = right.unwrap();
 
                     let eval_operator_result = eval_infix_operator(
-                        op, left_obj.borrow().clone(), right_obj.borrow().clone()
+                        op,
+                        left_obj.borrow().clone(),
+                        right_obj.borrow().clone(),
                     );
 
                     if let Err(err) = eval_operator_result {
@@ -197,18 +201,13 @@ impl Vm {
                         None => return Err(format!("expected an object for opcode {}", op)),
                     };
 
-                    let eval_operator_result = eval_prefix_operator(
-                        op, 
-                        right.borrow().clone()
-                    );
+                    let eval_operator_result = eval_prefix_operator(op, right.borrow().clone());
 
                     if let Err(err) = eval_operator_result {
                         return Err(format!("error evaluating prefix operator {}: {}", op, err));
                     }
 
-                    let push_result = self.push(
-                        rc_ref_cell!(eval_operator_result.unwrap())
-                    );
+                    let push_result = self.push(rc_ref_cell!(eval_operator_result.unwrap()));
 
                     if push_result.is_err() {
                         return push_result;
@@ -251,11 +250,7 @@ impl Vm {
                     let array_len = read_uint16(&instructions.borrow()[(ip + 1)..]);
                     self.current_frame().borrow_mut().ip += 2;
 
-                    let array_obj = build_array(
-                        &self.stack,
-                        self.sp - array_len as usize,
-                        self.sp
-                    );
+                    let array_obj = build_array(&self.stack, self.sp - array_len as usize, self.sp);
 
                     self.sp -= array_len as usize;
 
@@ -297,7 +292,7 @@ impl Vm {
                     let arg_count = read_uint8(&instructions.borrow()[(ip + 1)..]);
                     self.current_frame().borrow_mut().ip += 1;
 
-                    if let Err(msg) = function_utils::call_function(self, arg_count as usize) {
+                    if let Err(msg) = function_utils::call(self, arg_count as usize) {
                         return Err(format!("error calling function: {msg}"));
                     }
                 }
@@ -330,11 +325,12 @@ impl Vm {
                 OP_GET_LOCAL => {
                     let local_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
 
-                    self.current_frame().borrow_mut().ip += 2;
-
                     let frame = self.current_frame();
+                    let mut frame_mut = frame.borrow_mut();
 
-                    let index = frame.borrow().base_pointer + local_index as usize;
+                    frame_mut.ip += 2;
+
+                    let index = frame_mut.base_pointer + local_index as usize;
 
                     if let Err(msg) = self.push(self.stack[index].clone()) {
                         return Err(format!("error get local variable: {msg}"));
@@ -343,53 +339,67 @@ impl Vm {
 
                 OP_JUMP => {
                     let jump_to = read_uint16(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 2;
 
-                    self.current_frame().borrow_mut().ip = (jump_to as isize) - 1
+                    let frame = self.current_frame();
+                    let mut frame_mut = frame.borrow_mut();
+
+                    frame_mut.ip += 2;
+
+                    frame_mut.ip = (jump_to as isize) - 1
                 }
 
                 OP_JUMP_NOT_TRUTHY => {
                     let jump_to = read_uint16(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 2;
+
+                    let frame = self.current_frame();
+                    let mut frame_mut = frame.borrow_mut();
+
+                    frame_mut.ip += 2;
 
                     let condition = if let Some(cond) = self.pop() {
                         cond
                     } else {
                         return Err(String::from("expected an condition"));
-                    }.borrow().clone();
+                    }
+                    .borrow()
+                    .clone();
 
                     if !is_truthy(&condition) {
-                        self.current_frame().borrow_mut().ip = (jump_to as isize) - 1;
+                        frame_mut.ip = (jump_to as isize) - 1;
                     }
                 }
 
                 OP_SET_INDEX => {
                     let target = match self.pop() {
                         Some(it) => it,
-                        None => return Err(format!("expected an value to set"))
+                        None => return Err(format!("expected an value to set")),
                     };
-                    
+
                     let index = match self.pop() {
                         Some(it) => it,
-                        None => return Err(format!("expected an index to set"))
+                        None => return Err(format!("expected an index to set")),
                     };
 
                     let value = match self.pop() {
                         Some(it) => it,
-                        None => return Err(format!("expected an target( Iterable ) to set"))
-                    }.borrow().clone();
+                        None => return Err(format!("expected an target( Iterable ) to set")),
+                    }
+                    .borrow()
+                    .clone();
 
                     eval_set_index(value, index, target)?;
                 }
 
                 OP_CLOSURE => {
-                    let const_index = read_uint16(&instructions.borrow()[ip + 1..]);
-                    let free_count = read_uint16(&instructions.borrow()[ip + 3..]);
+                    let instructions = instructions.borrow();
+
+                    let const_index = read_uint16(&instructions[ip + 1..]);
+                    let free_count = read_uint16(&instructions[ip + 3..]);
 
                     self.current_frame().borrow_mut().ip += 4;
 
                     if let Err(msg) = push_closure(self, const_index, free_count) {
-                        return Err(format!("error push closure: {msg}"))
+                        return Err(format!("error push closure: {msg}"));
                     }
                 }
 
@@ -400,26 +410,34 @@ impl Vm {
                     let free_index = read_uint16(&instructions.borrow()[ip + 1..]);
                     frame_mut.ip += 2;
 
-                    let current_closure = frame_mut.closure.clone(); 
-                    if let Err(msg) = self.push(
-                        rc_ref_cell!(current_closure.borrow().free.borrow()[free_index as usize].clone())
-                    ) {
-                        return Err(format!("error push free variable: {msg}"))
+                    let current_closure = frame_mut.closure.clone();
+                    if let Err(msg) = self.push(rc_ref_cell!(
+                        current_closure.borrow().free.borrow()[free_index as usize].clone()
+                    )) {
+                        return Err(format!("error push free variable: {msg}"));
                     }
                 }
 
                 OP_CURRENT_CLOSURE => {
                     let current_frame = self.current_frame();
-                    let current_closure = current_frame
-                        .borrow()
-                        .closure
-                        .borrow()
-                        .clone();
+
+                    let current_closure = current_frame.borrow().closure.borrow().clone();
+
+                    if let Err(msg) = self.push(rc_ref_cell!(Box::new(current_closure))) {
+                        return Err(format!("error push current closure: {msg}"));
+                    }
+                }
+
+                OP_GET_BUILTIN => {
+                    let builtin_index = read_uint16(&instructions.borrow()[ip + 1..]);
+                    self.current_frame().borrow_mut().ip += 2;
 
                     if let Err(msg) = self.push(
-                        rc_ref_cell!(Box::new(current_closure))
+                        rc_ref_cell!(Box::new(
+                            BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone()
+                        ))
                     ) {
-                        return Err(format!("error push current closure: {msg}"))
+                        return Err(format!("error push builtin function: {msg}"))
                     }
                 }
 
@@ -465,7 +483,8 @@ impl Vm {
         }
 
         if self.sp >= self.stack.len() {
-            self.stack.resize(self.sp + 1, rc_ref_cell!(Box::new(UNINIT_OBJ.clone())));
+            self.stack
+                .resize(self.sp + 1, rc_ref_cell!(Box::new(UNINIT_OBJ.clone())));
         }
 
         self.stack[self.sp] = obj;

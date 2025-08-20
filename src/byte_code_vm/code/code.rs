@@ -72,7 +72,7 @@ impl Definition {
 
 lazy_static! {
     pub static ref definitions: HashMap<OpCode, Definition> = {
-        let mut m = HashMap::new();
+        let mut m = HashMap::with_capacity(31);
 
         m.insert(OP_CONSTANTS, Definition::new("OpConstant".into(), vec![2]));
         m.insert(OP_ADD, Definition::new("OpAdd".into(), vec![]));
@@ -113,8 +113,14 @@ lazy_static! {
         m.insert(OP_CLOSURE, Definition::new("OpClosure".into(), vec![2, 2]));
         m.insert(OP_GET_FREE, Definition::new("OpGetFree".into(), vec![2]));
         m.insert(OP_SET_INDEX, Definition::new("OpSetIndex".into(), vec![]));
-        m.insert(OP_GET_BUILTIN, Definition::new("OpGetBuiltin".into(), vec![2]));
-        m.insert(OP_CURRENT_CLOSURE, Definition::new("OpCurrentClosure".into(), vec![]));
+        m.insert(
+            OP_GET_BUILTIN,
+            Definition::new("OpGetBuiltin".into(), vec![2]),
+        );
+        m.insert(
+            OP_CURRENT_CLOSURE,
+            Definition::new("OpCurrentClosure".into(), vec![]),
+        );
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
