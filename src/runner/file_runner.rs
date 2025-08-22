@@ -9,16 +9,15 @@ use crate::byte_code_vm::run::run;
 use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
 use crate::object::object::ERROR;
 use crate::rc_ref_cell;
-use crate::{arg_structure::arg_structure::Args, object::object::Object};
+use crate::object::object::Object;
 
 pub struct FileRunner {
     file_path: String,
-    args: Args,
 }
 
 impl FileRunner {
-    pub fn new(file_path: String, args: Args) -> Self {
-        FileRunner { file_path, args }
+    pub fn new(file_path: String) -> Self {
+        FileRunner { file_path }
     }
 
     pub fn run(&self) {

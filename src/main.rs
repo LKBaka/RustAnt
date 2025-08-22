@@ -29,10 +29,10 @@ fn main() {
     if args.file.is_none() {
         // 没有提供文件路径
         // 进入REPL
-        let repl = REPLRunner::new(args);
+        let repl = REPLRunner::new();
         repl.run();
     } else {
-        let file_runner = FileRunner::new(args.file.clone().unwrap(), args.clone());
+        let file_runner = FileRunner::new(args.file.clone().unwrap());
         file_runner.run();
     }
 }

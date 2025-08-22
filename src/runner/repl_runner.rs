@@ -5,7 +5,6 @@ use std::rc::Rc;
 
 use colored::Colorize;
 
-use crate::arg_structure::arg_structure::Args;
 use crate::byte_code_vm::compiler::compiler::Compiler;
 use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
 use crate::byte_code_vm::constants::UNINIT_OBJ;
@@ -14,15 +13,13 @@ use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
 use crate::object::object::Object;
 use crate::rc_ref_cell;
 
-pub struct REPLRunner {
-    args: Args,
-}
+pub struct REPLRunner {}
 
 const REPL_FILE_NAME: &'static str = "repl";
 
 impl REPLRunner {
-    pub fn new(args: Args) -> Self {
-        REPLRunner { args }
+    pub fn new() -> Self {
+        REPLRunner {}
     }
 
     pub fn run(&self) {
