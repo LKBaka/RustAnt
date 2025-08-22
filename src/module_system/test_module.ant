@@ -1,0 +1,8 @@
+print(1)
+
+class Result {
+    let ok = null;
+    let err = null;
+}
+
+func f() {1}
