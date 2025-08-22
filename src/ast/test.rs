@@ -1,14 +1,14 @@
 #[cfg(test)]
 mod tests {
     use bigdecimal::BigDecimal;
-
+    
     #[test]
     fn test_print_nodes() {
         use crate::ast::ast::create_expression_statement;
         use crate::ast::expressions::integer_literal::create_integer_literal;
-        use crate::ast::utils::print_nodes;
         use crate::token::token::Token;
         use crate::token::token_type::TokenType;
+        use crate::ast::utils::print_nodes;
 
         let nodes = vec![
             create_expression_statement(create_integer_literal(

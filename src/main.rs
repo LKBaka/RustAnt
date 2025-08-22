@@ -3,7 +3,6 @@ mod ast;
 mod byte_code_vm;
 mod char_string;
 mod constants;
-mod environment;
 mod lexer;
 mod map;
 mod object;

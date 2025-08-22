@@ -1,6 +1,5 @@
 use lazy_static::lazy_static;
 
-use crate::environment::environment::Environment;
 use crate::object::ant_boolean::AntBoolean;
 use crate::object::ant_null::AntNull;
 use crate::object::ant_uninit::AntUninit;
@@ -11,7 +10,7 @@ pub const NEW_LINE: char = '\n';
 
 lazy_static! {
     pub static ref null_obj: Object = {
-        AntNull::new(Environment::new())
+        AntNull::new()
     };
 
     // 未初始化对象 通常用于在初始化函数参数前填充形参, 在类中则表示需要定义 (参考接口)
@@ -20,10 +19,10 @@ lazy_static! {
     };
 
     pub static ref ant_true: Object = {
-        AntBoolean::new_with_native_value(Box::new(true))
+        Box::new(AntBoolean::from(true))
     };
 
     pub static ref ant_false: Object = {
-        AntBoolean::new_with_native_value(Box::new(false))
+        Box::new(AntBoolean::from(false))
     };
 }

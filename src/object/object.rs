@@ -4,7 +4,6 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use uuid::Uuid;
 
-use crate::environment::environment::Environment;
 use crate::impl_object;
 
 pub type ObjectType = String;
@@ -60,14 +59,12 @@ impl Hash for dyn IAntObject {
 
 pub struct AntObject {
     pub id: Uuid,
-    pub env: Environment,
 }
 
 impl Clone for AntObject {
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            env: self.env.clone(),
         }
     }
 }

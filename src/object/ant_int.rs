@@ -2,14 +2,12 @@ use bigdecimal::BigDecimal;
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::ant_double::AntDouble;
 use crate::object::object::{IAntObject, INT, Object, ObjectType};
 
 pub struct AntInt {
     id: Uuid,
-    env: Environment,
     pub value: BigDecimal,
 }
 
@@ -17,7 +15,6 @@ impl Clone for AntInt {
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            env: self.env.clone(),
             value: self.value.clone(),
         }
     }
@@ -66,7 +63,6 @@ impl From<i32> for AntInt {
     fn from(value: i32) -> Self {
         AntInt {
             id: Uuid::new_v4(),
-            env: Environment::new(),
             value: BigDecimal::from(value),
         }
     }
@@ -76,7 +72,6 @@ impl From<usize> for AntInt {
     fn from(value: usize) -> Self {
         AntInt {
             id: Uuid::new_v4(),
-            env: Environment::new(),
             value: BigDecimal::from(value as u128),
         }
     }
@@ -86,7 +81,6 @@ impl From<BigDecimal> for AntInt {
     fn from(value: BigDecimal) -> Self {
         AntInt {
             id: Uuid::new_v4(),
-            env: Environment::new(),
             value,
         }
     }

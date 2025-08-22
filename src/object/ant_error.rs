@@ -1,13 +1,11 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{ERROR, IAntObject, Object, ObjectType};
 
 pub struct AntError {
     pub id: Uuid,
-    pub env: Environment,
     pub error_name: String,
     pub message: String,
 }
@@ -16,7 +14,6 @@ impl Clone for AntError {
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            env: self.env.clone(),
             error_name: self.error_name.clone(),
             message: self.message.clone(),
         }

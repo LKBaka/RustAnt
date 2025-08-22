@@ -1,13 +1,11 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{IAntObject, Object, ObjectType, RETURN_VALUE};
 
 pub struct AntReturnValue {
     id: Uuid,
-    env: Environment,
     pub value: Object,
 }
 
@@ -55,7 +53,6 @@ impl Clone for AntReturnValue {
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            env: self.env.clone(),
             value: self.value.clone(),
         }
     }

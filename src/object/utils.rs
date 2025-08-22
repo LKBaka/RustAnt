@@ -2,14 +2,12 @@ use bigdecimal::BigDecimal;
 use uuid::Uuid;
 
 use crate::constants::{ant_false, ant_true};
-use crate::environment::utils::create_env;
 
 use crate::object::ant_double::AntDouble;
 use crate::object::ant_error::AntError;
 use crate::object::ant_int::AntInt;
 use crate::object::object::ERROR;
 
-use super::ant_string::AntString;
 use super::object::Object;
 
 pub fn is_native_error(obj: &Object) -> bool {
@@ -37,16 +35,6 @@ pub fn is_truthy(obj: &Object) -> bool {
 pub fn create_error(message: String) -> Object {
     Box::new(AntError {
         id: Uuid::new_v4(),
-        env: create_env(vec![
-            (
-                "error_name".to_string(),
-                Box::new(AntString::new("Error".into())),
-            ),
-            (
-                "message".to_string(),
-                Box::new(AntString::new(message.clone())),
-            ),
-        ]),
         error_name: "Error".to_string(),
         message,
     })
@@ -55,16 +43,6 @@ pub fn create_error(message: String) -> Object {
 pub fn create_error_with_name(error_name: &'static str, message: String) -> Object {
     Box::new(AntError {
         id: Uuid::new_v4(),
-        env: create_env(vec![
-            (
-                "error_name".to_string(),
-                Box::new(AntString::new(error_name.into())),
-            ),
-            (
-                "message".to_string(),
-                Box::new(AntString::new(message.clone())),
-            ),
-        ]),
         error_name: error_name.to_string(),
         message,
     })

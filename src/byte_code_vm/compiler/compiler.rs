@@ -138,7 +138,7 @@ impl Compiler {
     }
 
     pub fn new() -> Self {
-        let main_scope = CompilationScope::new(
+        let main_scope: CompilationScope = CompilationScope::new(
             rc_ref_cell!(vec![]),
             EmittedInstruction::default(),
             EmittedInstruction::default(),

@@ -1,13 +1,11 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{ARRAY, IAntObject, Object, ObjectType, STRING};
 
 pub struct AntArray {
     id: Uuid,
-    env: Environment,
     pub items: Vec<Object>,
 }
 
@@ -15,7 +13,6 @@ impl Clone for AntArray {
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            env: self.env.clone(),
             items: self.items.clone(),
         }
     }
@@ -78,7 +75,6 @@ impl From<Vec<Object>> for AntArray {
     fn from(items: Vec<Object>) -> Self {
         AntArray {
             id: Uuid::new_v4(),
-            env: Environment::new(),
             items,
         }
     }

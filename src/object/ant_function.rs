@@ -2,14 +2,11 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::ast::statements::block_statement::BlockStatement;
-use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{FUNCTION, IAntObject, Object, ObjectType};
 
 pub struct AntFunction {
     pub id: Uuid,
-    pub env: Environment,
-    pub param_env: Environment,
     pub block: BlockStatement,
 }
 
@@ -17,8 +14,6 @@ impl Clone for AntFunction {
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            env: self.env.clone(),
-            param_env: self.param_env.clone(),
             block: self.block.clone(),
         }
     }

@@ -1,7 +1,6 @@
 use std::any::Any;
 use uuid::Uuid;
 
-use crate::environment::environment::Environment;
 use crate::impl_object;
 use crate::object::object::{IAntObject, Object, ObjectType};
 
@@ -9,7 +8,6 @@ pub struct AntClass {
     pub id: Uuid,
     pub name: String,
     pub base: Option<Object>,
-    pub env: Environment,
 }
 
 impl Clone for AntClass {
@@ -18,7 +16,6 @@ impl Clone for AntClass {
             id: self.id,
             name: self.name.clone(),
             base: self.base.clone(),
-            env: self.env.clone(),
         }
     }
 }
