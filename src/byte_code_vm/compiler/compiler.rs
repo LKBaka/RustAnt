@@ -15,17 +15,23 @@ use crate::{
             boolean_literal::BooleanLiteral, call_expression::CallExpression,
             double_literal::DoubleLiteral, function_expression::FunctionExpression,
             identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression,
-            infix_expression::InfixExpression, integer_literal::IntegerLiteral, prefix_expression::PrefixExpression,
-            return_expression::ReturnExpression, string_literal::StringLiteral,
-            test_print_expression::TestPrintExpression, tuple_expression::TupleExpression,
+            infix_expression::InfixExpression, integer_literal::IntegerLiteral,
+            prefix_expression::PrefixExpression, return_expression::ReturnExpression,
+            string_literal::StringLiteral, test_print_expression::TestPrintExpression,
+            tuple_expression::TupleExpression,
         },
         statements::{
-            block_statement::BlockStatement,
-            let_statement::LetStatement, while_statement::WhileStatement,
+            block_statement::BlockStatement, let_statement::LetStatement,
+            while_statement::WhileStatement,
         },
-    }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
+    },
+    big_dec,
+    builtin::builtin_map::BUILTIN_MAP_INDEX,
+    byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            Instructions, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN,
+            OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL,
+            OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, make,
         },
         compiler::{
             compile_handlers::{
@@ -39,7 +45,10 @@ use crate::{
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-    }, convert_type_to_owned, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object}, rc_ref_cell, struct_type_id
+    },
+    convert_type_to_owned,
+    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object},
+    rc_ref_cell, struct_type_id,
 };
 
 #[derive(Debug, Clone)]
@@ -73,16 +82,10 @@ impl CompilationScope {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct EmittedInstruction {
     pub op: OpCode,
     pub pos: usize,
-}
-
-impl Default for EmittedInstruction {
-    fn default() -> Self {
-        Self { op: 0, pos: 0 }
-    }
 }
 
 impl EmittedInstruction {
@@ -171,7 +174,7 @@ impl Compiler {
         );
 
         let mut m: HashBrownMap<TypeId, CompileHandler> = HashBrownMap::with_capacity(8);
-        
+
         Self::init_compile_map(&mut m);
 
         Self {
@@ -191,11 +194,7 @@ impl Compiler {
                 let block = convert_type_to_owned!(BlockStatement, node);
 
                 for stmt in block.statements {
-                    let result = self.compile(stmt);
-
-                    if result.is_err() {
-                        return result;
-                    }
+                    self.compile(stmt)?;
                 }
 
                 Ok(())
@@ -205,10 +204,7 @@ impl Compiler {
                 let expr_stmt = convert_type_to_owned!(ExpressionStatement, node);
 
                 if let Some(expr) = expr_stmt.expression {
-                    let result = self.compile(expr);
-                    if result.is_err() {
-                        return result;
-                    };
+                    self.compile(expr)?;
                 }
 
                 Ok(())
@@ -230,8 +226,8 @@ impl Compiler {
                 use num_traits::ToPrimitive;
 
                 // 常量池优化
-                let integer: Object = if &integer_literal.value > &big_dec!(0)
-                    && &integer_literal.value < &big_dec!(257)
+                let integer: Object = if integer_literal.value > big_dec!(0)
+                    && integer_literal.value < big_dec!(257)
                 {
                     CONSTANT_POOL_0_256[integer_literal.value.to_usize().unwrap()].clone()
                 } else {
@@ -290,7 +286,7 @@ impl Compiler {
                 let result = self.compile(let_stmt.value);
 
                 if let Err(msg) = result {
-                    return Err(format!("error compile let statement: {}", msg));
+                    return Err(format!("error compile let statement: {msg}"));
                 }
 
                 self.emit(
@@ -311,7 +307,7 @@ impl Compiler {
                 let result = self.compile(assign_expr.value);
 
                 if let Err(msg) = result {
-                    return Err(format!("error compile assignment expression: {}", msg));
+                    return Err(format!("error compile assignment expression: {msg}"));
                 }
 
                 let anyed_expr = assign_expr.left as Box<dyn Any>;
@@ -360,10 +356,10 @@ impl Compiler {
 
                     Ok(())
                 } else {
-                    return Err(format!(
+                    Err(format!(
                         "undefined identifier: {}. at line: {}, at file: {}",
                         ident.value, ident.token.line, ident.token.file,
-                    ));
+                    ))
                 }
             }
 
@@ -493,7 +489,7 @@ impl Compiler {
 
         let mut target = current_instructions.borrow_mut();
 
-        let op = target[op_pos].clone();
+        let op = target[op_pos];
         let new_instruction = make(op, &[operand].to_vec());
         let len = new_instruction.len();
 
@@ -561,11 +557,7 @@ impl Compiler {
 
     pub fn start_compile(&mut self, program: Program) -> Result<(), String> {
         for stmt in program.statements {
-            let result = self.compile(stmt);
-
-            if result.is_err() {
-                return result;
-            }
+            self.compile(stmt)?;
         }
 
         Ok(())
