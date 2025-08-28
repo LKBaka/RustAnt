@@ -1,7 +1,6 @@
 use crate::ast::ast::{Expression, Node, Statement};
 use crate::ast::expressions::identifier::Identifier;
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for LetStatement {
@@ -30,8 +29,6 @@ impl Node for LetStatement {
         format!("let {} = {}", self.name.to_string(), self.value.to_string())
     }
 }
-
-impl_node!(LetStatement);
 
 impl Statement for LetStatement {}
 

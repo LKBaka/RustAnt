@@ -1,8 +1,6 @@
 use crate::ast::ast::{Expression, Node};
 use crate::token::token::Token;
 
-use crate::impl_node;
-
 impl Clone for PrefixExpression {
     fn clone(&self) -> Self {
         Self {
@@ -31,8 +29,6 @@ impl Node for PrefixExpression {
 }
 
 impl Expression for PrefixExpression {}
-
-impl_node!(PrefixExpression);
 
 pub fn create_prefix_expression(
     token: Token,

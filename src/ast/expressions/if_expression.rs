@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node, Statement};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for IfExpression {
@@ -128,6 +127,3 @@ pub fn create_else_if_expression(
         consequence,
     }
 }
-
-impl_node!(IfExpression);
-impl_node!(ElseIfExpression);

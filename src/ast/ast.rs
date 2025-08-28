@@ -4,11 +4,16 @@ use std::fmt::Debug;
 
 use crate::constants::NEW_LINE;
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 pub trait TypeNameGetter {
     fn type_name(&self) -> String;
+}
+
+impl<T: Node> TypeNameGetter for T {
+    fn type_name(&self) -> String {
+        self.to_string()
+    }
 }
 
 pub trait Node: DynClone + Sync + Send + Any + Debug + TypeNameGetter {
@@ -77,8 +82,6 @@ impl Node for Program {
     }
 }
 
-impl_node!(Program);
-
 impl Clone for ExpressionStatement {
     fn clone(&self) -> Self {
         Self {
@@ -118,5 +121,3 @@ pub fn create_expression_statement(expression: impl Expression + 'static) -> Exp
         expression: Some(Box::new(expression) as Box<dyn Expression>),
     }
 }
-
-impl_node!(ExpressionStatement);

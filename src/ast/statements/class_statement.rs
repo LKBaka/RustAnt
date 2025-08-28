@@ -1,7 +1,6 @@
 use crate::ast::ast::{Node, Statement};
 use crate::ast::expressions::identifier::Identifier;
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 use super::block_statement::BlockStatement;
@@ -47,8 +46,6 @@ impl Node for ClassStatement {
         }
     }
 }
-
-impl_node!(ClassStatement);
 
 impl Statement for ClassStatement {}
 

@@ -1,8 +1,6 @@
 use crate::ast::ast::{Expression, Node};
 use crate::token::token::Token;
 
-use crate::impl_node;
-
 impl Clone for Identifier {
     fn clone(&self) -> Self {
         Self {
@@ -29,8 +27,6 @@ impl Node for Identifier {
 }
 
 impl Expression for Identifier {}
-
-impl_node!(Identifier);
 
 pub fn create_identifier(token: Token, value: String) -> Identifier {
     Identifier { token, value }

@@ -2,7 +2,6 @@ use crate::ast::ast::{Expression, Node};
 use crate::ast::statements::block_statement::BlockStatement;
 use crate::ast::utils::expressions_to_string;
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for FunctionExpression {
@@ -38,8 +37,6 @@ impl Node for FunctionExpression {
         )
     }
 }
-
-impl_node!(FunctionExpression);
 
 impl Expression for FunctionExpression {}
 

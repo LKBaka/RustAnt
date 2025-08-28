@@ -1,5 +1,4 @@
 use crate::ast::ast::{Expression, Node};
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for TupleExpression {
@@ -34,8 +33,6 @@ impl Node for TupleExpression {
 }
 
 impl Expression for TupleExpression {}
-
-impl_node!(TupleExpression);
 
 pub fn create_tuple_expression(
     token: Token,

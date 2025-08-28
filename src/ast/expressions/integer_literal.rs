@@ -1,7 +1,6 @@
 use bigdecimal::BigDecimal;
 
 use crate::ast::ast::{Expression, Node};
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for IntegerLiteral {
@@ -30,8 +29,6 @@ impl Node for IntegerLiteral {
 }
 
 impl Expression for IntegerLiteral {}
-
-impl_node!(IntegerLiteral);
 
 pub fn create_integer_literal(token: Token, value: BigDecimal) -> IntegerLiteral {
     IntegerLiteral { token, value }

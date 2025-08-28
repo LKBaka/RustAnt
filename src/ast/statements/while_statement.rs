@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node, Statement};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 use super::block_statement::BlockStatement;
@@ -37,8 +36,6 @@ impl Node for WhileStatement {
 }
 
 impl Statement for WhileStatement {}
-
-impl_node!(WhileStatement);
 
 pub fn create_while_statement(
     token: Token,

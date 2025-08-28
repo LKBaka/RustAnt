@@ -3,7 +3,6 @@ use std::ops::Deref;
 use crate::ast::ast::{Node, Statement};
 use crate::constants::NEW_LINE;
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for BlockStatement {
@@ -40,8 +39,6 @@ impl Node for BlockStatement {
         s
     }
 }
-
-impl_node!(BlockStatement);
 
 impl Statement for BlockStatement {}
 

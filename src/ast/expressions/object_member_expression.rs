@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for ObjectMemberExpression {
@@ -31,8 +30,6 @@ impl Node for ObjectMemberExpression {
 }
 
 impl Expression for ObjectMemberExpression {}
-
-impl_node!(ObjectMemberExpression);
 
 pub fn create_object_member_expression(
     token: Token,
