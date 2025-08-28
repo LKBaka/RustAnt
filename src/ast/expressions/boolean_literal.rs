@@ -5,7 +5,7 @@ use crate::token::token::Token;
 impl Clone for BooleanLiteral {
     fn clone(&self) -> Self {
         Self {
-            value: self.value.clone(),
+            value: self.value,
             token: self.token.clone(),
         }
     }
