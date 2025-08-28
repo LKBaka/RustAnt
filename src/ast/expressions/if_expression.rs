@@ -39,7 +39,7 @@ impl Node for IfExpression {
             let mut s = String::from("");
 
             for else_if_expression in it {
-                s.push_str(&*else_if_expression.to_string())
+                s.push_str(&else_if_expression.to_string())
             }
 
             s
@@ -54,11 +54,11 @@ impl Node for IfExpression {
         );
 
         if !else_if_string.is_empty() {
-            result.push_str(&format!(" {}", else_if_string));
+            result.push_str(&format!(" {else_if_string}"));
         }
 
         if !alternative_string.is_empty() {
-            result.push_str(&format!(" else {{{}}}", alternative_string));
+            result.push_str(&format!(" else {{{alternative_string}}}"));
         }
 
         result
