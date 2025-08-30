@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for CallExpression {
@@ -35,8 +34,6 @@ impl Node for CallExpression {
         format!("{}({})", self.func.to_string(), args_strings.join(", "))
     }
 }
-
-impl_node!(CallExpression);
 
 impl Expression for CallExpression {}
 

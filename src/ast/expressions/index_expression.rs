@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for IndexExpression {
@@ -29,8 +28,6 @@ impl Node for IndexExpression {
         format!("{}[{}]", self.expr.to_string(), self.index.to_string())
     }
 }
-
-impl_node!(IndexExpression);
 
 impl Expression for IndexExpression {}
 

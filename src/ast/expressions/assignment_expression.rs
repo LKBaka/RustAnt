@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for AssignmentExpression {
@@ -29,8 +28,6 @@ impl Node for AssignmentExpression {
         format!("{} = {}", self.left.to_string(), self.value.to_string())
     }
 }
-
-impl_node!(AssignmentExpression);
 
 impl Expression for AssignmentExpression {}
 

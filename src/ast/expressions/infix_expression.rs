@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for InfixExpression {
@@ -36,8 +35,6 @@ impl Node for InfixExpression {
         )
     }
 }
-
-impl_node!(InfixExpression);
 
 impl Expression for InfixExpression {}
 

@@ -19,14 +19,3 @@ pub fn expressions_to_string(expressions: &Vec<Box<dyn Expression>>, separator: 
 
     strings.join(separator)
 }
-
-#[macro_export]
-macro_rules! impl_node {
-    ($struct_name:ident) => {
-        impl crate::ast::ast::TypeNameGetter for $struct_name {
-            fn type_name(&self) -> String {
-                stringify!($struct_name).to_string()
-            }
-        }
-    };
-}

@@ -1,6 +1,5 @@
 use crate::ast::ast::{Expression, Node};
 
-use crate::impl_node;
 use crate::token::token::Token;
 
 impl Clone for ArrayLiteral {
@@ -33,8 +32,6 @@ impl Node for ArrayLiteral {
         format!("[{}]", item_strings.join(", "))
     }
 }
-
-impl_node!(ArrayLiteral);
 
 impl Expression for ArrayLiteral {}
 

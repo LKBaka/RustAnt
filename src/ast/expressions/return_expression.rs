@@ -1,8 +1,6 @@
 use crate::ast::ast::{Expression, Node};
 use crate::token::token::Token;
 
-use crate::impl_node;
-
 impl Clone for ReturnExpression {
     fn clone(&self) -> Self {
         Self {
@@ -29,8 +27,6 @@ impl Node for ReturnExpression {
 }
 
 impl Expression for ReturnExpression {}
-
-impl_node!(ReturnExpression);
 
 pub fn create_return_expression(token: Token, value: Box<dyn Expression>) -> ReturnExpression {
     ReturnExpression { token, value }
