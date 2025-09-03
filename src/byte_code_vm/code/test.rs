@@ -21,8 +21,8 @@ mod tests {
             },
             TestCase {
                 op: OP_CALL,
-                operands: vec![255],
-                expected: vec![OP_CALL as u8, 255],
+                operands: vec![0],
+                expected: vec![OP_CALL as u8, 0, 0],
             },
             TestCase {
                 op: OP_CLOSURE,
@@ -75,7 +75,7 @@ mod tests {
         expected.push_str("0004 OpConstant 2\n");
         expected.push_str("0007 OpConstant 65535\n");
         expected.push_str("0010 OpCall 255\n");
-        expected.push_str("0012 OpClosure 0 0\n");
+        expected.push_str("0013 OpClosure 0 0\n");
 
         let mut concatted: Vec<u8> = vec![];
 
@@ -112,7 +112,7 @@ mod tests {
 
         let tests = vec![
             ReadOperandsTestCase::new(OP_CONSTANTS, vec![65535u16], 2),
-            ReadOperandsTestCase::new(OP_CALL, vec![255u16], 1),
+            ReadOperandsTestCase::new(OP_CALL, vec![0u16], 2),
             ReadOperandsTestCase::new(OP_CLOSURE, vec![0u16, 0u16], 4),
         ];
 
