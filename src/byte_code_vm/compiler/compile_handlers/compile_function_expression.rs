@@ -4,7 +4,7 @@ use crate::{
         expressions::{function_expression::FunctionExpression, identifier::Identifier},
     },
     byte_code_vm::{
-        code::code::{OP_CLOSURE, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
+        code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
         compiler::compiler::Compiler,
     },
     convert_type_to_owned,
@@ -29,13 +29,11 @@ pub fn compile_function_expression(
     compiler.enter_scope();
 
     if let Some(name) = &func_expr.name {
-        Some(
-            compiler
-                .symbol_table
-                .borrow_mut()
-                .define_function_name(name)
-                .index as u16,
-        );
+        compiler
+            .symbol_table
+            .borrow_mut()
+            .define_function_name(name)
+            .index as u16;
     }
 
     let param_vec: Vec<&Identifier> = func_expr
@@ -60,8 +58,10 @@ pub fn compile_function_expression(
         return Err(format!("error compile function body: {msg}"));
     }
 
-    compiler.add_instruction(vec![OP_RETURN_VALUE]);
-
+    if compiler.last_instruction_is(OP_POP) {
+        compiler.remove_last_pop_to(OP_RETURN_VALUE, &vec![]);
+    }
+    
     let free_symbols = compiler.symbol_table.borrow().free_symbols.clone();
 
     let local_count = compiler.symbol_table.borrow().num_definitions;
@@ -74,6 +74,8 @@ pub fn compile_function_expression(
     }
 
     let compiled_function = CompiledFunction {
+        #[cfg(feature = "debug")]
+        id: uuid::Uuid::new_v4(),
         instructions: rc_ref_cell!(instructions),
         local_count,
         param_count,
@@ -92,7 +94,11 @@ pub fn compile_function_expression(
             },
             vec![symbol_index.unwrap()],
         );
+
+        return Ok(());
     }
+
+    compiler.emit(OP_POP, vec![]);
 
     Ok(())
 }
