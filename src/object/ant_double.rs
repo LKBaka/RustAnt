@@ -1,22 +1,16 @@
 use bigdecimal::BigDecimal;
 use std::any::Any;
+use std::str::FromStr;
 use uuid::Uuid;
 
 use crate::impl_object;
-use crate::object::object::{DOUBLE, IAntObject, Object, ObjectType};
+use crate::obj_enum::object::Object;
+use crate::object::object::{DOUBLE, IAntObject, ObjectType};
 
+#[derive(Clone)]
 pub struct AntDouble {
     id: Uuid,
     pub value: BigDecimal,
-}
-
-impl Clone for AntDouble {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-            value: self.value.clone(),
-        }
-    }
 }
 
 impl From<BigDecimal> for AntDouble {
@@ -33,6 +27,15 @@ impl From<i32> for AntDouble {
         AntDouble {
             id: Uuid::new_v4(),
             value: BigDecimal::from(value),
+        }
+    }
+}
+
+impl From<f64> for AntDouble {
+    fn from(value: f64) -> Self {
+        AntDouble {
+            id: Uuid::new_v4(),
+            value: BigDecimal::from_str(&value.to_string()).unwrap(),
         }
     }
 }

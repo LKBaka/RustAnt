@@ -31,7 +31,6 @@ pub struct SymbolTable {
     pub free_symbols: Vec<Symbol>,
     pub store: hashbrown::HashMap<String, Symbol>,
     pub num_definitions: usize,
-    pub num_func_definitions: usize,
 }
 
 impl SymbolTable {
@@ -41,7 +40,6 @@ impl SymbolTable {
             free_symbols: vec![],
             store: HashMap::new(),
             num_definitions: 0,
-            num_func_definitions: 0,
         }
     }
 
@@ -51,7 +49,6 @@ impl SymbolTable {
             free_symbols: vec![],
             store: HashMap::new(),
             num_definitions: 0,
-            num_func_definitions: 0,
         }
     }
 
@@ -96,6 +93,7 @@ impl SymbolTable {
         None
     }
 
+    // this function has bug
     pub fn define_free(&mut self, original: Symbol) -> Symbol {
         self.free_symbols.push(original.clone());
 
@@ -103,12 +101,7 @@ impl SymbolTable {
         symbol.index = self.free_symbols.len() - 1;
         symbol.scope = SymbolScope::Free;
 
-        if self.store.contains_key(&symbol.name) {
-            self.store.remove(&symbol.name);
-            self.store.insert(symbol.name.clone(), symbol.clone());
-        } else {
-            self.store.insert(symbol.name.clone(), symbol.clone());
-        }
+        self.store.insert(symbol.name.clone(), symbol.clone());
 
         symbol
     }
@@ -117,12 +110,10 @@ impl SymbolTable {
         let symbol = Symbol::new(
             func_name.into(),
             SymbolScope::Function,
-            self.num_func_definitions,
+            0,
         );
 
         self.store.insert(func_name.into(), symbol.clone());
-
-        self.num_func_definitions += 1;
 
         symbol
     }

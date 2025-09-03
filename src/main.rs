@@ -4,13 +4,14 @@ mod byte_code_vm;
 mod char_string;
 mod constants;
 mod lexer;
-mod map;
 mod object;
 mod parser;
 mod runner;
 mod token;
 mod utils;
 mod builtin;
+mod obj_enum;
+mod map;
 // mod lg_ir_gen;
 
 extern crate lazy_static;

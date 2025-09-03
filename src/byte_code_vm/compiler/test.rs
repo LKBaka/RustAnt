@@ -9,18 +9,12 @@ mod tests {
     use colored::Colorize;
 
     use crate::{
-        big_dec,
-        byte_code_vm::{
+        big_dec, byte_code_vm::{
             code::code::{
-                Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE,
-                OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY,
-                OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE, instruction_to_str, make,
+                instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE
             },
             compiler::compiler::Compiler,
-        },
-        convert_type_use_box,
-        object::{ant_int::AntInt, ant_string::AntString, object::Object},
-        parser::utils::parse,
+        }, convert_type_use_box, obj_enum::object::Object, object::{ant_int::AntInt, ant_string::AntString}, parser::utils::parse
     };
 
     struct CompilerTestCase<T: Debug + Clone + 'static> {

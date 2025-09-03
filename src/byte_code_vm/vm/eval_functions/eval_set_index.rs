@@ -4,12 +4,7 @@ use bigdecimal::Signed;
 use num_traits::ToPrimitive;
 
 use crate::{
-    big_dec,
-    object::{
-        ant_array::AntArray,
-        ant_int::AntInt,
-        object::{ARRAY, INT, Object},
-    },
+    big_dec, obj_enum::object::Object, object::object::{IAntObject, ARRAY, INT}, try_unwrap_ref
 };
 
 fn eval_set_index_array(
@@ -17,48 +12,49 @@ fn eval_set_index_array(
     index: Rc<RefCell<Object>>,
     target: Rc<RefCell<Object>>,
 ) -> Result<(), String> {
-    let index_borrow = index.borrow_mut();
-
-    let casted_index = index_borrow
-        .as_any()
-        .downcast_ref::<AntInt>()
+    let casted_index = try_unwrap_ref!(index, Object::AntInt(index))
         .expect(&format!("expected an integer, but got: {:?}", index));
-
-    let mut target_borrow_mut = target.borrow_mut();
-
-    let casted_target = target_borrow_mut
-        .as_any_mut()
-        .downcast_mut::<AntArray>()
-        .expect(&format!("expected an array, but got: {:?}", index));
 
     let index = &casted_index.value;
 
-    // index 检查
-    if !index.is_integer() {
-        return Err(format!("unsupported array index: {}", index));
+    // 直接借用 target 并在匹配到 AntArray 时就地修改 items，保持直接可变性
+    let mut target_borrow = target.borrow_mut();
+
+    match *target_borrow {
+        Object::AntArray(ref mut arr) => {
+
+            // index 检查
+            if !index.is_integer() {
+                return Err(format!("unsupported array index: {}", index));
+            }
+
+            // 计算绝对索引（处理负数索引）
+            let absolute_index = if index.is_positive() || *index == big_dec!(0) {
+                index.clone()
+            } else {
+                big_dec!(arr.items.len() as u128) + index.clone()
+            };
+
+            if absolute_index >= big_dec!(usize::MAX as u128) {
+                return Err(format!("index too big! index: {}", index));
+            }
+
+            if absolute_index >= big_dec!(arr.items.len() as u128) || absolute_index < big_dec!(0) {
+                return Err(format!(
+                    "index out of range, index: {}, array length: {}",
+                    index,
+                    arr.items.len()
+                ));
+            }
+
+            // 就地替换数组元素，保持直接可变性
+            arr.items[absolute_index.to_usize().unwrap()] = value;
+
+            return Ok(());
+        }
+
+        _ => panic!("expected an array, but got: {:?}", target),
     }
-
-    let absolute_index = if index.is_positive() || *index == big_dec!(0) {
-        &index
-    } else {
-        &(big_dec!(casted_target.items.len() as u128) + index)
-    };
-
-    if absolute_index >= &big_dec!(usize::MAX as u128) {
-        return Err(format!("index too big! index: {}", index));
-    }
-
-    if absolute_index >= &big_dec!(casted_target.items.len() as u128) || absolute_index < &big_dec!(0) {
-        return Err(format!(
-            "index out of range, index: {}, array length: {}",
-            index,
-            casted_target.items.len()
-        ));
-    }
-
-    casted_target.items[absolute_index.to_usize().unwrap()] = value;
-
-    Ok(())
 }
 
 pub fn eval_set_index(

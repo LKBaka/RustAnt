@@ -2,20 +2,13 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::impl_object;
-use crate::object::object::{IAntObject, Object, ObjectType, STRING};
+use crate::obj_enum::object::Object;
+use crate::object::object::{IAntObject, ObjectType, STRING};
 
+#[derive(Clone)]
 pub struct AntString {
     id: Uuid,
-    pub(crate) value: String,
-}
-
-impl Clone for AntString {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-            value: self.value.clone(),
-        }
-    }
+    pub value: String,
 }
 
 impl AntString {

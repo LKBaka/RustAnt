@@ -4,7 +4,7 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJ},
         vm::{frame::Frame, vm::Vm},
-    }, object::{ant_closure::Closure, ant_compiled_function::CompiledFunction, ant_native_function::AntNativeFunction, object::{Object, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
+    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_compiled_function::CompiledFunction, ant_native_function::AntNativeFunction, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
@@ -101,7 +101,7 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
 
     let free_count_usize = free_count as usize;
 
-    let uninit_obj: Object = Box::new(UNINIT_OBJ.clone());
+    let uninit_obj: Object = Object::AntUninit(UNINIT_OBJ.clone());
     let mut free = vec![uninit_obj; free_count_usize];
 
     for i in 0..free_count_usize {
@@ -115,5 +115,5 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
         free: rc_ref_cell!(free),
     };
 
-    vm.push(rc_ref_cell!(Box::new(closure)))
+    vm.push(rc_ref_cell!(Object::Closure(closure)))
 }

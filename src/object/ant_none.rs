@@ -2,7 +2,8 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::impl_object;
-use crate::object::object::{IAntObject, NULL, Object, ObjectType};
+use crate::obj_enum::object::Object;
+use crate::object::object::{IAntObject, NULL, ObjectType};
 
 #[derive(Clone)]
 pub struct AntNone {
@@ -11,7 +12,7 @@ pub struct AntNone {
 
 impl AntNone {
     pub fn new() -> Object {
-        Box::new(Self {
+        Object::AntNone(Self {
             id: Uuid::new_v4(),
         })
     }

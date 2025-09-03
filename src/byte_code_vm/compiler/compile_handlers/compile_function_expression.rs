@@ -2,14 +2,10 @@ use crate::{
     ast::{
         ast::Node,
         expressions::{function_expression::FunctionExpression, identifier::Identifier},
-    },
-    byte_code_vm::{
+    }, byte_code_vm::{
         code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
         compiler::compiler::Compiler,
-    },
-    convert_type_to_owned,
-    object::ant_compiled_function::CompiledFunction,
-    rc_ref_cell,
+    }, convert_type_to_owned, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction, rc_ref_cell
 };
 
 pub fn compile_function_expression(
@@ -81,7 +77,7 @@ pub fn compile_function_expression(
         param_count,
     };
 
-    let constant_index = compiler.add_constant(Box::new(compiled_function)) as u16;
+    let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;
 
     compiler.emit(OP_CLOSURE, vec![constant_index, free_symbols.len() as u16]);
 

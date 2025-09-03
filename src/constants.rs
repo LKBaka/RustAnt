@@ -1,9 +1,9 @@
 use lazy_static::lazy_static;
 
+use crate::obj_enum::object::Object;
 use crate::object::ant_boolean::AntBoolean;
 use crate::object::ant_none::AntNone;
 use crate::object::ant_uninit::AntUninit;
-use crate::object::object::Object;
 
 pub const NULL_CHAR: char = '\0';
 pub const NEW_LINE: char = '\n';
@@ -19,10 +19,10 @@ lazy_static! {
     };
 
     pub static ref ant_true: Object = {
-        Box::new(AntBoolean::from(true))
+        Object::AntBoolean(AntBoolean::from(true))
     };
 
     pub static ref ant_false: Object = {
-        Box::new(AntBoolean::from(false))
+        Object::AntBoolean(AntBoolean::from(false))
     };
 }

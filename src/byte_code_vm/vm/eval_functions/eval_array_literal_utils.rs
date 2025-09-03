@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::object::{ant_array::AntArray, object::Object};
+use crate::{obj_enum::object::Object, object::ant_array::AntArray};
 
 pub fn build_array(
     stack: &Vec<Rc<RefCell<Object>>>,

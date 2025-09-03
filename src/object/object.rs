@@ -1,13 +1,14 @@
 use dyn_clone::{DynClone, clone_trait_object};
+use enum_dispatch::enum_dispatch;
 use std::any::Any;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use uuid::Uuid;
 
 use crate::impl_object;
+use crate::obj_enum::object::Object;
 
 pub type ObjectType = String;
-pub type Object = Box<dyn IAntObject>;
 
 pub const ANY: &str = "Any";
 pub const OBJECT: &str = "Object";
@@ -18,19 +19,16 @@ pub const STRING: &str = "String";
 pub const NULL: &str = "None";
 pub const UNINIT: &str = "Uninit";
 pub const ERROR: &str = "Error";
-pub const FUNCTION: &str = "Function";
-pub const ENVIRONMENT: &str = "Environment";
 pub const NATIVE_FUNCTION: &str = "NativeFunction";
 pub const COMPILED_FUNCTION: &str = "CompiledFunction";
-pub const COMPILED_CLASS: &str = "CompiledClass";
 pub const CLOSURE: &str = "Closure";
 pub const ARRAY: &str = "Array";
-pub const RETURN_VALUE: &str = "__Return_Value__";
 
 pub trait AsAnyMut {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
+#[enum_dispatch]
 pub trait IAntObject: DynClone + Sync + Send + Any + Debug + AsAnyMut {
     fn get_type(&self) -> ObjectType;
     fn get_value(&self) -> Box<dyn Any>;
@@ -45,7 +43,7 @@ clone_trait_object!(IAntObject);
 
 impl PartialEq for Object {
     fn eq(&self, other: &Object) -> bool {
-        self.equals(other.as_ref())
+        self.equals(other)
     }
 }
 

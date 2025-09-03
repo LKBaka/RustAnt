@@ -1,46 +1,33 @@
 use bigdecimal::BigDecimal;
 
 use crate::{
-    byte_code_vm::code::code::{OP_BANG, OP_MINUS, OpCode},
-    object::{ant_boolean::AntBoolean, ant_double::AntDouble, ant_int::AntInt, object::Object},
+    byte_code_vm::{code::code::{OpCode, OP_BANG, OP_MINUS}, utils::native_boolean_to_object}, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt}
 };
 
 pub fn bang(right: Object) -> Result<Object, String> {
-    let right_as_anyed = right.as_any();
+    match right {
+        Object::AntBoolean(right) => Ok(native_boolean_to_object(!right.value)),
+        Object::AntInt(right) => Ok(native_boolean_to_object(right.value == BigDecimal::from(0))),
+        Object::AntDouble(right) => Ok(native_boolean_to_object(right.value == BigDecimal::from(0))),
 
-    if let Some(right) = right_as_anyed.downcast_ref::<AntBoolean>() {
-        return Ok(Box::new(AntBoolean::from(!right.value)));
-    } else if let Some(right) = right_as_anyed.downcast_ref::<AntInt>() {
-        return Ok(Box::new(AntBoolean::from(
-            right.value == BigDecimal::from(0),
-        )));
-    } else if let Some(right) = right_as_anyed.downcast_ref::<AntDouble>() {
-        return Ok(Box::new(AntBoolean::from(
-            right.value == BigDecimal::from(0),
-        )));
+        _ => Err(format!(
+            "unimplemented for type: {:?}",
+            right
+        ))
     }
-
-    Err(format!(
-        "unimplemented for type: {:?}",
-        right_as_anyed.type_id()
-    ))
 }
 
 pub fn minus(right: Object) -> Result<Object, String> {
-    let right_as_anyed = right.as_any();
+    match right {
+        Object::AntBoolean(right) => Ok(Object::AntInt(AntInt::from(-(right.value as i32)))),
+        Object::AntInt(right) => Ok(Object::AntInt(AntInt::from(-&right.value))),
+        Object::AntDouble(right) => Ok(Object::AntDouble(AntDouble::from(-&right.value))),
 
-    if let Some(right) = right_as_anyed.downcast_ref::<AntBoolean>() {
-        return Ok(Box::new(AntInt::from(-(right.value as i32))));
-    } else if let Some(right) = right_as_anyed.downcast_ref::<AntInt>() {
-        return Ok(Box::new(AntInt::from(-&right.value)));
-    } else if let Some(right) = right_as_anyed.downcast_ref::<AntDouble>() {
-        return Ok(Box::new(AntDouble::from(-&right.value)));
+        _ => Err(format!(
+            "unimplemented for type: {:?}",
+            right
+        ))
     }
-
-    Err(format!(
-        "unimplemented for type: {:?}",
-        right_as_anyed.type_id()
-    ))
 }
 
 pub fn eval_prefix_operator(op: OpCode, right: Object) -> Result<Object, String> {

@@ -1,11 +1,12 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, time::{SystemTime, UNIX_EPOCH}};
 
-use crate::{convert_type, object::{ant_array::AntArray, ant_int::AntInt, object::Object}};
+use bigdecimal::BigDecimal;
+
+use crate::{obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, object::IAntObject}};
 
 pub fn builtin_print(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
     let obj = args[0]
-        .borrow()
-        .clone();
+        .borrow();
 
     println!("{}", obj.inspect());
 
@@ -14,12 +15,15 @@ pub fn builtin_print(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
 
 pub fn builtin_len(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
     let obj = args[0]
-        .borrow()
-        .clone();
+        .borrow();
 
-    let arr = convert_type!(AntArray, obj);
+    let arr = if let Object::AntArray(ref arr) = *obj {
+        arr
+    } else {
+        panic!("expected an array of function len")
+    };
 
-    Some(Box::new(AntInt::from(arr.items.len())))
+    Some(Object::AntInt(AntInt::from(arr.items.len())))
 }
 
 pub fn builtin_copy(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
@@ -28,4 +32,15 @@ pub fn builtin_copy(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
         .clone();
 
     Some(obj)
+}
+
+pub fn builtin_now(_args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+    Some(Object::AntInt(AntInt::from(
+        BigDecimal::from(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        )
+    )))
 }

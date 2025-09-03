@@ -2,312 +2,129 @@ use bigdecimal::BigDecimal;
 
 use crate::{
     byte_code_vm::{
-        code::code::{OP_ADD, OP_DIVIDE, OP_EQ, OP_GT, OP_MULTIPLY, OP_NOTEQ, OP_SUBTRACT, OpCode},
+        code::code::{OpCode, OP_ADD, OP_DIVIDE, OP_EQ, OP_GT, OP_MULTIPLY, OP_NOTEQ, OP_SUBTRACT},
         utils::native_boolean_to_object,
     },
-    object::{
-        ant_boolean::AntBoolean, ant_double::AntDouble, ant_int::AntInt, ant_string::AntString,
-        object::Object,
-    },
+    obj_enum::object::Object,
+    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::IAntObject},
 };
 
+// 保留原本注释与语义：对多种数值/字符串类型做互操作
 fn add_native(left: Object, right: Object) -> Result<Object, String> {
-    let left_as_anyed = left.as_any();
-    let right_as_anyed = right.as_any();
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value + &r.value))),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
+        (Object::AntString(l), Object::AntString(r)) => Ok(Object::AntString(AntString::new(l.value + &r.value))),
 
-    // AntInt + AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        return Ok(Box::new(AntInt::from(&left.value + &right.value)));
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
-
-    // AntDouble + AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value + &right.value)));
-    }
-
-    // AntInt + AntDouble -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value + &right.value)));
-    }
-
-    // AntDouble + AntInt -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value + &right.value)));
-    }
-
-    // AntString + AntString
-    if let Some(left) = left_as_anyed.downcast_ref::<AntString>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntString>()
-    {
-        return Ok(Box::new(AntString::new(left.value.clone() + &right.value)));
-    }
-
-    return Err(format!(
-        "unimplemented for types: {} and {}",
-        left.get_type(),
-        right.get_type()
-    ));
 }
 
 fn subtract_native(left: Object, right: Object) -> Result<Object, String> {
-    let left_as_anyed = left.as_any();
-    let right_as_anyed = right.as_any();
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value - &r.value))),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value))),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value))),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value))),
 
-    // AntInt - AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        return Ok(Box::new(AntInt::from(&left.value - &right.value)));
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
-
-    // AntDouble - AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value - &right.value)));
-    }
-
-    // AntInt - AntDouble -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value - &right.value)));
-    }
-
-    // AntDouble - AntInt -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value - &right.value)));
-    }
-
-    return Err(format!(
-        "unimplemented for types: {} and {}",
-        left.get_type(),
-        right.get_type()
-    ));
 }
 
 fn multiply_native(left: Object, right: Object) -> Result<Object, String> {
-    let left_as_anyed = left.as_any();
-    let right_as_anyed = right.as_any();
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value * &r.value))),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value))),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value))),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value))),
 
-    // AntInt * AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        return Ok(Box::new(AntInt::from(&left.value * &right.value)));
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
-
-    // AntDouble * AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value * &right.value)));
-    }
-
-    // AntInt * AntDouble -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value * &right.value)));
-    }
-
-    // AntDouble * AntInt -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        return Ok(Box::new(AntDouble::from(&left.value * &right.value)));
-    }
-
-    return Err(format!(
-        "unimplemented for types: {} and {}",
-        left.get_type(),
-        right.get_type()
-    ));
 }
 
 fn divide_native(left: Object, right: Object) -> Result<Object, String> {
-    let left_as_anyed = left.as_any();
-    let right_as_anyed = right.as_any();
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => {
+            if r.value == BigDecimal::from(0) {
+                return Err("division by zero".to_string());
+            }
 
-    // AntInt / AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        if right.value == BigDecimal::from(0) {
-            return Err("division by zero".to_string());
+            let result = &l.value / &r.value;
+            if result.is_integer() {
+                Ok(Object::AntInt(AntInt::from(result)))
+            } else {
+                Ok(Object::AntDouble(AntDouble::from(result)))
+            }
         }
 
-        let result = &left.value / &right.value;
+        (Object::AntDouble(l), Object::AntDouble(r)) => {
+            if r.value == BigDecimal::from(0) {
+                return Err("division by zero".to_string());
+            }
 
-        return if result.is_integer() {
-            Ok(Box::new(AntInt::from(result)))
-        } else {
-            Ok(Box::new(AntDouble::from(result)))
-        };
-    }
-
-    // AntDouble / AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        if right.value == BigDecimal::from(0) {
-            return Err("division by zero".to_string());
+            let result = &l.value / &r.value;
+            if result.is_integer() {
+                Ok(Object::AntInt(AntInt::from(result)))
+            } else {
+                Ok(Object::AntDouble(AntDouble::from(result)))
+            }
         }
 
-        let result = &left.value / &right.value;
+        (Object::AntInt(l), Object::AntDouble(r)) => {
+            if r.value == BigDecimal::from(0) {
+                return Err("division by zero".to_string());
+            }
 
-        return if result.is_integer() {
-            Ok(Box::new(AntInt::from(result)))
-        } else {
-            Ok(Box::new(AntDouble::from(result)))
-        };
-    }
-
-    // AntInt / AntDouble -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        if right.value == BigDecimal::from(0) {
-            return Err("division by zero".to_string());
+            let result = &l.value / &r.value;
+            Ok(Object::AntDouble(AntDouble::from(result)))
         }
 
-        let result = &left.value / &right.value;
-        return Ok(Box::new(AntDouble::from(result)));
-    }
+        (Object::AntDouble(l), Object::AntInt(r)) => {
+            if r.value == BigDecimal::from(0) {
+                return Err("division by zero".to_string());
+            }
 
-    // AntDouble / AntInt -> 转换为 AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        if right.value == BigDecimal::from(0) {
-            return Err("division by zero".to_string());
+            let result = &l.value / &r.value;
+            Ok(Object::AntDouble(AntDouble::from(result)))
         }
 
-        let result = &left.value / &right.value;
-        return Ok(Box::new(AntDouble::from(result)));
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
-
-    return Err(format!(
-        "unimplemented for types: {} and {}",
-        left.get_type(),
-        right.get_type()
-    ));
 }
 
 fn gt_native(left: Object, right: Object) -> Result<Object, String> {
-    let left_as_anyed = left.as_any();
-    let right_as_anyed = right.as_any();
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
 
-    // AntInt > AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        let result = &left.value > &right.value;
-        return Ok(native_boolean_to_object(result));
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
-
-    // AntDouble > AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        let result = &left.value > &right.value;
-        return Ok(native_boolean_to_object(result));
-    }
-
-    // AntInt > AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        let result = &left.value > &right.value;
-        return Ok(native_boolean_to_object(result));
-    }
-
-    // AntDouble > AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        let result = &left.value > &right.value;
-        return Ok(native_boolean_to_object(result));
-    }
-
-    return Err(format!(
-        "unimplemented for types: {} and {}",
-        left.get_type(),
-        right.get_type()
-    ));
 }
 
 fn eq_native(left: Object, right: Object) -> Result<Object, String> {
-    let left_as_anyed = left.as_any();
-    let right_as_anyed = right.as_any();
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntBoolean(l), Object::AntBoolean(r)) => Ok(native_boolean_to_object(l.value == r.value)),
 
-    // AntInt == AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        let result = &left.value == &right.value;
-        return Ok(native_boolean_to_object(result));
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
-
-    // AntDouble == AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        let result = &left.value == &right.value;
-        return Ok(native_boolean_to_object(result));
-    }
-
-    // AntInt == AntDouble
-    if let Some(left) = left_as_anyed.downcast_ref::<AntInt>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntDouble>()
-    {
-        let result = &left.value == &right.value;
-        return Ok(native_boolean_to_object(result));
-    }
-
-    // AntDouble == AntInt
-    if let Some(left) = left_as_anyed.downcast_ref::<AntDouble>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntInt>()
-    {
-        let result = &left.value == &right.value;
-        return Ok(native_boolean_to_object(result));
-    }
-
-    // AntBoolean == AntBoolean
-    if let Some(left) = left_as_anyed.downcast_ref::<AntBoolean>()
-        && let Some(right) = right_as_anyed.downcast_ref::<AntBoolean>()
-    {
-        let result = &left.value == &right.value;
-        return Ok(native_boolean_to_object(result));
-    }
-
-    return Err(format!(
-        "unimplemented for types: {} and {}",
-        left.get_type(),
-        right.get_type()
-    ));
 }
 
 fn not_eq_native(left: Object, right: Object) -> Result<Object, String> {
-    let result = eq_native(left, right);
-
-    match result {
+    match eq_native(left, right) {
         Ok(obj) => {
-            if let Some(boolean) = obj.as_any().downcast_ref::<AntBoolean>() {
-                return Ok(native_boolean_to_object(!boolean.value));
+            if let Object::AntBoolean(b) = obj {
+                return Ok(native_boolean_to_object(!b.value));
             }
 
-            return Err(format!("expected a boolean object, got: {:?}", obj));
+            Err(format!("expected a boolean object, got: {:?}", obj))
         }
 
         Err(e) => Err(e),

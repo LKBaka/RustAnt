@@ -4,7 +4,8 @@ use std::rc::Rc;
 use uuid::Uuid;
 
 use crate::impl_object;
-use crate::object::object::{IAntObject, NATIVE_FUNCTION, Object, ObjectType};
+use crate::obj_enum::object::Object;
+use crate::object::object::{IAntObject, NATIVE_FUNCTION, ObjectType};
 
 use super::type_hint::TypeHintMap;
 

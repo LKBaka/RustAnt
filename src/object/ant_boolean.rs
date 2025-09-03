@@ -2,22 +2,13 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::impl_object;
+use crate::obj_enum::object::Object;
 use crate::object::object::{BOOLEAN, IAntObject, ObjectType};
 
-use super::object::Object;
-
+#[derive(Clone)]
 pub struct AntBoolean {
     id: Uuid,
     pub value: bool,
-}
-
-impl Clone for AntBoolean {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-            value: self.value,
-        }
-    }
 }
 
 impl From<bool> for AntBoolean {

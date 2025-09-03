@@ -1,23 +1,18 @@
 use bigdecimal::BigDecimal;
+use bigdecimal::ToPrimitive;
 use std::any::Any;
 use uuid::Uuid;
 
+use crate::byte_code_vm::compiler::constant_pool::CONSTANT_POOL_0_256;
 use crate::impl_object;
+use crate::obj_enum::object::Object;
 use crate::object::ant_double::AntDouble;
-use crate::object::object::{IAntObject, INT, Object, ObjectType};
+use crate::object::object::{IAntObject, INT, ObjectType};
 
+#[derive(Clone)]
 pub struct AntInt {
     id: Uuid,
     pub value: BigDecimal,
-}
-
-impl Clone for AntInt {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-            value: self.value.clone(),
-        }
-    }
 }
 
 impl IAntObject for AntInt {

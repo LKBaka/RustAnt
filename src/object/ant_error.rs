@@ -2,22 +2,14 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::impl_object;
-use crate::object::object::{ERROR, IAntObject, Object, ObjectType};
+use crate::obj_enum::object::Object;
+use crate::object::object::{ERROR, IAntObject, ObjectType};
 
+#[derive(Clone)]
 pub struct AntError {
     pub id: Uuid,
     pub error_name: String,
     pub message: String,
-}
-
-impl Clone for AntError {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-            error_name: self.error_name.clone(),
-            message: self.message.clone(),
-        }
-    }
 }
 
 impl IAntObject for AntError {

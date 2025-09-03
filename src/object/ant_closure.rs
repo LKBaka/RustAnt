@@ -5,8 +5,9 @@ use std::rc::Rc;
 use uuid::Uuid;
 
 use crate::impl_object;
+use crate::obj_enum::object::Object;
 use crate::object::ant_compiled_function::CompiledFunction;
-use crate::object::object::{CLOSURE, IAntObject, Object, ObjectType};
+use crate::object::object::{CLOSURE, IAntObject, ObjectType};
 
 #[derive(Clone)]
 pub struct Closure {

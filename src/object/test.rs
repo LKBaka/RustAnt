@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::object::object::{IAntObject, Object};
+    use crate::{byte_code_vm::constants::UNINIT_OBJ, obj_enum::object::Object, object::object::IAntObject};
 
-    fn test_object_inspect(obj: Box<impl IAntObject + ?Sized>, expected_inspect: String) {
+    fn test_object_inspect(obj: Object, expected_inspect: String) {
         let inspected = obj.inspect();
 
         if inspected != expected_inspect {
@@ -20,10 +20,10 @@ mod tests {
         use crate::object::ant_int::AntInt;
 
         let cases: Vec<(Object, String)> = vec![
-            (Box::new(AntInt::from(91)), String::from("91")),
-            (Box::new(AntInt::from(78)), String::from("78")),
+            (Object::AntInt(AntInt::from(91)), String::from("91")),
+            (Object::AntInt(AntInt::from(78)), String::from("78")),
             (
-                Box::new(crate::byte_code_vm::constants::UNINIT_OBJ.clone()),
+                Object::AntUninit(UNINIT_OBJ.clone()),
                 String::from("uninit"),
             ),
         ];

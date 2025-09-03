@@ -6,7 +6,7 @@ use crate::{
     ast::ast::Node, byte_code_vm::compiler::{
         compiler::{ByteCode, Compiler},
         symbol_table::symbol_table::SymbolTable,
-    }, object::object::Object, parser::utils::parse
+    }, obj_enum::object::Object, parser::utils::parse
 };
 
 pub fn compile_it(code: String, file: String) -> Result<ByteCode, String> {

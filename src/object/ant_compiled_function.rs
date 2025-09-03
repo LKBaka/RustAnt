@@ -6,7 +6,8 @@ use uuid::Uuid;
 
 use crate::byte_code_vm::code::code::{Instructions, instruction_to_str};
 use crate::impl_object;
-use crate::object::object::{COMPILED_FUNCTION, IAntObject, Object, ObjectType};
+use crate::obj_enum::object::Object;
+use crate::object::object::{COMPILED_FUNCTION, IAntObject, ObjectType};
 
 pub struct CompiledFunction {
     #[cfg(feature = "debug")]

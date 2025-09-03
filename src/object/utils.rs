@@ -3,12 +3,9 @@ use uuid::Uuid;
 
 use crate::constants::{ant_false, ant_true};
 
-use crate::object::ant_double::AntDouble;
+use crate::obj_enum::object::Object;
 use crate::object::ant_error::AntError;
-use crate::object::ant_int::AntInt;
-use crate::object::object::ERROR;
-
-use super::object::Object;
+use crate::object::object::{IAntObject, ERROR};
 
 pub fn is_native_error(obj: &Object) -> bool {
     obj.get_type() == ERROR
@@ -23,9 +20,9 @@ pub fn is_truthy(obj: &Object) -> bool {
         true
     } else if obj == &*ant_false {
         false
-    } else if let Some(obj) = obj.as_any().downcast_ref::<AntInt>() {
+    } else if let Object::AntInt(obj) = obj {
         !(obj.value == BigDecimal::from(0))
-    } else if let Some(obj) = obj.as_any().downcast_ref::<AntDouble>() {
+    } else if let Object::AntDouble(obj) = obj {
         !(obj.value == BigDecimal::from(0))
     } else {
         false
@@ -33,7 +30,7 @@ pub fn is_truthy(obj: &Object) -> bool {
 }
 
 pub fn create_error(message: String) -> Object {
-    Box::new(AntError {
+    Object::AntError(AntError {
         id: Uuid::new_v4(),
         error_name: "Error".to_string(),
         message,
@@ -41,7 +38,7 @@ pub fn create_error(message: String) -> Object {
 }
 
 pub fn create_error_with_name(error_name: &'static str, message: String) -> Object {
-    Box::new(AntError {
+    Object::AntError(AntError {
         id: Uuid::new_v4(),
         error_name: error_name.to_string(),
         message,
@@ -95,23 +92,6 @@ macro_rules! convert_type_to_owned {
 }
 
 #[macro_export]
-macro_rules! convert_type {
-    ($t:ty, $value:expr) => {{
-        use std::any::Any;
-
-        let value = $value.as_ref() as &dyn Any;
-
-        let converted = value.downcast_ref::<$t>().expect(&format!(
-            "cannot convert '{:?}' to type '{}'",
-            $value,
-            std::any::type_name::<$t>()
-        ));
-
-        converted.clone()
-    }};
-}
-
-#[macro_export]
 macro_rules! big_dec {
     ($value:expr) => {
         bigdecimal::BigDecimal::from($value)
@@ -124,5 +104,27 @@ macro_rules! big_dec_from_str {
         use std::str::FromStr;
         
         bigdecimal::BigDecimal::from_str(stringify!($value)).unwrap()
+    }};
+}
+
+#[macro_export]
+macro_rules! try_unwrap {
+    ($o:expr, Object::$variant:ident($binding:pat)) => {{
+        match $o {
+            Object::$variant(inner) => Some(inner),
+            _ => None,
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! try_unwrap_ref {
+    ($rrc:expr, Object::$variant:ident($binding:pat)) => {{
+        let o = $rrc.borrow().clone();
+
+        match o {
+            Object::$variant(inner) => Some(inner),
+            _ => None,
+        }
     }};
 }

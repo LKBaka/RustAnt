@@ -17,10 +17,10 @@ use crate::{
             frame::Frame,
             function_utils::{self, push_closure},
         },
-    }, object::{
+    }, obj_enum::object::Object, object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
-        object::{Object, UNINIT},
+        object::{IAntObject, UNINIT},
         utils::is_truthy,
     }, rc_ref_cell
 };
@@ -40,7 +40,7 @@ pub struct Vm {
 
 impl Vm {
     pub fn new(bytecode: ByteCode) -> Self {
-        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Box::new(UNINIT_OBJ.clone()));
+        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()));
 
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
@@ -193,7 +193,7 @@ impl Vm {
                         FALSE.clone()
                     };
 
-                    let push_result = self.push(rc_ref_cell!(Box::new(obj)));
+                    let push_result = self.push(rc_ref_cell!(Object::AntBoolean(obj)));
 
                     if push_result.is_err() {
                         return push_result;
@@ -259,7 +259,7 @@ impl Vm {
 
                     self.sp -= array_len as usize;
 
-                    let push_result = self.push(rc_ref_cell!(Box::new(array_obj)));
+                    let push_result = self.push(rc_ref_cell!(Object::AntArray(array_obj)));
                     if let Err(msg) = push_result {
                         return Err(format!("error push array object: {msg}"));
                     }
@@ -437,7 +437,7 @@ impl Vm {
 
                     let current_closure = current_frame.borrow().closure.borrow().clone();
 
-                    if let Err(msg) = self.push(rc_ref_cell!(Box::new(current_closure))) {
+                    if let Err(msg) = self.push(rc_ref_cell!(Object::Closure(current_closure))) {
                         return Err(format!("error push current closure: {msg}"));
                     }
                 }
@@ -447,7 +447,7 @@ impl Vm {
                     self.current_frame().borrow_mut().ip += 2;
 
                     if let Err(msg) = self.push(
-                        rc_ref_cell!(Box::new(
+                        rc_ref_cell!(Object::AntNativeFunction(
                             BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone()
                         ))
                     ) {
@@ -500,7 +500,7 @@ impl Vm {
 
         if self.sp >= self.stack.len() {
             self.stack
-                .resize(self.sp + 1, rc_ref_cell!(Box::new(UNINIT_OBJ.clone())));
+                .resize(self.sp + 1, rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone())));
         }
 
         self.stack[self.sp] = obj;

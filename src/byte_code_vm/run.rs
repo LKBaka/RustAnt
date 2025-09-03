@@ -6,8 +6,7 @@ use crate::{
     byte_code_vm::{
         compiler::{symbol_table::symbol_table::SymbolTable, utils::compile_with_state},
         vm::{frame::fmt_frames, vm::Vm},
-    },
-    object::{object::Object, utils::create_error_with_name},
+    }, obj_enum::object::Object, object::utils::create_error_with_name
 };
 
 pub enum RunError {

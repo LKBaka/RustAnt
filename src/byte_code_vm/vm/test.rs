@@ -10,17 +10,10 @@ mod tests {
     use colored::Colorize;
 
     use crate::{
-        big_dec, big_dec_from_str,
-        byte_code_vm::{compiler::utils::compile_it, vm::vm::Vm},
-        convert_type, convert_type_use_box,
-        object::{
+        big_dec, big_dec_from_str, byte_code_vm::{compiler::utils::compile_it, vm::vm::Vm}, convert_type_use_box, obj_enum::object::Object, object::{
             ant_array::AntArray,
-            ant_boolean::AntBoolean,
-            ant_double::AntDouble,
-            ant_int::AntInt,
-            ant_string::AntString,
-            object::{Object, DOUBLE, INT},
-        },
+            object::{IAntObject, DOUBLE, INT},
+        }, try_unwrap
     };
 
     struct VmTestCase<T: Debug + Clone + 'static> {
@@ -535,7 +528,8 @@ mod tests {
     }
 
     fn test_string_object(expected: String, actual: &Object) -> Result<(), String> {
-        let str_obj = convert_type!(AntString, actual);
+        let str_obj = try_unwrap!(actual, Object::AntString(_))
+            .expect("expected an string");
 
         if str_obj.value != expected {
             Err(format!(
@@ -548,7 +542,8 @@ mod tests {
     }
 
     fn test_boolean_object(expected: bool, actual: &Object) -> Result<(), String> {
-        let bool_obj = convert_type!(AntBoolean, actual);
+        let bool_obj = try_unwrap!(actual, Object::AntBoolean(_))
+            .expect("expected an boolean");
 
         if bool_obj.value != expected {
             Err(format!(
@@ -561,7 +556,8 @@ mod tests {
     }
 
     fn test_integer_object(expected: BigDecimal, actual: &Object) -> Result<(), String> {
-        let int_obj = convert_type!(AntInt, actual);
+        let int_obj = try_unwrap!(actual, Object::AntInt(_))
+            .expect("expected an integer");
 
         if int_obj.value != expected {
             Err(format!(
@@ -574,7 +570,8 @@ mod tests {
     }
 
     fn test_double_object(expected: BigDecimal, actual: &Object) -> Result<(), String> {
-        let double_obj = convert_type!(AntDouble, actual);
+        let double_obj = try_unwrap!(actual, Object::AntDouble(_))
+            .expect("expected an doubke");
 
         if double_obj.value != expected {
             Err(format!(

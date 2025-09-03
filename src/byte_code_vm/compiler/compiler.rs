@@ -24,10 +24,7 @@ use crate::{
             block_statement::BlockStatement, let_statement::LetStatement,
             while_statement::WhileStatement,
         },
-    },
-    big_dec,
-    builtin::builtin_map::BUILTIN_MAP_INDEX,
-    byte_code_vm::{
+    }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
             make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
@@ -43,10 +40,7 @@ use crate::{
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-    },
-    convert_type_to_owned,
-    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::Object},
-    rc_ref_cell, struct_type_id,
+    }, convert_type_to_owned, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, struct_type_id
 };
 
 #[derive(Debug, Clone)]
@@ -92,7 +86,7 @@ impl EmittedInstruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ByteCode {
     pub instructions: Instructions,
     pub constants: Vec<Object>,
@@ -232,12 +226,12 @@ impl Compiler {
                 use num_traits::ToPrimitive;
 
                 // 常量池优化
-                let integer: Object = if integer_literal.value > big_dec!(0)
+                let integer = if integer_literal.value > big_dec!(0)
                     && integer_literal.value < big_dec!(257)
                 {
                     CONSTANT_POOL_0_256[integer_literal.value.to_usize().unwrap()].clone()
                 } else {
-                    Box::new(AntInt::from(mem::take(&mut integer_literal.value)))
+                    Object::AntInt(AntInt::from(mem::take(&mut integer_literal.value)))
                 };
 
                 let constant_index = self.add_constant(integer);
@@ -249,8 +243,8 @@ impl Compiler {
             id if id == struct_type_id!(DoubleLiteral) => {
                 let mut double_literal = convert_type_to_owned!(DoubleLiteral, node);
 
-                let double: Object =
-                    Box::new(AntDouble::from(mem::take(&mut double_literal.value)));
+                let double =
+                    Object::AntDouble(AntDouble::from(mem::take(&mut double_literal.value)));
 
                 let constant_index = self.add_constant(double);
                 self.emit(OP_CONSTANTS, vec![constant_index as u16]);
@@ -261,7 +255,7 @@ impl Compiler {
             id if id == struct_type_id!(StringLiteral) => {
                 let str_literal = convert_type_to_owned!(StringLiteral, node);
 
-                let string: Object = Box::new(AntString::new(str_literal.value));
+                let string = Object::AntString(AntString::new(str_literal.value));
 
                 let constant_index = self.add_constant(string);
                 self.emit(OP_CONSTANTS, vec![constant_index as u16]);

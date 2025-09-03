@@ -2,15 +2,17 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::impl_object;
-use crate::object::object::{IAntObject, Object, ObjectType, UNINIT};
+use crate::obj_enum::object::Object;
+use crate::object::object::{IAntObject, ObjectType, UNINIT};
 
+#[derive(Clone)]
 pub struct AntUninit {
     id: Uuid,
 }
 
 impl AntUninit {
     pub fn new() -> Object {
-        Box::new(Self { id: Uuid::new_v4() })
+        Object::AntUninit(Self { id: Uuid::new_v4() })
     }
 
     pub fn create() -> Self {
@@ -50,12 +52,6 @@ impl IAntObject for AntUninit {
             } else {
                 false
             }
-    }
-}
-
-impl Clone for AntUninit {
-    fn clone(&self) -> Self {
-        Self { id: self.id }
     }
 }
 

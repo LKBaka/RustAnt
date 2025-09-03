@@ -2,20 +2,13 @@ use std::any::Any;
 use uuid::Uuid;
 
 use crate::impl_object;
-use crate::object::object::{ARRAY, IAntObject, Object, ObjectType, STRING};
+use crate::obj_enum::object::Object;
+use crate::object::object::{ARRAY, IAntObject, ObjectType, STRING};
 
+#[derive(Clone)]
 pub struct AntArray {
     id: Uuid,
     pub items: Vec<Object>,
-}
-
-impl Clone for AntArray {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-            items: self.items.clone(),
-        }
-    }
 }
 
 impl IAntObject for AntArray {

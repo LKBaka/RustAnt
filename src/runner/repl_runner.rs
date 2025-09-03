@@ -10,7 +10,8 @@ use crate::byte_code_vm::compiler::symbol_table::symbol_table::SymbolTable;
 use crate::byte_code_vm::constants::UNINIT_OBJ;
 use crate::byte_code_vm::run::{RunError, run};
 use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
-use crate::object::object::Object;
+use crate::obj_enum::object::Object;
+use crate::object::object::IAntObject;
 use crate::rc_ref_cell;
 
 pub struct REPLRunner {}
@@ -23,7 +24,7 @@ impl REPLRunner {
     }
 
     pub fn run(&self) {
-        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Box::new(UNINIT_OBJ.clone()));
+        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()));
 
         let symbol_table = rc_ref_cell!(SymbolTable::new());
         let constants = rc_ref_cell!(vec![]);
