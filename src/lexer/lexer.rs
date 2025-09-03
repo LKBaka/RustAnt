@@ -134,7 +134,6 @@ impl Lexer {
 
     fn read_comment(&mut self) -> String {
         let start = self.pos + 2; // 跳过 "//"
-        let start_line = self.line;
 
         loop {
             self.read_char();

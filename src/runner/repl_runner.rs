@@ -55,12 +55,14 @@ impl REPLRunner {
             }
 
             // 使用多行输入功能
-            let full_code = self.read_multi_line(&mut code);
+            let mut full_code = self.read_multi_line(&mut code);
 
             // 如果用户输入为空，跳过执行
             if full_code.trim().is_empty() {
                 continue;
             }
+
+            full_code = full_code.trim_end().to_string(); // 去除末尾的换行符
 
             #[cfg(feature = "get_code_run_seconds")]
             use std::time::Instant;

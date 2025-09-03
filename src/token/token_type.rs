@@ -5,6 +5,7 @@ pub enum TokenType {
     Nonsense,
     Integer,
     String,
+    None,
     Colon,
     Dot,
     LBracket,
@@ -131,6 +132,7 @@ impl TokenType {
             TokenType::GetClassMember => "::",
             TokenType::TestPrint => "TestPrint",
             TokenType::Comment => "Comment",
+            TokenType::None => "None",
         }
     }
 }
@@ -192,5 +194,6 @@ pub static TOKEN_TYPE_MAP: phf::Map<&'static str, TokenType> = phf_map! {
     "ALIAS" => TokenType::Alias,
     "::" => TokenType::GetClassMember,
     "TESTPRINT" => TokenType::TestPrint,
+    "NONE" => TokenType::None,
     "\0" => TokenType::Eof,
 };

@@ -8,7 +8,7 @@ pub mod ant_error;
 pub mod ant_function;
 pub mod ant_int;
 pub mod ant_native_function;
-pub mod ant_null;
+pub mod ant_none;
 pub mod ant_return_value;
 pub mod ant_string;
 pub mod ant_uninit;

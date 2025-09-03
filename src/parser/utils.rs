@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::ast::ast::Program;
 
 pub fn parse(code: String, file: String) -> Result<Program, ()> {
@@ -10,6 +12,9 @@ pub fn parse(code: String, file: String) -> Result<Program, ()> {
         code_lexer.print_errors();
         return Err(());
     }
+
+    #[cfg(feature = "debug")]
+    println!("Tokens: {}", format!("{:?}", tokens).yellow());
 
     let mut parser: Parser = Parser::new(tokens.clone());
     let program = parser.parse_program();

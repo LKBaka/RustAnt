@@ -54,7 +54,7 @@ pub fn fmt_closure(closure: Rc<RefCell<Closure>>, indent: &str) -> String {
         "{indent}{}\n",
         fmt_compiled_function(borrow_closure.func.clone(), indent)
     ));
-    s.push_str(&format!("{indent}{:?}\n", borrow_closure.free.clone()));
+    s.push_str(&format!("{indent}{:#?}\n", borrow_closure.free.clone()));
 
     s
 }
@@ -66,6 +66,7 @@ pub fn fmt_frames(frames: &Vec<Frame>) -> String {
         s.push_str(&format!("Frame{index}: \n"));
         s.push_str(&format!("    {}\n", fmt_closure(f.closure.clone(), "\t")));
         s.push_str(&format!("    InstructionsPos: {}\n", f.ip));
+        s.push_str(&format!("    BasePointer: {}\n", f.base_pointer));
     }
 
     s

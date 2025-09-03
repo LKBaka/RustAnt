@@ -15,7 +15,7 @@ pub fn compile_call_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> 
 
     for arg in call_expr.args {
         if let Err(msg) = compiler.compile(arg) {
-            return Err(format!("err compile args: {msg}"));
+            return Err(format!("error compile args: {msg}"));
         }
     }
 
