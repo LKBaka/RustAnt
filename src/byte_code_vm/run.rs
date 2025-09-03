@@ -4,7 +4,6 @@ use colored::Colorize;
 
 use crate::{
     byte_code_vm::{
-        code::code::instruction_to_str,
         compiler::{symbol_table::symbol_table::SymbolTable, utils::compile_with_state},
         vm::{frame::fmt_frames, vm::Vm},
     },
@@ -34,10 +33,10 @@ pub fn run(
 
     #[cfg(feature = "debug")]
     println!(
-        "{}, ByteCode: {:?}, Instructions: {}",
+        "{}, ByteCode: {:#?}, Instructions: {}",
         "机器已上电".green(),
         bytecode,
-        instruction_to_str(&bytecode.instructions)
+        crate::byte_code_vm::code::code::instruction_to_str(&bytecode.instructions)
     );
 
     let mut vm = Vm::with_globals(bytecode, globals);
@@ -47,7 +46,7 @@ pub fn run(
             #[cfg(feature = "debug")]
             println!("{}", fmt_frames(&vm.frames()));
 
-            if let Some(result) = vm.pop() {
+            if let Some(result) = vm.last_popped_stack_elem() {
                 Ok(Some(result.borrow().clone()))
             } else {
                 Ok(None)
