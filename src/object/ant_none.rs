@@ -4,11 +4,12 @@ use uuid::Uuid;
 use crate::impl_object;
 use crate::object::object::{IAntObject, NULL, Object, ObjectType};
 
-pub struct AntNull {
+#[derive(Clone)]
+pub struct AntNone {
     id: Uuid,
 }
 
-impl AntNull {
+impl AntNone {
     pub fn new() -> Object {
         Box::new(Self {
             id: Uuid::new_v4(),
@@ -16,7 +17,7 @@ impl AntNull {
     }
 }
 
-impl IAntObject for AntNull {
+impl IAntObject for AntNone {
     fn get_type(&self) -> ObjectType {
         NULL.to_string()
     }
@@ -34,7 +35,7 @@ impl IAntObject for AntNull {
     }
 
     fn inspect(&self) -> String {
-        "null".to_string()
+        "None".to_string()
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
@@ -51,12 +52,4 @@ impl IAntObject for AntNull {
     }
 }
 
-impl Clone for AntNull {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-        }
-    }
-}
-
-impl_object!(AntNull);
+impl_object!(AntNone);
