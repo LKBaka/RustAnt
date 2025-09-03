@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     byte_code_vm::{
-        constants::UNINIT_OBJ,
+        constants::{NONE_OBJ, UNINIT_OBJ},
         vm::{frame::Frame, vm::Vm},
     }, object::{ant_closure::Closure, ant_compiled_function::CompiledFunction, ant_native_function::AntNativeFunction, object::{Object, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
 };
@@ -42,6 +42,12 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
         if let Err(msg) = vm.push(rc_ref_cell!(it)) {
             return Err(format!("error push native function result: {msg}"))
         }
+
+        return Ok(());
+    }
+
+    if let Err(msg) = vm.push(rc_ref_cell!(NONE_OBJ.clone())) {
+        return Err(format!("error push none object: {msg}"));
     }
 
     Ok(())
@@ -84,7 +90,10 @@ pub fn call_function(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) ->
 pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<(), String> {
     let constant = &vm.constants[const_index as usize];
 
-    let func = if let Some(it) = constant.as_any().downcast_ref::<CompiledFunction>() {
+    let func = if let Some(it) = constant
+        .as_any()
+        .downcast_ref::<CompiledFunction>() 
+    {
         it
     } else {
         return Err(format!("not a function: {:?}", constant));
@@ -95,11 +104,11 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
     let uninit_obj: Object = Box::new(UNINIT_OBJ.clone());
     let mut free = vec![uninit_obj; free_count_usize];
 
-    for i in 0..free_count as usize {
+    for i in 0..free_count_usize {
         free[i] = vm.stack[vm.sp - free_count_usize + i].borrow().clone();
     }
 
-    vm.sp = vm.sp - free_count_usize;
+    vm.sp -= free_count_usize;
 
     let closure = Closure {
         func: rc_ref_cell!(func.clone()),
