@@ -4,16 +4,7 @@ use crate::ast::ast::{Expression, Node};
 
 use crate::token::token::Token;
 
-impl Clone for DoubleLiteral {
-    fn clone(&self) -> Self {
-        Self {
-            value: self.value.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DoubleLiteral {
     pub value: BigDecimal,
     pub token: Token,

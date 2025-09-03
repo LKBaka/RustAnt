@@ -4,18 +4,7 @@ use crate::ast::utils::expressions_to_string;
 
 use crate::token::token::Token;
 
-impl Clone for FunctionExpression {
-    fn clone(&self) -> Self {
-        Self {
-            token: self.token.clone(),
-            name: self.name.clone(),
-            params: self.params.clone(),
-            block: self.block.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionExpression {
     pub token: Token,
     pub name: Option<String>,

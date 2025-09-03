@@ -2,18 +2,7 @@ use crate::ast::ast::{Expression, Node};
 
 use crate::token::token::Token;
 
-impl Clone for InfixExpression {
-    fn clone(&self) -> Self {
-        Self {
-            left: self.left.clone(),
-            right: self.right.clone(),
-            operator: self.operator.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InfixExpression {
     pub left: Box<dyn Expression>,
     pub right: Box<dyn Expression>,

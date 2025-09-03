@@ -1,16 +1,7 @@
 use crate::ast::ast::{Expression, Node};
 use crate::token::token::Token;
 
-impl Clone for TestPrintExpression {
-    fn clone(&self) -> Self {
-        Self {
-            value: self.value.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TestPrintExpression {
     pub value: Box<dyn Expression>,
     pub token: Token,

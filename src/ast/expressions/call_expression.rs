@@ -2,19 +2,9 @@ use crate::ast::ast::{Expression, Node};
 
 use crate::token::token::Token;
 
-impl Clone for CallExpression {
-    fn clone(&self) -> Self {
-        Self {
-            func: self.func.clone(),
-            args: self.args.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CallExpression {
-    pub func: Box<dyn Expression + 'static>,
+    pub func: Box<dyn Expression>,
     pub args: Vec<Box<dyn Expression>>,
     pub token: Token,
 }

@@ -5,18 +5,7 @@ use crate::token::token::Token;
 
 use super::block_statement::BlockStatement;
 
-impl Clone for ClassStatement {
-    fn clone(&self) -> Self {
-        Self {
-            token: self.token.clone(),
-            name: self.name.clone(),
-            base: self.base.clone(),
-            block: self.block.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ClassStatement {
     pub token: Token,
     pub name: Identifier,

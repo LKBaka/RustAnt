@@ -1,17 +1,7 @@
 use crate::ast::ast::{Expression, Node};
 use crate::token::token::Token;
 
-impl Clone for PrefixExpression {
-    fn clone(&self) -> Self {
-        Self {
-            operator: self.operator.clone(),
-            expression: self.expression.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PrefixExpression {
     pub operator: String,
     pub expression: Box<dyn Expression>,

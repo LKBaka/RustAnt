@@ -5,16 +5,7 @@ use crate::constants::NEW_LINE;
 
 use crate::token::token::Token;
 
-impl Clone for BlockStatement {
-    fn clone(&self) -> Self {
-        Self {
-            token: self.token.clone(),
-            statements: self.statements.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BlockStatement {
     pub token: Token,
     pub statements: Vec<Box<dyn Statement>>,
@@ -22,11 +13,7 @@ pub struct BlockStatement {
 
 impl Node for BlockStatement {
     fn token_literal(&self) -> String {
-        if !self.statements.is_empty() {
-            self.statements[0].token_literal()
-        } else {
-            String::new()
-        }
+        self.token.value.clone()
     }
 
     fn to_string(&self) -> String {

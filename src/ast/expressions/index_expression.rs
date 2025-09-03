@@ -2,17 +2,7 @@ use crate::ast::ast::{Expression, Node};
 
 use crate::token::token::Token;
 
-impl Clone for IndexExpression {
-    fn clone(&self) -> Self {
-        Self {
-            expr: self.expr.clone(),
-            index: self.index.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IndexExpression {
     pub expr: Box<dyn Expression>,
     pub index: Box<dyn Expression>,

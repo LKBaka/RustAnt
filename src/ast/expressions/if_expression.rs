@@ -2,19 +2,7 @@ use crate::ast::ast::{Expression, Node, Statement};
 
 use crate::token::token::Token;
 
-impl Clone for IfExpression {
-    fn clone(&self) -> Self {
-        Self {
-            token: self.token.clone(),
-            condition: self.condition.clone(),
-            consequence: self.consequence.clone(),
-            alternative: self.alternative.clone(),
-            else_if_expressions: self.else_if_expressions.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IfExpression {
     pub token: Token,
     pub condition: Box<dyn Expression>,          // 条件

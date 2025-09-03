@@ -1,16 +1,7 @@
 use crate::ast::ast::{Expression, Node};
 use crate::token::token::Token;
 
-impl Clone for TupleExpression {
-    fn clone(&self) -> Self {
-        Self {
-            expressions: self.expressions.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TupleExpression {
     pub expressions: Vec<Box<dyn Expression>>,
     pub token: Token,

@@ -3,16 +3,7 @@ use bigdecimal::BigDecimal;
 use crate::ast::ast::{Expression, Node};
 use crate::token::token::Token;
 
-impl Clone for IntegerLiteral {
-    fn clone(&self) -> Self {
-        Self {
-            value: self.value.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IntegerLiteral {
     pub value: BigDecimal,
     pub token: Token,

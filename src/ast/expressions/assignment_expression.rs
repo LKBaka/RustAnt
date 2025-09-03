@@ -2,17 +2,7 @@ use crate::ast::ast::{Expression, Node};
 
 use crate::token::token::Token;
 
-impl Clone for AssignmentExpression {
-    fn clone(&self) -> Self {
-        Self {
-            left: self.left.clone(),
-            value: self.value.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AssignmentExpression {
     pub left: Box<dyn Expression + 'static>,
     pub value: Box<dyn Expression>,

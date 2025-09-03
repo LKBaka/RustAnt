@@ -4,17 +4,7 @@ use crate::token::token::Token;
 
 use super::block_statement::BlockStatement;
 
-impl Clone for WhileStatement {
-    fn clone(&self) -> Self {
-        Self {
-            token: self.token.clone(),
-            condition: self.condition.clone(),
-            block: self.block.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WhileStatement {
     pub token: Token,
     pub condition: Box<dyn Expression>,

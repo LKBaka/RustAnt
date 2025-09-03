@@ -2,16 +2,7 @@ use crate::ast::ast::{Expression, Node};
 
 use crate::token::token::Token;
 
-impl Clone for BooleanLiteral {
-    fn clone(&self) -> Self {
-        Self {
-            value: self.value,
-            token: self.token.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BooleanLiteral {
     pub value: bool,
     pub token: Token,

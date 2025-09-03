@@ -2,16 +2,7 @@ use crate::ast::ast::{Expression, Node};
 
 use crate::token::token::Token;
 
-impl Clone for ArrayLiteral {
-    fn clone(&self) -> Self {
-        Self {
-            token: self.token.clone(),
-            items: self.items.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArrayLiteral {
     pub items: Vec<Box<dyn Expression>>,
     pub token: Token,

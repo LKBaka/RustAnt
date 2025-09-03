@@ -3,18 +3,7 @@ use crate::ast::expressions::identifier::Identifier;
 
 use crate::token::token::Token;
 
-impl Clone for LetStatement {
-    fn clone(&self) -> Self {
-        Self {
-            token: self.token.clone(),
-            name: self.name.clone(),
-            value: self.value.clone(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct LetStatement {
+#[derive(Debug, Clone)]pub struct LetStatement {
     pub token: Token,
     pub name: Identifier,
     pub value: Box<dyn Expression>,
