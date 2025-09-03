@@ -3,10 +3,10 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
-            read_uint16, read_uint8, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            read_uint16, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::compiler::ByteCode,
-        constants::{FALSE, TRUE, UNINIT_OBJ},
+        constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJ},
         vm::{
             eval_functions::{
                 eval_array_literal_utils::build_array,
@@ -28,6 +28,7 @@ use crate::{
 pub const STACK_SIZE: u16 = 2048;
 pub const GLOBALS_SIZE: u16 = 65535;
 
+
 pub struct Vm {
     pub constants: Vec<Object>,
     pub stack: Vec<Rc<RefCell<Object>>>,
@@ -42,6 +43,8 @@ impl Vm {
         let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Box::new(UNINIT_OBJ.clone()));
 
         let main_func = CompiledFunction {
+            #[cfg(feature = "debug")]
+            id: uuid::Uuid::new_v4(),
             instructions: rc_ref_cell!(bytecode.instructions),
             local_count: 0,
             param_count: 0,
@@ -69,6 +72,8 @@ impl Vm {
         globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
     ) -> Self {
         let main_func = CompiledFunction {
+            #[cfg(feature = "debug")]
+            id: uuid::Uuid::new_v4(),
             instructions: rc_ref_cell!(bytecode.instructions),
             local_count: 0,
             param_count: 0,
@@ -289,8 +294,8 @@ impl Vm {
                 }
 
                 OP_CALL => {
-                    let arg_count = read_uint8(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 1;
+                    let arg_count = read_uint16(&instructions.borrow()[(ip + 1)..]);
+                    self.current_frame().borrow_mut().ip += 2;
 
                     if let Err(msg) = function_utils::call(self, arg_count as usize) {
                         return Err(format!("error calling function: {msg}"));
@@ -301,6 +306,12 @@ impl Vm {
                     let return_value = self.pop();
 
                     let frame = self.pop_frame(); // 弹出当前帧
+
+                    if self.frame_index == 0 {
+                        // 没栈帧可榨了 说明已经到了主栈帧 直接报错
+                        return Err(format!("cannot return outside function"))
+                    }
+
                     self.sp = frame.borrow().base_pointer - 1;
 
                     if let Some(value) = return_value {
@@ -319,7 +330,9 @@ impl Vm {
 
                     let index = frame.borrow().base_pointer + local_index as usize;
 
-                    self.stack[index] = self.pop().expect("expected an object to set local")
+                    self.stack[index] = self
+                        .pop()
+                        .expect("expected an object to set local");
                 }
 
                 OP_GET_LOCAL => {
@@ -358,11 +371,12 @@ impl Vm {
 
                     let condition = if let Some(cond) = self.pop() {
                         cond
+                            .borrow()
+                            .clone()
                     } else {
                         return Err(String::from("expected an condition"));
-                    }
-                    .borrow()
-                    .clone();
+                    };
+                        
 
                     if !is_truthy(&condition) {
                         frame_mut.ip = (jump_to as isize) - 1;
@@ -441,6 +455,12 @@ impl Vm {
                     }
                 }
 
+                OP_NONE => {
+                    if let Err(msg) = self.push(rc_ref_cell!(NONE_OBJ.clone())) {
+                        return Err(format!("error push none object: {msg}"));
+                    }
+                }
+
                 OP_TEST_PRINT => {
                     let obj = if let Some(obj) = self.pop() {
                         obj
@@ -469,11 +489,7 @@ impl Vm {
     }
 
     pub fn last_popped_stack_elem(&self) -> Option<Rc<RefCell<Object>>> {
-        if self.sp == 0 {
-            None
-        } else {
-            Some(self.stack[self.sp].clone())
-        }
+        self.stack.get(self.sp).cloned()
     }
 
     #[inline]
@@ -496,14 +512,13 @@ impl Vm {
 
     #[inline]
     pub fn pop(&mut self) -> Option<Rc<RefCell<Object>>> {
-        if self.sp == 0 {
-            None
-        } else {
-            self.sp -= 1;
+        if self.sp == 0 { return None }
 
-            // 地雷式 stack, 不是合法的 sp 范围直接 panic
-            Some(self.stack[self.sp].clone())
-        }
+        let result = self.stack.get(self.sp - 1)?;
+
+        self.sp -= 1;
+
+        Some(result.clone())
     }
 
     pub fn frames(&self) -> Vec<Frame> {
