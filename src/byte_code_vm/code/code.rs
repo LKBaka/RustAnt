@@ -37,6 +37,8 @@ pub const OP_GET_FREE: u8 = 26;
 pub const OP_SET_INDEX: u8 = 27;
 pub const OP_GET_BUILTIN: u8 = 28;
 pub const OP_CURRENT_CLOSURE: u8 = 29;
+pub const OP_NONE: u8 = 30;
+pub const OP_HASH: u8 = 31;
 pub const OP_TEST_PRINT: u8 = 254;
 pub const OP_NOP: u8 = 255;
 
@@ -72,7 +74,7 @@ impl Definition {
 
 lazy_static! {
     pub static ref definitions: HashMap<OpCode, Definition> = {
-        let mut m = HashMap::with_capacity(31);
+        let mut m = HashMap::with_capacity(40);
 
         m.insert(OP_CONSTANTS, Definition::new("OpConstant".into(), vec![2]));
         m.insert(OP_ADD, Definition::new("OpAdd".into(), vec![]));
@@ -102,7 +104,7 @@ lazy_static! {
         );
         m.insert(OP_ARRAY, Definition::new("OpArray".into(), vec![2]));
         m.insert(OP_INDEX, Definition::new("OpIndex".into(), vec![]));
-        m.insert(OP_CALL, Definition::new("OpCall".into(), vec![1]));
+        m.insert(OP_CALL, Definition::new("OpCall".into(), vec![2]));
         m.insert(
             OP_RETURN_VALUE,
             Definition::new("OpReturnValue".into(), vec![]),
@@ -121,6 +123,8 @@ lazy_static! {
             OP_CURRENT_CLOSURE,
             Definition::new("OpCurrentClosure".into(), vec![]),
         );
+        m.insert(OP_NONE, Definition::new("OpNone".into(), vec![]));
+        m.insert(OP_NONE, Definition::new("OpHash".into(), vec![2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
