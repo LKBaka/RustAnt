@@ -21,3 +21,11 @@ pub fn builtin_len(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
 
     Some(Box::new(AntInt::from(arr.items.len())))
 }
+
+pub fn builtin_copy(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+    let obj = args[0]
+        .borrow()
+        .clone();
+
+    Some(obj)
+}
