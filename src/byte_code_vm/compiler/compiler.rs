@@ -29,9 +29,7 @@ use crate::{
     builtin::builtin_map::BUILTIN_MAP_INDEX,
     byte_code_vm::{
         code::code::{
-            Instructions, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN,
-            OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_RETURN_VALUE, OP_SET_GLOBAL,
-            OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, make,
+            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
@@ -135,8 +133,10 @@ impl Compiler {
     }
 
     pub fn init_builtin_map(table: Rc<RefCell<SymbolTable>>) {
+        let mut table_mut = table.borrow_mut();
+
         for (i, name) in BUILTIN_MAP_INDEX.iter().enumerate() {
-            table.borrow_mut().define_builtin(i, name);
+            table_mut.define_builtin(i, name);
         }
     }
 
@@ -204,7 +204,13 @@ impl Compiler {
                 let expr_stmt = convert_type_to_owned!(ExpressionStatement, node);
 
                 if let Some(expr) = expr_stmt.expression {
+                    let is_func_expr = 
+                        (expr.as_ref() as &dyn Any).is::<FunctionExpression>();
+
                     self.compile(expr)?;
+
+                    if is_func_expr {return Ok(())}
+                    self.emit(OP_POP, vec![]);
                 }
 
                 Ok(())
@@ -397,6 +403,15 @@ impl Compiler {
             }
 
             id if id == TypeId::of::<ReturnExpression>() => {
+                // 第一件事 检查作用域
+                if self.symbol_table
+                    .borrow()
+                    .outer
+                    .is_none() 
+                {
+                    return Err(format!("cannot return outside function"))
+                }
+
                 let return_expr = convert_type_to_owned!(ReturnExpression, node);
 
                 if let Err(msg) = self.compile(return_expr.value) {
