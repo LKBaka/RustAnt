@@ -19,7 +19,7 @@ mod tests {
             ant_double::AntDouble,
             ant_int::AntInt,
             ant_string::AntString,
-            object::{DOUBLE, INT, Object},
+            object::{Object, DOUBLE, INT},
         },
     };
 
@@ -288,6 +288,8 @@ mod tests {
                     func inner(c) {
                         a + b + c
                     }
+
+                    inner
                 }
 
                 let adder = new_adder(1, 2);
@@ -302,6 +304,8 @@ mod tests {
                 func new_adder(a, b) { 
                     let c = a + b; 
                     func inner(d) { c + d }; 
+
+                    inner
                 }; 
                 let adder = new_adder(1, 2); 
                 adder(8); 
@@ -317,7 +321,11 @@ mod tests {
                     func inner1(d) { 
                         let e = d + c; 
                         func inner2(f) { e + f; }; 
+
+                        inner2
                     }; 
+
+                    inner1
                 }; 
                 let new_adder_inner = new_adder_outer(1, 2); 
                 let adder = new_adder_inner(3); 
@@ -333,7 +341,11 @@ mod tests {
                 func new_adder_outer(b) { 
                     func inner1(c) { 
                         func inner2(d) { a + b + c + d }; 
+
+                        inner2
                     };  
+
+                    inner1
                 }; 
                 let new_adder_inner = new_adder_outer(2); 
                 let adder = new_adder_inner(3); 
@@ -349,6 +361,8 @@ mod tests {
                     func param1() { a; }; 
                     func param2() { b; }; 
                     func last_func() { param1() + param2(); }; 
+
+                    last_func
                 }; 
                 let closure = new_closure(9, 90); 
                 closure(); 
@@ -389,14 +403,16 @@ mod tests {
                 panic!("{}", format!("compiler error: {msg}").red());
             }
 
-            let mut vm = Vm::new(compile_result.expect("compiler failed!"));
+            let bytecode = compile_result.expect("compiler failed!");
+
+            let mut vm = Vm::new(bytecode);
 
             let result = vm.run();
             if let Err(msg) = result {
                 panic!("{}", format!("vm run error: {msg}").red());
             }
 
-            let last_popped = vm.pop();
+            let last_popped = vm.last_popped_stack_elem();
 
             match test_case.expected.type_id() {
                 id if id == TypeId::of::<BigDecimal>() => {
