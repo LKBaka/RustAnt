@@ -9,6 +9,8 @@ use crate::impl_object;
 use crate::object::object::{COMPILED_FUNCTION, IAntObject, Object, ObjectType};
 
 pub struct CompiledFunction {
+    #[cfg(feature = "debug")]
+    pub id: Uuid,
     pub instructions: Rc<RefCell<Instructions>>,
     pub local_count: usize,
     pub param_count: usize,
@@ -17,6 +19,8 @@ pub struct CompiledFunction {
 impl Clone for CompiledFunction {
     fn clone(&self) -> Self {
         Self {
+            #[cfg(feature = "debug")]
+            id: self.id,
             instructions: self.instructions.clone(),
             local_count: self.local_count,
             param_count: self.param_count,
@@ -38,10 +42,24 @@ impl IAntObject for CompiledFunction {
     }
 
     fn get_id(&self) -> Uuid {
-        uuid::Uuid::new_v4()
+        #[cfg(feature = "debug")]
+        return self.id;
+
+        #[cfg(not(feature = "debug"))]
+        Uuid::new_v4()
     }
 
     fn inspect(&self) -> String {
+        #[cfg(feature = "debug")]
+        return format!(
+            "<CompiledFunction id: {} locals_count: {} param_count: {} {}>",
+            self.id,
+            self.local_count,
+            self.param_count,
+            instruction_to_str(&self.instructions.borrow().clone())
+        );
+
+        #[cfg(not(feature = "debug"))]
         format!(
             "<CompiledFunction locals_count: {} param_count: {} {}>",
             self.local_count,
