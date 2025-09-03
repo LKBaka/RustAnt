@@ -15,9 +15,8 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let condition = match parser.parse_expression(Precedence::Lowest) {
         Some(expr) => expr,
         None => {
-            parser.errors.push(format!(
-                "missing condition. at file <{}>, line {}",
-                parser.cur_token.file, parser.cur_token.line
+            parser.push_err(format!(
+                "missing condition",
             ));
             return None;
         }
@@ -28,13 +27,16 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let consequence = match parse_block_statement(parser) {
         Some(block) => block,
         None => {
-            parser.errors.push(format!(
-                "missing if body. at file <{}>, line {}",
-                parser.cur_token.file, parser.cur_token.line
+            parser.push_err(format!(
+                "missing if body.",
             ));
             return None;
         }
     };
+
+    if !parser.expect_cur(TokenType::RBrace) {
+        return None;
+    }
 
     let mut else_if_expressions = vec![];
 
@@ -58,13 +60,16 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
         let else_block = match parse_block_statement(parser) {
             Some(block) => block,
             None => {
-                parser.errors.push(format!(
-                    "missing else body. at file <{}>, line {}",
-                    parser.cur_token.file, parser.cur_token.line
+                parser.push_err(format!(
+                    "missing else body.",
                 ));
                 return None;
             }
         };
+
+        if !parser.expect_cur(TokenType::RBrace) {
+            return None;
+        }
 
         return Some(Box::new(create_if_expression(
             token,

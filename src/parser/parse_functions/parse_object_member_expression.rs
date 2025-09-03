@@ -16,9 +16,8 @@ pub fn parse_object_member_expression(
 
     match right_expression {
         None => {
-            parser.errors.push(format!(
-                "missing expression. at file <{}>, line {}",
-                token.file, token.line
+            parser.push_err(format!(
+                "missing expression.",
             ));
             None
         }

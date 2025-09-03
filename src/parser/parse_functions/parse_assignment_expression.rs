@@ -22,9 +22,8 @@ pub fn parse_assignment_expression(
         )));
     }
 
-    parser.errors.push(format!(
-        "missing expression. at file <{}>, line {}",
-        token.file, token.line
+    parser.push_err(format!(
+        "missing expression.",
     ));
     None
 }

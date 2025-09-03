@@ -13,9 +13,8 @@ pub fn parse_return_expression(parser: &mut Parser) -> Option<Box<dyn Expression
     if let Some(it) = expr {
         Some(Box::new(create_return_expression(token, it)))
     } else {
-        parser.errors.push(format!(
-            "missing expression. at file <{}>, line {}",
-            token.file, token.line
+        parser.push_err(format!(
+            "missing expression.",
         ));
         None
     }

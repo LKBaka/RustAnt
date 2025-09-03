@@ -11,9 +11,8 @@ pub fn parse_test_print_expression(parser: &mut Parser) -> Option<Box<dyn Expres
     let to_print_expr = if let Some(it) = parser.parse_expression(Precedence::Lowest) {
         it
     } else {
-        parser.errors.push(format!(
-            "missing expression to print. at file <{}>, line {}",
-            parser.cur_token.file, parser.cur_token.line
+        parser.push_err(format!(
+            "missing expression to print.",
         ));
         return None;
     };

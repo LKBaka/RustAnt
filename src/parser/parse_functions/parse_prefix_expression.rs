@@ -14,8 +14,7 @@ pub fn parse_prefix_expression(parser: &mut Parser) -> Option<Box<dyn Expression
             Some(expr) => expr,
             None => {
                 parser
-                    .errors
-                    .push(format!("expected expression after '{}'", operator));
+                    .push_err(format!("expected expression after '{}'.", operator));
                 return None;
             }
         }

@@ -14,9 +14,8 @@ pub fn parse_index_expression(
     let index = if let Some(it) = parser.parse_expression(Precedence::Lowest) {
         it
     } else {
-        parser.errors.push(format!(
-            "missing index. at file <{}>, line {}",
-            parser.cur_token.file, parser.cur_token.line
+        parser.push_err(format!(
+            "missing index.",
         ));
 
         return None;

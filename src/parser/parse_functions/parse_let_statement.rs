@@ -37,9 +37,8 @@ pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
         return Some(Box::new(create_let_statement(token, ident, value)));
     }
 
-    parser.errors.push(format!(
-        "missing expression. at file <{}>, line {}",
-        token.file, token.line
+    parser.push_err(format!(
+        "missing expression.",
     ));
     None
 }

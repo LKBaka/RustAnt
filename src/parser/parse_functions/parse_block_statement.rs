@@ -1,7 +1,7 @@
 use crate::ast::ast::Statement;
 use crate::ast::statements::block_statement::create_block_statement;
 use crate::parser::parser::Parser;
-use crate::token::token_type::TokenType::{LBrace, RBrace};
+use crate::token::token_type::TokenType::{self, LBrace, RBrace};
 
 pub fn parse_block_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
     let token = parser.cur_token.clone();
@@ -14,7 +14,8 @@ pub fn parse_block_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
 
     let mut statements = vec![];
 
-    while !parser.cur_token_is(RBrace) {
+
+    while !parser.cur_token_is(RBrace) && !parser.cur_token_is(TokenType::Eof) {
         let statement = parser.parse_statement();
 
         statements.push(statement?);

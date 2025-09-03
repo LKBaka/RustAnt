@@ -17,9 +17,8 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
     // 条件
     let condition = parser.parse_expression(Precedence::Lowest);
     if let Option::None = condition {
-        parser.errors.push(format!(
-            "missing condition. at file <{}>, line {}",
-            parser.cur_token.file, parser.cur_token.line
+        parser.push_err(format!(
+            "missing condition",
         ));
 
         return None;
@@ -33,9 +32,8 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
 
     let block = parse_block_statement(parser);
     if block.is_none() {
-        parser.errors.push(format!(
-            "missing while body. at file <{}>, line {}",
-            parser.cur_token.file, parser.cur_token.line
+        parser.push_err(format!(
+            "missing while body.",
         ));
         return None;
     }

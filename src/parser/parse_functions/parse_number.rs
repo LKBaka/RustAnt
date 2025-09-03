@@ -12,8 +12,8 @@ pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
     let parse_result = BigDecimal::from_str(&parser.cur_token.value);
     if let Err(_) = parse_result {
-        parser.errors.push(format!(
-            "could not parse '{}' as integer",
+        parser.push_err(format!(
+            "could not parse '{}' as integer.",
             parser.cur_token.value.clone()
         ));
         return None;
@@ -36,8 +36,7 @@ pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
     if let Err(_) = parse_result {
         parser
-            .errors
-            .push(format!("could not parse '{}' as decimal", s));
+            .push_err(format!("could not parse '{}' as decimal.", s));
         return None;
     }
 

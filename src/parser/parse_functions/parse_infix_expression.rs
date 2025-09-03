@@ -22,10 +22,10 @@ pub fn parse_infix_expression(
 
     match right_expression {
         None => {
-            parser.errors.push(format!(
-                "missing expression. at file <{}>, line {}",
-                token.file, token.line
+            parser.push_err(format!(
+                "missing expression."
             ));
+
             None
         }
         Some(right_expression) => Some(Box::new(create_infix_expression(
