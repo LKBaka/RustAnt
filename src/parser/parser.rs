@@ -8,6 +8,7 @@ use crate::parser::parse_functions::parse_boolean::parse_boolean;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
 use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
 use crate::parser::parse_functions::parse_index_expression::parse_index_expression;
+use crate::parser::parse_functions::parse_none::parse_none;
 use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
 use crate::parser::parse_functions::parse_test_print_expression::parse_test_print_expression;
 use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expression;
@@ -36,7 +37,7 @@ type StmtParseFn = fn(&mut Parser) -> Option<Box<dyn Statement>>;
 
 pub struct Parser {
     tokens: Vec<Token>,
-    pub errors: Vec<String>,
+    errors: Vec<String>,
 
     pos: usize,
     next_pos: usize,
@@ -119,6 +120,9 @@ impl Parser {
         parser
             .prefix_parse_fn_map
             .insert(TokenType::Minus, parse_prefix_expression);
+        parser
+            .prefix_parse_fn_map
+            .insert(TokenType::None, parse_none);
         parser
             .prefix_parse_fn_map
             .insert(TokenType::TestPrint, parse_test_print_expression);
@@ -220,12 +224,19 @@ impl Parser {
         {
             left = self.prefix_parse_fn_map[&self.cur_token.token_type](self)?
         } else {
+            let token_str = if self.cur_token.token_type == TokenType::Illegal {
+                &self.cur_token.value
+            } else {
+                self.cur_token.token_type.to_string()
+            };
+
             self.errors.push(format!(
                 "no prefix parse function for {} found. at file <{}> line {}",
-                self.cur_token.token_type.to_string(),
+                token_str,
                 self.cur_token.file,
                 self.cur_token.line
             ));
+
             return None;
         }
 
@@ -367,6 +378,16 @@ impl Parser {
 
     pub fn contains_error(&self) -> bool {
         !self.errors.is_empty()
+    }
+
+    pub fn push_error(&mut self, msg: String, token: &Token) {
+        self.errors
+            .push(format!("{} at file <{}>, line {}", msg, token.file, token.line));
+    }
+
+    pub fn push_err(&mut self, msg: String) {
+        self.errors
+            .push(format!("{} at file <{}>, line {}", msg, self.cur_token.file, self.cur_token.line));
     }
 
     pub fn print_errors(&self) {
