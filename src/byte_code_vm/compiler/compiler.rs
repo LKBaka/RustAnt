@@ -11,14 +11,7 @@ use crate::{
     ast::{
         ast::{ExpressionStatement, Node, Program},
         expressions::{
-            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression,
-            boolean_literal::BooleanLiteral, call_expression::CallExpression,
-            double_literal::DoubleLiteral, function_expression::FunctionExpression,
-            identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression,
-            infix_expression::InfixExpression, integer_literal::IntegerLiteral,
-            prefix_expression::PrefixExpression, return_expression::ReturnExpression,
-            string_literal::StringLiteral, test_print_expression::TestPrintExpression,
-            tuple_expression::TupleExpression,
+            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
         },
         statements::{
             block_statement::BlockStatement, let_statement::LetStatement,
@@ -26,7 +19,7 @@ use crate::{
         },
     }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
@@ -272,6 +265,15 @@ impl Compiler {
                     } else {
                         OP_FALSE
                     },
+                    vec![],
+                );
+
+                Ok(())
+            }
+
+            id if id == struct_type_id!(NoneLiteral) => {
+                self.emit(
+                    OP_NONE,
                     vec![],
                 );
 
