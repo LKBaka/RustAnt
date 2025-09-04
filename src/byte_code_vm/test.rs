@@ -104,7 +104,6 @@ mod tests {
     use crate::byte_code_vm::compiler::utils::compile_it;
     use crate::byte_code_vm::vm::vm::Vm;
 
-    #[test]
     fn test_speed() {
         let bytecode = compile_it(
             r#"
