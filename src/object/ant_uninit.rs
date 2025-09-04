@@ -1,22 +1,22 @@
 use std::any::Any;
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
+use crate::object::id_counter::next_id;
 use crate::object::object::{IAntObject, ObjectType, UNINIT};
 
 #[derive(Clone)]
 pub struct AntUninit {
-    id: Uuid,
+    id: usize,
 }
 
 impl AntUninit {
     pub fn new() -> Object {
-        Object::AntUninit(Self { id: Uuid::new_v4() })
+        Object::AntUninit(Self { id: next_id() })
     }
 
     pub fn create() -> Self {
-        Self { id: Uuid::new_v4() }
+        Self { id: next_id() }
     }
 }
 
@@ -33,7 +33,7 @@ impl IAntObject for AntUninit {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 

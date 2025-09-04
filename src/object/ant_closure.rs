@@ -2,8 +2,6 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use uuid::Uuid;
-
 use crate::impl_object;
 use crate::obj_enum::object::Object;
 use crate::object::ant_compiled_function::CompiledFunction;
@@ -28,8 +26,8 @@ impl IAntObject for Closure {
         None
     }
 
-    fn get_id(&self) -> Uuid {
-        uuid::Uuid::new_v4()
+    fn get_id(&self) -> usize {
+        0x33550336
     }
 
     fn inspect(&self) -> String {

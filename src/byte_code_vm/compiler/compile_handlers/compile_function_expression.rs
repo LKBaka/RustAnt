@@ -1,3 +1,5 @@
+#[cfg(feature = "debug")]
+use crate::object::id_counter::next_id;
 use crate::{
     ast::{
         ast::Node,
@@ -71,7 +73,7 @@ pub fn compile_function_expression(
 
     let compiled_function = CompiledFunction {
         #[cfg(feature = "debug")]
-        id: uuid::Uuid::new_v4(),
+        id: next_id(),
         instructions: rc_ref_cell!(instructions),
         local_count,
         param_count,

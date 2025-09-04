@@ -1,20 +1,20 @@
 use std::any::Any;
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
+use crate::object::id_counter::next_id;
 use crate::object::object::{IAntObject, ObjectType, STRING};
 
 #[derive(Clone)]
 pub struct AntString {
-    id: Uuid,
+    id: usize,
     pub value: String,
 }
 
 impl AntString {
     pub fn new(s: String) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: next_id(),
             value: s,
         }
     }
@@ -33,7 +33,7 @@ impl IAntObject for AntString {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 

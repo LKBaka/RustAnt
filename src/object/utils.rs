@@ -1,10 +1,10 @@
 use bigdecimal::BigDecimal;
-use uuid::Uuid;
 
 use crate::constants::{ant_false, ant_true};
 
 use crate::obj_enum::object::Object;
 use crate::object::ant_error::AntError;
+use crate::object::id_counter::next_id;
 use crate::object::object::{IAntObject, ERROR};
 
 pub fn is_native_error(obj: &Object) -> bool {
@@ -31,7 +31,7 @@ pub fn is_truthy(obj: &Object) -> bool {
 
 pub fn create_error(message: String) -> Object {
     Object::AntError(AntError {
-        id: Uuid::new_v4(),
+        id: next_id(),
         error_name: "Error".to_string(),
         message,
     })
@@ -39,7 +39,7 @@ pub fn create_error(message: String) -> Object {
 
 pub fn create_error_with_name(error_name: &'static str, message: String) -> Object {
     Object::AntError(AntError {
-        id: Uuid::new_v4(),
+        id: next_id(),
         error_name: error_name.to_string(),
         message,
     })

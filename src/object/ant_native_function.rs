@@ -1,10 +1,10 @@
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
+use crate::object::id_counter::next_id;
 use crate::object::object::{IAntObject, NATIVE_FUNCTION, ObjectType};
 
 use super::type_hint::TypeHintMap;
@@ -13,7 +13,7 @@ pub type NativeFunction = fn(args: Vec<Rc<RefCell<Object>>>) -> Option<Object>;
 
 #[derive(Clone)]
 pub struct AntNativeFunction {
-    pub id: Uuid,
+    pub id: usize,
     pub type_hint_map: Option<TypeHintMap>,
     pub function: NativeFunction,
 }
@@ -31,7 +31,7 @@ impl IAntObject for AntNativeFunction {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 
@@ -64,7 +64,7 @@ pub fn create_ant_native_function(
     type_hint_map: Option<TypeHintMap>,
     function: NativeFunction,
 ) -> AntNativeFunction {
-    let id = Uuid::new_v4();
+    let id = next_id();
 
     AntNativeFunction {
         id,

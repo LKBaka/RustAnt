@@ -3,7 +3,6 @@ use enum_dispatch::enum_dispatch;
 use std::any::Any;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
@@ -33,7 +32,7 @@ pub trait IAntObject: DynClone + Sync + Send + Any + Debug + AsAnyMut {
     fn get_type(&self) -> ObjectType;
     fn get_value(&self) -> Box<dyn Any>;
     fn get_base(&self) -> Option<Object>;
-    fn get_id(&self) -> Uuid;
+    fn get_id(&self) -> usize;
     fn inspect(&self) -> String;
     fn equals(&self, other: &dyn IAntObject) -> bool;
     fn as_any(&self) -> &dyn Any;
@@ -55,16 +54,9 @@ impl Hash for dyn IAntObject {
     }
 }
 
+#[derive(Clone)]
 pub struct AntObject {
-    pub id: Uuid,
-}
-
-impl Clone for AntObject {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-        }
-    }
+    pub id: usize,
 }
 
 impl IAntObject for AntObject {
@@ -80,7 +72,7 @@ impl IAntObject for AntObject {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 

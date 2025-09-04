@@ -1,5 +1,4 @@
 use std::any::Any;
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
@@ -7,7 +6,7 @@ use crate::object::object::{IAntObject, ObjectType};
 
 #[derive(Clone)]
 pub struct AntClass {
-    pub id: Uuid,
+    pub id: usize,
     pub name: String,
     pub base: Option<Box<Object>>,
 }
@@ -25,7 +24,7 @@ impl IAntObject for AntClass {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 

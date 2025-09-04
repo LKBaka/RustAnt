@@ -1,5 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
+#[cfg(feature = "debug")]
+use crate::object::id_counter::next_id;
 use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
@@ -44,7 +46,7 @@ impl Vm {
 
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
-            id: uuid::Uuid::new_v4(),
+            id: next_id(),
             instructions: rc_ref_cell!(bytecode.instructions),
             local_count: 0,
             param_count: 0,
@@ -73,7 +75,7 @@ impl Vm {
     ) -> Self {
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
-            id: uuid::Uuid::new_v4(),
+            id: next_id(),
             instructions: rc_ref_cell!(bytecode.instructions),
             local_count: 0,
             param_count: 0,

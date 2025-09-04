@@ -1,17 +1,15 @@
 use bigdecimal::BigDecimal;
-use bigdecimal::ToPrimitive;
 use std::any::Any;
-use uuid::Uuid;
 
-use crate::byte_code_vm::compiler::constant_pool::CONSTANT_POOL_0_256;
 use crate::impl_object;
 use crate::obj_enum::object::Object;
 use crate::object::ant_double::AntDouble;
+use crate::object::id_counter::next_id;
 use crate::object::object::{IAntObject, INT, ObjectType};
 
 #[derive(Clone)]
 pub struct AntInt {
-    id: Uuid,
+    id: usize,
     pub value: BigDecimal,
 }
 
@@ -28,7 +26,7 @@ impl IAntObject for AntInt {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 
@@ -57,7 +55,7 @@ impl_object!(AntInt);
 impl From<i32> for AntInt {
     fn from(value: i32) -> Self {
         AntInt {
-            id: Uuid::new_v4(),
+            id: next_id(),
             value: BigDecimal::from(value),
         }
     }
@@ -66,7 +64,7 @@ impl From<i32> for AntInt {
 impl From<usize> for AntInt {
     fn from(value: usize) -> Self {
         AntInt {
-            id: Uuid::new_v4(),
+            id: next_id(),
             value: BigDecimal::from(value as u128),
         }
     }
@@ -75,7 +73,7 @@ impl From<usize> for AntInt {
 impl From<BigDecimal> for AntInt {
     fn from(value: BigDecimal) -> Self {
         AntInt {
-            id: Uuid::new_v4(),
+            id: next_id(),
             value,
         }
     }

@@ -1,5 +1,4 @@
 use std::any::Any;
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
@@ -7,7 +6,7 @@ use crate::object::object::{ERROR, IAntObject, ObjectType};
 
 #[derive(Clone)]
 pub struct AntError {
-    pub id: Uuid,
+    pub id: usize,
     pub error_name: String,
     pub message: String,
 }
@@ -25,7 +24,7 @@ impl IAntObject for AntError {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 

@@ -1,13 +1,13 @@
 use std::any::Any;
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
+use crate::object::id_counter::next_id;
 use crate::object::object::{ARRAY, IAntObject, ObjectType, STRING};
 
 #[derive(Clone)]
 pub struct AntArray {
-    id: Uuid,
+    id: usize,
     pub items: Vec<Object>,
 }
 
@@ -29,7 +29,7 @@ impl IAntObject for AntArray {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 
@@ -67,7 +67,7 @@ impl_object!(AntArray);
 impl From<Vec<Object>> for AntArray {
     fn from(items: Vec<Object>) -> Self {
         AntArray {
-            id: Uuid::new_v4(),
+            id: next_id(),
             items,
         }
     }

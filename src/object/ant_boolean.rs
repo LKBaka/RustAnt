@@ -1,20 +1,20 @@
 use std::any::Any;
-use uuid::Uuid;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
+use crate::object::id_counter::next_id;
 use crate::object::object::{BOOLEAN, IAntObject, ObjectType};
 
 #[derive(Clone)]
 pub struct AntBoolean {
-    id: Uuid,
+    id: usize,
     pub value: bool,
 }
 
 impl From<bool> for AntBoolean {
     fn from(value: bool) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: next_id(),
             value,
         }
     }
@@ -33,7 +33,7 @@ impl IAntObject for AntBoolean {
         None
     }
 
-    fn get_id(&self) -> Uuid {
+    fn get_id(&self) -> usize {
         self.id
     }
 
