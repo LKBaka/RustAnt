@@ -1,3 +1,4 @@
+pub mod id_counter;
 pub mod ant_array;
 pub mod ant_boolean;
 pub mod ant_class;

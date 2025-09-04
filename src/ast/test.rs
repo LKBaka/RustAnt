@@ -16,7 +16,7 @@ mod tests {
                     TokenType::Integer,
                     "91".to_string(),
                     "__test_print_nodes__".to_string(),
-                    -1,
+                    1, 1
                 ),
                 BigDecimal::from(91),
             )),
@@ -25,7 +25,7 @@ mod tests {
                     TokenType::Integer,
                     "78".to_string(),
                     "__test_print_nodes__".to_string(),
-                    -1,
+                    1, 1
                 ),
                 BigDecimal::from(78),
             )),

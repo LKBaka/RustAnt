@@ -20,25 +20,29 @@ fn test_print_tokens() {
             TokenType::Let,
             String::from("let"),
             "__test_print_tokens__".to_string(),
-            -91,
+            91,
+            91,
         ),
         Token::new(
             TokenType::Ident,
             String::from("a"),
             "__test_print_tokens__".to_string(),
-            -91,
+            91,
+            91,
         ),
         Token::new(
             TokenType::Assign,
             String::from("="),
             "__test_print_tokens__".to_string(),
-            -91,
+            91,
+            91,
         ),
         Token::new(
             TokenType::Integer,
             String::from("1"),
             "__test_print_tokens__".to_string(),
-            -91,
+            91,
+            91,
         ),
     ]);
 

@@ -1,9 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use colored::Colorize;
 
 use crate::{
-    ast::ast::Node, byte_code_vm::compiler::{
+    byte_code_vm::compiler::{
         compiler::{ByteCode, Compiler},
         symbol_table::symbol_table::SymbolTable,
     }, obj_enum::object::Object, parser::utils::parse
@@ -14,7 +13,13 @@ pub fn compile_it(code: String, file: String) -> Result<ByteCode, String> {
 
     if let Ok(it) = program {
         #[cfg(feature = "debug")]
-        println!("AST: {}", it.to_string().yellow());
+        {
+            use colored::Colorize;
+
+            use crate::ast::ast::Node;
+
+            println!("AST: {}", it.to_string().yellow());
+        }
 
         let mut compiler = Compiler::new();
 
@@ -39,7 +44,13 @@ pub fn compile_with_state(
 
     if let Ok(it) = program {
         #[cfg(feature = "debug")]
-        println!("AST: {}", it.to_string().yellow());
+        {
+            use colored::Colorize;
+
+            use crate::ast::ast::Node;
+
+            println!("AST: {}", it.to_string().yellow());
+        }
         
         let mut compiler = Compiler::with_state(symbol_table, constants);
 

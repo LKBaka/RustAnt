@@ -1,11 +1,10 @@
 use std::{cell::RefCell, rc::Rc};
 
-use colored::Colorize;
 
 use crate::{
     byte_code_vm::{
         compiler::{symbol_table::symbol_table::SymbolTable, utils::compile_with_state},
-        vm::{frame::fmt_frames, vm::Vm},
+        vm::vm::Vm,
     }, obj_enum::object::Object, object::utils::create_error_with_name
 };
 
@@ -21,6 +20,12 @@ pub fn run(
     constants: Rc<RefCell<Vec<Object>>>,
     globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 ) -> Result<Option<Object>, RunError> {
+    #[cfg(feature = "debug")]
+    use colored::Colorize;
+
+    #[cfg(feature = "debug")]
+    use crate::byte_code_vm::vm::frame::fmt_frames;
+
     let bytecode = {
         let compile_result = compile_with_state(code, file, symbol_table, constants);
 
