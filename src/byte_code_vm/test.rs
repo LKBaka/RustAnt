@@ -17,7 +17,8 @@ pub fn test_byte_code_rust_ant_main() {
 
     let file = "repl".to_string();
 
-    let uninit: Vec<Rc<RefCell<Object>>> = vec![rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()))];
+    let uninit: Vec<Rc<RefCell<Object>>> =
+        vec![rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()))];
 
     let symbol_table = rc_ref_cell!(SymbolTable::new());
     let constants = rc_ref_cell!(vec![]);
@@ -112,9 +113,11 @@ mod tests {
                 i = i + 1
                 sum = i + sum
             }
-            "#.into(), 
-            "__test_speed__".into()
-        ).unwrap();
+            "#
+            .into(),
+            "__test_speed__".into(),
+        )
+        .unwrap();
 
         let mut total: Duration = Default::default();
 
@@ -127,17 +130,21 @@ mod tests {
             total += start.elapsed()
         }
 
-        println!("{}", format!(
-            r#"
+        println!(
+            "{}",
+            format!(
+                r#"
 total seconds: {}, total millseconds: {}, total nanoseconds: {}
 average seconds: {}, average millseconds: {}, average nanoseconds: {}
             "#,
-            total.as_secs_f64(),
-            total.as_millis(),
-            total.as_nanos(),
-            total.as_secs_f64() / TEST_COUNT as f64,
-            BigDecimal::from(total.as_millis()) / TEST_COUNT as f64,
-            BigDecimal::from(total.as_nanos()) / TEST_COUNT as f64
-        ).green())
+                total.as_secs_f64(),
+                total.as_millis(),
+                total.as_nanos(),
+                total.as_secs_f64() / TEST_COUNT as f64,
+                BigDecimal::from(total.as_millis()) / TEST_COUNT as f64,
+                BigDecimal::from(total.as_nanos()) / TEST_COUNT as f64
+            )
+            .green()
+        )
     }
 }

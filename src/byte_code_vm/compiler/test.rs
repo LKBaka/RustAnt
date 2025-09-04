@@ -9,12 +9,20 @@ mod tests {
     use colored::Colorize;
 
     use crate::{
-        big_dec, byte_code_vm::{
+        big_dec,
+        byte_code_vm::{
             code::code::{
-                instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NONE, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE
+                Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE,
+                OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY,
+                OP_NONE, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE, instruction_to_str,
+                make,
             },
             compiler::compiler::Compiler,
-        }, convert_type_use_box, obj_enum::object::Object, object::{ant_int::AntInt, ant_string::AntString}, parser::utils::parse
+        },
+        convert_type_use_box,
+        obj_enum::object::Object,
+        object::{ant_int::AntInt, ant_string::AntString},
+        parser::utils::parse,
     };
 
     struct CompilerTestCase<T: Debug + Clone + 'static> {
@@ -94,7 +102,7 @@ mod tests {
                 "-1".into(),
                 vec![Box::new(big_dec!(1))],
                 vec![
-                    make(OP_CONSTANTS, &vec![]), 
+                    make(OP_CONSTANTS, &vec![]),
                     make(OP_MINUS, &vec![]),
                     make(OP_POP, &vec![]),
                 ],
@@ -268,27 +276,9 @@ mod tests {
             CompilerTestCase::<Box<BigDecimal>>::new(
                 "!true".into(),
                 vec![],
-                vec![make(OP_TRUE, &vec![]), make(OP_BANG, &vec![]), make(OP_POP, &vec![])],
-            ),
-        ];
-
-        run_compiler_tests(tests)
-    }
-
-    #[test]
-    fn test_none_literal() {
-        let tests: Vec<CompilerTestCase<()>> = vec![
-            CompilerTestCase::new(
-                "none; nOne; NONE; None".into(),
-                vec![],
                 vec![
-                    make(OP_NONE, &vec![]),
-                    make(OP_POP, &vec![]),
-                    make(OP_NONE, &vec![]),
-                    make(OP_POP, &vec![]),
-                    make(OP_NONE, &vec![]),
-                    make(OP_POP, &vec![]),
-                    make(OP_NONE, &vec![]),
+                    make(OP_TRUE, &vec![]),
+                    make(OP_BANG, &vec![]),
                     make(OP_POP, &vec![]),
                 ],
             ),
@@ -297,6 +287,25 @@ mod tests {
         run_compiler_tests(tests)
     }
 
+    #[test]
+    fn test_none_literal() {
+        let tests: Vec<CompilerTestCase<()>> = vec![CompilerTestCase::new(
+            "none; nOne; NONE; None".into(),
+            vec![],
+            vec![
+                make(OP_NONE, &vec![]),
+                make(OP_POP, &vec![]),
+                make(OP_NONE, &vec![]),
+                make(OP_POP, &vec![]),
+                make(OP_NONE, &vec![]),
+                make(OP_POP, &vec![]),
+                make(OP_NONE, &vec![]),
+                make(OP_POP, &vec![]),
+            ],
+        )];
+
+        run_compiler_tests(tests)
+    }
 
     #[test]
     fn test_global_let_statements() {
@@ -361,7 +370,7 @@ mod tests {
             CompilerTestCase::new(
                 "\"lava\"".into(),
                 vec![Box::new("lava".to_string())],
-                vec![make(OP_CONSTANTS, &vec![0u16]), make(OP_POP, &vec![]),],
+                vec![make(OP_CONSTANTS, &vec![0u16]), make(OP_POP, &vec![])],
             ),
             // 测试2: 字符串拼接
             CompilerTestCase::new(

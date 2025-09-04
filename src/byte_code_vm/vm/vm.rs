@@ -3,9 +3,13 @@ use std::{cell::RefCell, rc::Rc};
 #[cfg(feature = "debug")]
 use crate::object::id_counter::next_id;
 use crate::{
-    builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
+    builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX},
+    byte_code_vm::{
         code::code::{
-            read_uint16, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE,
+            OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP,
+            OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE,
+            OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, read_uint16,
         },
         compiler::compiler::ByteCode,
         constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJ},
@@ -19,17 +23,19 @@ use crate::{
             frame::Frame,
             function_utils::{self, push_closure},
         },
-    }, obj_enum::object::Object, object::{
+    },
+    obj_enum::object::Object,
+    object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
         object::{IAntObject, UNINIT},
         utils::is_truthy,
-    }, rc_ref_cell
+    },
+    rc_ref_cell,
 };
 
 pub const STACK_SIZE: u16 = 2048;
 pub const GLOBALS_SIZE: u16 = 65535;
-
 
 pub struct Vm {
     pub constants: Vec<Object>,
@@ -311,7 +317,7 @@ impl Vm {
 
                     if self.frame_index == 0 {
                         // 没栈帧可榨了 说明已经到了主栈帧 直接报错
-                        return Err(format!("cannot return outside function"))
+                        return Err(format!("cannot return outside function"));
                     }
 
                     self.sp = frame.borrow().base_pointer - 1;
@@ -332,9 +338,7 @@ impl Vm {
 
                     let index = frame.borrow().base_pointer + local_index as usize;
 
-                    self.stack[index] = self
-                        .pop()
-                        .expect("expected an object to set local");
+                    self.stack[index] = self.pop().expect("expected an object to set local");
                 }
 
                 OP_GET_LOCAL => {
@@ -370,13 +374,11 @@ impl Vm {
                     let mut frame_mut = frame.borrow_mut();
 
                     let condition = if let Some(cond) = self.pop() {
-                        cond
-                            .borrow()
-                            .clone()
+                        cond.borrow().clone()
                     } else {
                         return Err(String::from("expected an condition"));
                     };
-                        
+
                     if !is_truthy(&condition) {
                         frame_mut.ip = (jump_to as isize) - 1;
                         continue;
@@ -448,12 +450,10 @@ impl Vm {
                     let builtin_index = read_uint16(&instructions.borrow()[ip + 1..]);
                     self.current_frame().borrow_mut().ip += 2;
 
-                    if let Err(msg) = self.push(
-                        rc_ref_cell!(Object::AntNativeFunction(
-                            BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone()
-                        ))
-                    ) {
-                        return Err(format!("error push builtin function: {msg}"))
+                    if let Err(msg) = self.push(rc_ref_cell!(Object::AntNativeFunction(
+                        BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone()
+                    ))) {
+                        return Err(format!("error push builtin function: {msg}"));
                     }
                 }
 
@@ -501,8 +501,10 @@ impl Vm {
         }
 
         if self.sp >= self.stack.len() {
-            self.stack
-                .resize(self.sp + 1, rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone())));
+            self.stack.resize(
+                self.sp + 1,
+                rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone())),
+            );
         }
 
         self.stack[self.sp] = obj;
@@ -514,7 +516,9 @@ impl Vm {
 
     #[inline]
     pub fn pop(&mut self) -> Option<Rc<RefCell<Object>>> {
-        if self.sp == 0 { return None }
+        if self.sp == 0 {
+            return None;
+        }
 
         let result = self.stack.get(self.sp - 1)?;
 

@@ -11,15 +11,27 @@ use crate::{
     ast::{
         ast::{ExpressionStatement, Node, Program},
         expressions::{
-            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
+            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression,
+            boolean_literal::BooleanLiteral, call_expression::CallExpression,
+            double_literal::DoubleLiteral, function_expression::FunctionExpression,
+            identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression,
+            infix_expression::InfixExpression, integer_literal::IntegerLiteral,
+            none_literal::NoneLiteral, prefix_expression::PrefixExpression,
+            return_expression::ReturnExpression, string_literal::StringLiteral,
+            test_print_expression::TestPrintExpression, tuple_expression::TupleExpression,
         },
         statements::{
             block_statement::BlockStatement, let_statement::LetStatement,
             while_statement::WhileStatement,
         },
-    }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
+    },
+    big_dec,
+    builtin::builtin_map::BUILTIN_MAP_INDEX,
+    byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            Instructions, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN,
+            OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE,
+            OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, make,
         },
         compiler::{
             compile_handlers::{
@@ -33,7 +45,11 @@ use crate::{
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-    }, convert_type_to_owned, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, struct_type_id
+    },
+    convert_type_to_owned,
+    obj_enum::object::Object,
+    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString},
+    rc_ref_cell, struct_type_id,
 };
 
 #[derive(Debug, Clone)]
@@ -191,12 +207,13 @@ impl Compiler {
                 let expr_stmt = convert_type_to_owned!(ExpressionStatement, node);
 
                 if let Some(expr) = expr_stmt.expression {
-                    let is_func_expr = 
-                        (expr.as_ref() as &dyn Any).is::<FunctionExpression>();
+                    let is_func_expr = (expr.as_ref() as &dyn Any).is::<FunctionExpression>();
 
                     self.compile(expr)?;
 
-                    if is_func_expr {return Ok(())}
+                    if is_func_expr {
+                        return Ok(());
+                    }
                     self.emit(OP_POP, vec![]);
                 }
 
@@ -272,10 +289,7 @@ impl Compiler {
             }
 
             id if id == struct_type_id!(NoneLiteral) => {
-                self.emit(
-                    OP_NONE,
-                    vec![],
-                );
+                self.emit(OP_NONE, vec![]);
 
                 Ok(())
             }
@@ -400,12 +414,8 @@ impl Compiler {
 
             id if id == TypeId::of::<ReturnExpression>() => {
                 // 第一件事 检查作用域
-                if self.symbol_table
-                    .borrow()
-                    .outer
-                    .is_none() 
-                {
-                    return Err(format!("cannot return outside function"))
+                if self.symbol_table.borrow().outer.is_none() {
+                    return Err(format!("cannot return outside function"));
                 }
 
                 let return_expr = convert_type_to_owned!(ReturnExpression, node);

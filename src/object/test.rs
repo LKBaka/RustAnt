@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::{byte_code_vm::constants::UNINIT_OBJ, obj_enum::object::Object, object::object::IAntObject};
+    use crate::{
+        byte_code_vm::constants::UNINIT_OBJ, obj_enum::object::Object, object::object::IAntObject,
+    };
 
     fn test_object_inspect(obj: Object, expected_inspect: String) {
         let inspected = obj.inspect();

@@ -31,9 +31,7 @@ pub fn parse_class_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
         parser.next_token(); // 离开冒号
 
         if !parser.expect_cur(TokenType::Ident) {
-            parser.push_err(format!(
-                "missing parent class name",
-            ));
+            parser.push_err(format!("missing parent class name",));
             return None;
         }
 
@@ -53,9 +51,7 @@ pub fn parse_class_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
             let class_ident = if let Some(ident) = class_ident {
                 ident
             } else {
-                parser.push_err(format!(
-                    "missing class name.",
-                ));
+                parser.push_err(format!("missing class name.",));
 
                 return None;
             };

@@ -8,7 +8,7 @@ use crate::byte_code_vm::constants::UNINIT_OBJ;
 use crate::byte_code_vm::run::run;
 use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
 use crate::obj_enum::object::Object;
-use crate::object::object::{IAntObject, ERROR};
+use crate::object::object::{ERROR, IAntObject};
 use crate::rc_ref_cell;
 
 pub struct FileRunner {
@@ -31,7 +31,8 @@ impl FileRunner {
                 #[cfg(feature = "get_code_run_seconds")]
                 let start = Instant::now();
 
-                let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()));
+                let uninit: Rc<RefCell<Object>> =
+                    rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()));
 
                 let symbol_table = rc_ref_cell!(SymbolTable::new());
                 let constants = rc_ref_cell!(vec![]);

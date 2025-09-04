@@ -14,9 +14,7 @@ pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Box<dyn Expressio
     let condition = match parser.parse_expression(Precedence::Lowest) {
         Some(expr) => expr,
         None => {
-            parser.push_err(format!(
-                "missing condition.",
-            ));
+            parser.push_err(format!("missing condition.",));
             return None;
         }
     };
@@ -26,9 +24,7 @@ pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Box<dyn Expressio
     let block = match parse_block_statement(parser) {
         Some(block) => block,
         None => {
-            parser.push_err(format!(
-                "missing else if body",
-            ));
+            parser.push_err(format!("missing else if body",));
             return None;
         }
     };

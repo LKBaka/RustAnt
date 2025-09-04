@@ -4,7 +4,10 @@ use bigdecimal::Signed;
 use num_traits::ToPrimitive;
 
 use crate::{
-    big_dec, obj_enum::object::Object, object::object::{IAntObject, ARRAY, INT}, try_unwrap_ref
+    big_dec,
+    obj_enum::object::Object,
+    object::object::{ARRAY, IAntObject, INT},
+    try_unwrap_ref,
 };
 
 fn eval_set_index_array(
@@ -22,7 +25,6 @@ fn eval_set_index_array(
 
     match *target_borrow {
         Object::AntArray(ref mut arr) => {
-
             // index 检查
             if !index.is_integer() {
                 return Err(format!("unsupported array index: {}", index));

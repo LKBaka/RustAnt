@@ -14,7 +14,6 @@ pub fn parse_block_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
 
     let mut statements = vec![];
 
-
     while !parser.cur_token_is(RBrace) && !parser.cur_token_is(TokenType::Eof) {
         let statement = parser.parse_statement();
 

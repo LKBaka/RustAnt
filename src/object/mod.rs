@@ -1,4 +1,3 @@
-pub mod id_counter;
 pub mod ant_array;
 pub mod ant_boolean;
 pub mod ant_class;
@@ -11,6 +10,7 @@ pub mod ant_native_function;
 pub mod ant_none;
 pub mod ant_string;
 pub mod ant_uninit;
+pub mod id_counter;
 pub mod object;
 pub mod object_macro;
 mod test;
