@@ -9,9 +9,9 @@ fn test_lexer() {
     let file: &'static str = "__test_lexer__";
 
     let expected_tokens = vec![
-        Token::new(TokenType::Integer, "1".into(), file.into(), 1, 1),
-        Token::new(TokenType::Eq, "==".into(), file.into(), 1, 3),
-        Token::new(TokenType::Integer, "2".into(), file.into(), 1, 6),
+    Token::new(TokenType::Integer, "1".into(), file.into(), 1, 1),
+    Token::new(TokenType::Eq, "==".into(), file.into(), 1, 3),
+    Token::new(TokenType::Integer, "2".into(), file.into(), 1, 6),
     ];
 
     let code = "1 == 2";
@@ -36,10 +36,10 @@ fn test_lexer_2() {
     let file: &'static str = "__test_lexer_2__";
 
     let expected_tokens = vec![
-        Token::new(TokenType::Class, "class".into(), file.into(), 1, 1),
-        Token::new(TokenType::Ident, "a".into(), file.into(), 1, 7),
-        Token::new(TokenType::LBrace, "{".into(), file.into(), 1, 9),
-        Token::new(TokenType::RBrace, "}".into(), file.into(), 1, 10),
+    Token::new(TokenType::Class, "class".into(), file.into(), 1, 1),
+    Token::new(TokenType::Ident, "a".into(), file.into(), 1, 7),
+    Token::new(TokenType::LBrace, "{".into(), file.into(), 1, 9),
+    Token::new(TokenType::RBrace, "}".into(), file.into(), 1, 10),
     ];
 
     let code = "class a {}";
@@ -64,11 +64,11 @@ fn test_lexer_3() {
     let file: &'static str = "__test_lexer_3__";
 
     let expected_tokens = vec![
-        Token::new(TokenType::Ident, "Main".into(), file.into(), 1, 1),
-        Token::new(TokenType::GetClassMember, "::".into(), file.into(), 1, 5),
-        Token::new(TokenType::Ident, "run".into(), file.into(), 1, 7),
-        Token::new(TokenType::LParen, "(".into(), file.into(), 1, 10),
-        Token::new(TokenType::RParen, ")".into(), file.into(), 1, 11),
+    Token::new(TokenType::Ident, "Main".into(), file.into(), 1, 1),
+    Token::new(TokenType::GetClassMember, "::".into(), file.into(), 1, 5),
+    Token::new(TokenType::Ident, "run".into(), file.into(), 1, 7),
+    Token::new(TokenType::LParen, "(".into(), file.into(), 1, 10),
+    Token::new(TokenType::RParen, ")".into(), file.into(), 1, 11),
     ];
 
     let code = "Main::run()";

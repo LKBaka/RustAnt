@@ -2,7 +2,7 @@ use bigdecimal::BigDecimal;
 
 use crate::{
     byte_code_vm::{
-        code::code::{OP_ADD, OP_DIVIDE, OP_EQ, OP_GT, OP_MULTIPLY, OP_NOTEQ, OP_SUBTRACT, OpCode},
+        code::code::{OpCode, OP_ADD, OP_DIVIDE, OP_EQ, OP_GT, OP_MULTIPLY, OP_NOTEQ, OP_SUBTRACT},
         utils::native_boolean_to_object,
     },
     obj_enum::object::Object,
@@ -12,73 +12,35 @@ use crate::{
 // 保留原本注释与语义：对多种数值/字符串类型做互操作
 fn add_native(left: Object, right: Object) -> Result<Object, String> {
     match (left, right) {
-        (Object::AntInt(l), Object::AntInt(r)) => {
-            Ok(Object::AntInt(AntInt::from(&l.value + &r.value)))
-        }
-        (Object::AntDouble(l), Object::AntDouble(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value)))
-        }
-        (Object::AntInt(l), Object::AntDouble(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value)))
-        }
-        (Object::AntDouble(l), Object::AntInt(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value)))
-        }
-        (Object::AntString(l), Object::AntString(r)) => {
-            Ok(Object::AntString(AntString::new(l.value + &r.value)))
-        }
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value + &r.value))),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
+        (Object::AntString(l), Object::AntString(r)) => Ok(Object::AntString(AntString::new(l.value + &r.value))),
 
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
 }
 
 fn subtract_native(left: Object, right: Object) -> Result<Object, String> {
     match (left, right) {
-        (Object::AntInt(l), Object::AntInt(r)) => {
-            Ok(Object::AntInt(AntInt::from(&l.value - &r.value)))
-        }
-        (Object::AntDouble(l), Object::AntDouble(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value)))
-        }
-        (Object::AntInt(l), Object::AntDouble(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value)))
-        }
-        (Object::AntDouble(l), Object::AntInt(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value)))
-        }
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value - &r.value))),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value))),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value))),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value))),
 
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
 }
 
 fn multiply_native(left: Object, right: Object) -> Result<Object, String> {
     match (left, right) {
-        (Object::AntInt(l), Object::AntInt(r)) => {
-            Ok(Object::AntInt(AntInt::from(&l.value * &r.value)))
-        }
-        (Object::AntDouble(l), Object::AntDouble(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value)))
-        }
-        (Object::AntInt(l), Object::AntDouble(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value)))
-        }
-        (Object::AntDouble(l), Object::AntInt(r)) => {
-            Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value)))
-        }
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value * &r.value))),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value))),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value))),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value))),
 
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
 }
 
@@ -128,58 +90,30 @@ fn divide_native(left: Object, right: Object) -> Result<Object, String> {
             Ok(Object::AntDouble(AntDouble::from(result)))
         }
 
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
 }
 
 fn gt_native(left: Object, right: Object) -> Result<Object, String> {
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
-        (Object::AntDouble(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value > &r.value))
-        }
-        (Object::AntInt(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value > &r.value))
-        }
-        (Object::AntDouble(l), Object::AntInt(r)) => {
-            Ok(native_boolean_to_object(&l.value > &r.value))
-        }
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
 
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
 }
 
 fn eq_native(left: Object, right: Object) -> Result<Object, String> {
     match (left, right) {
-        (Object::AntInt(l), Object::AntInt(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntDouble(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntInt(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntDouble(l), Object::AntInt(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntBoolean(l), Object::AntBoolean(r)) => {
-            Ok(native_boolean_to_object(l.value == r.value))
-        }
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntDouble(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntInt(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntDouble(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
+        (Object::AntBoolean(l), Object::AntBoolean(r)) => Ok(native_boolean_to_object(l.value == r.value)),
 
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
+        (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
 }
 

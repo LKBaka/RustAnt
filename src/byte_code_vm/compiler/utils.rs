@@ -1,12 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
+
 use crate::{
     byte_code_vm::compiler::{
         compiler::{ByteCode, Compiler},
         symbol_table::symbol_table::SymbolTable,
-    },
-    obj_enum::object::Object,
-    parser::utils::parse,
+    }, obj_enum::object::Object, parser::utils::parse
 };
 
 pub fn compile_it(code: String, file: String) -> Result<ByteCode, String> {
@@ -52,7 +51,7 @@ pub fn compile_with_state(
 
             println!("AST: {}", it.to_string().yellow());
         }
-
+        
         let mut compiler = Compiler::with_state(symbol_table, constants);
 
         let result = compiler.start_compile(it);

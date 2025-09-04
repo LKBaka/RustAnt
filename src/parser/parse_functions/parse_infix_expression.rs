@@ -22,7 +22,9 @@ pub fn parse_infix_expression(
 
     match right_expression {
         None => {
-            parser.push_err(format!("missing expression."));
+            parser.push_err(format!(
+                "missing expression."
+            ));
 
             None
         }

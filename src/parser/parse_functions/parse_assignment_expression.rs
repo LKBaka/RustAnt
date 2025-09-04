@@ -22,6 +22,8 @@ pub fn parse_assignment_expression(
         )));
     }
 
-    parser.push_err(format!("missing expression.",));
+    parser.push_err(format!(
+        "missing expression.",
+    ));
     None
 }

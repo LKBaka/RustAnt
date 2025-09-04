@@ -107,7 +107,11 @@ impl SymbolTable {
     }
 
     pub fn define_function_name(&mut self, func_name: &str) -> Symbol {
-        let symbol = Symbol::new(func_name.into(), SymbolScope::Function, 0);
+        let symbol = Symbol::new(
+            func_name.into(),
+            SymbolScope::Function,
+            0,
+        );
 
         self.store.insert(func_name.into(), symbol.clone());
 
@@ -115,7 +119,11 @@ impl SymbolTable {
     }
 
     pub fn define_builtin(&mut self, index: usize, name: &str) -> Symbol {
-        let symbol = Symbol::new(name.into(), SymbolScope::Builtin, index);
+        let symbol = Symbol::new(
+            name.into(),
+            SymbolScope::Builtin,
+            index,
+        );
 
         self.store.insert(name.into(), symbol.clone());
 

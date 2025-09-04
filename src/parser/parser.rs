@@ -234,7 +234,10 @@ impl Parser {
 
             self.errors.push(format!(
                 "no prefix parse function for {} found. at file <{}> line {}, column {}",
-                token_str, self.cur_token.file, self.cur_token.line, self.cur_token.column
+                token_str,
+                self.cur_token.file,
+                self.cur_token.line,
+                self.cur_token.column
             ));
 
             return None;
@@ -333,19 +336,19 @@ impl Parser {
                 self.tokens[self.next_pos].clone()
             } else {
                 Token::eof(
-                    self.cur_token.file.clone(),
+                    self.cur_token.file.clone(), 
                     self.cur_token.line,
                     self.cur_token.column,
                 )
             };
         } else {
             self.cur_token = Token::eof(
-                self.cur_token.file.clone(),
+                self.cur_token.file.clone(), 
                 self.cur_token.line,
                 self.cur_token.column,
             );
             self.peek_token = Token::eof(
-                self.peek_token.file.clone(),
+                self.peek_token.file.clone(), 
                 self.peek_token.line,
                 self.peek_token.column,
             );
@@ -396,17 +399,16 @@ impl Parser {
     }
 
     pub fn push_error(&mut self, msg: String, token: &Token) {
-        self.errors.push(format!(
-            "{} at file <{}>, line {}, column {}",
-            msg, token.file, token.line, token.column
-        ));
+        self.errors
+            .push(format!("{} at file <{}>, line {}, column {}", msg, token.file, token.line, token.column));
     }
 
     pub fn push_err(&mut self, msg: String) {
-        self.errors.push(format!(
-            "{} at file <{}>, line {}, column {}",
-            msg, self.cur_token.file, self.cur_token.line, self.cur_token.column
-        ));
+        self.errors
+            .push(format!(
+                "{} at file <{}>, line {}, column {}", 
+                msg, self.cur_token.file, self.cur_token.line, self.cur_token.column
+            ));
     }
 
     pub fn print_errors(&self) {

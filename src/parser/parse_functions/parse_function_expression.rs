@@ -50,7 +50,9 @@ pub fn parse_function_expression(parser: &mut Parser) -> Option<Box<dyn Expressi
             )))
         }
         None => {
-            parser.push_err(format!("missing function body.",));
+            parser.push_err(format!(
+                "missing function body.",
+            ));
             None
         }
     }

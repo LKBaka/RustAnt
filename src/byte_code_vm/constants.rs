@@ -1,9 +1,6 @@
 use once_cell::sync::Lazy;
 
-use crate::{
-    obj_enum::object::Object,
-    object::{ant_boolean::AntBoolean, ant_none::AntNone, ant_uninit::AntUninit},
-};
+use crate::{obj_enum::object::Object, object::{ant_boolean::AntBoolean, ant_none::AntNone, ant_uninit::AntUninit}};
 
 pub static TRUE: Lazy<AntBoolean> = Lazy::new(|| AntBoolean::from(true));
 pub static FALSE: Lazy<AntBoolean> = Lazy::new(|| AntBoolean::from(false));

@@ -1,23 +1,19 @@
 use bigdecimal::BigDecimal;
 
 use crate::{
-    byte_code_vm::{
-        code::code::{OP_BANG, OP_MINUS, OpCode},
-        utils::native_boolean_to_object,
-    },
-    obj_enum::object::Object,
-    object::{ant_double::AntDouble, ant_int::AntInt},
+    byte_code_vm::{code::code::{OpCode, OP_BANG, OP_MINUS}, utils::native_boolean_to_object}, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt}
 };
 
 pub fn bang(right: Object) -> Result<Object, String> {
     match right {
         Object::AntBoolean(right) => Ok(native_boolean_to_object(!right.value)),
         Object::AntInt(right) => Ok(native_boolean_to_object(right.value == BigDecimal::from(0))),
-        Object::AntDouble(right) => {
-            Ok(native_boolean_to_object(right.value == BigDecimal::from(0)))
-        }
+        Object::AntDouble(right) => Ok(native_boolean_to_object(right.value == BigDecimal::from(0))),
 
-        _ => Err(format!("unimplemented for type: {:?}", right)),
+        _ => Err(format!(
+            "unimplemented for type: {:?}",
+            right
+        ))
     }
 }
 
@@ -27,7 +23,10 @@ pub fn minus(right: Object) -> Result<Object, String> {
         Object::AntInt(right) => Ok(Object::AntInt(AntInt::from(-&right.value))),
         Object::AntDouble(right) => Ok(Object::AntDouble(AntDouble::from(-&right.value))),
 
-        _ => Err(format!("unimplemented for type: {:?}", right)),
+        _ => Err(format!(
+            "unimplemented for type: {:?}",
+            right
+        ))
     }
 }
 

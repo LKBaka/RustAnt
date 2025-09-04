@@ -4,15 +4,7 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJ},
         vm::{frame::Frame, vm::Vm},
-    },
-    obj_enum::object::Object,
-    object::{
-        ant_closure::Closure,
-        ant_compiled_function::CompiledFunction,
-        ant_native_function::AntNativeFunction,
-        object::{CLOSURE, IAntObject, NATIVE_FUNCTION},
-    },
-    rc_ref_cell,
+    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_compiled_function::CompiledFunction, ant_native_function::AntNativeFunction, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
@@ -23,15 +15,16 @@ pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
     } else if calling_obj.borrow().get_type() == NATIVE_FUNCTION {
         call_native(vm, calling_obj.clone(), arg_count)
     } else {
-        return Err(format!(
-            "calling non-function. obj: {:?}",
-            calling_obj.borrow()
-        ));
+        return Err(format!("calling non-function. obj: {:?}", calling_obj.borrow()))
     }
 }
 
 pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
-    let calling_obj = if let Some(it) = obj.borrow().as_any().downcast_ref::<AntNativeFunction>() {
+    let calling_obj = if let Some(it) = obj
+        .borrow()
+        .as_any()
+        .downcast_ref::<AntNativeFunction>()
+    {
         it.clone()
     } else {
         return Err(format!("calling non-native-function"));
@@ -47,7 +40,7 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
     // 将返回值放到栈顶（作为函数调用表达式的值）
     if let Some(it) = result {
         if let Err(msg) = vm.push(rc_ref_cell!(it)) {
-            return Err(format!("error push native function result: {msg}"));
+            return Err(format!("error push native function result: {msg}"))
         }
 
         return Ok(());
@@ -60,12 +53,12 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
     Ok(())
 }
 
-pub fn call_function(
-    vm: &mut Vm,
-    obj: Rc<RefCell<Object>>,
-    arg_count: usize,
-) -> Result<(), String> {
-    let calling_obj = if let Some(it) = obj.borrow().as_any().downcast_ref::<Closure>() {
+pub fn call_function(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
+    let calling_obj = if let Some(it) = obj
+        .borrow()
+        .as_any()
+        .downcast_ref::<Closure>()
+    {
         it.clone()
     } else {
         return Err(format!("calling non-function"));
@@ -97,7 +90,10 @@ pub fn call_function(
 pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<(), String> {
     let constant = &vm.constants[const_index as usize];
 
-    let func = if let Some(it) = constant.as_any().downcast_ref::<CompiledFunction>() {
+    let func = if let Some(it) = constant
+        .as_any()
+        .downcast_ref::<CompiledFunction>() 
+    {
         it
     } else {
         return Err(format!("not a function: {:?}", constant));

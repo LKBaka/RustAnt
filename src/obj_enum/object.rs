@@ -1,5 +1,5 @@
-use enum_dispatch::enum_dispatch;
 use std::any::Any;
+use enum_dispatch::enum_dispatch;
 
 use crate::object::ant_array::AntArray;
 use crate::object::ant_boolean::AntBoolean;
@@ -14,8 +14,9 @@ use crate::object::ant_none::AntNone;
 use crate::object::ant_string::AntString;
 use crate::object::ant_uninit::AntUninit;
 use crate::object::object::AsAnyMut;
-use crate::object::object::IAntObject;
 use crate::object::object::ObjectType;
+use crate::object::object::IAntObject;
+
 
 #[enum_dispatch(IAntObject)]
 #[derive(Debug, Clone)]
@@ -31,7 +32,7 @@ pub enum Object {
     AntNativeFunction,
     AntNone,
     AntString,
-    AntUninit,
+    AntUninit
 }
 
 impl AsAnyMut for Object {

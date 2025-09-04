@@ -2,14 +2,7 @@ use num_traits::Signed;
 use num_traits::cast::ToPrimitive;
 
 use crate::{
-    big_dec,
-    obj_enum::object::Object,
-    object::{
-        ant_array::AntArray,
-        ant_int::AntInt,
-        object::{IAntObject, INT},
-    },
-    try_unwrap,
+    big_dec, obj_enum::object::Object, object::{ant_array::AntArray, ant_int::AntInt, object::{IAntObject, INT}}, try_unwrap
 };
 
 fn eval_array_index_expression(arr: &AntArray, index: &AntInt) -> Result<Object, String> {
@@ -45,14 +38,17 @@ pub fn eval_index_expression(obj: Object, index: Object) -> Result<Object, Strin
 
             let i = try_unwrap!(index, Object::AntInt(idx));
             let index = if i.is_none() {
-                return Err(format!("list indices must be {INT}, not {}", index_type));
+                return Err(format!(
+                    "list indices must be {INT}, not {}",
+                    index_type
+                ))
             } else {
                 i.unwrap()
             };
-
+                
             eval_array_index_expression(&arr, &index)
         }
 
-        _ => Err(format!("object {:?} is not a subscriptable", obj)),
+        _ => Err(format!("object {:?} is not a subscriptable", obj))
     }
 }

@@ -5,7 +5,7 @@ use crate::constants::{ant_false, ant_true};
 use crate::obj_enum::object::Object;
 use crate::object::ant_error::AntError;
 use crate::object::id_counter::next_id;
-use crate::object::object::{ERROR, IAntObject};
+use crate::object::object::{IAntObject, ERROR};
 
 pub fn is_native_error(obj: &Object) -> bool {
     obj.get_type() == ERROR
@@ -102,7 +102,7 @@ macro_rules! big_dec {
 macro_rules! big_dec_from_str {
     ($value:expr) => {{
         use std::str::FromStr;
-
+        
         bigdecimal::BigDecimal::from_str(stringify!($value)).unwrap()
     }};
 }

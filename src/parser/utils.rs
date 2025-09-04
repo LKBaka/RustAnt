@@ -1,3 +1,4 @@
+
 use crate::ast::ast::Program;
 
 pub fn parse(code: String, file: String) -> Result<Program, ()> {

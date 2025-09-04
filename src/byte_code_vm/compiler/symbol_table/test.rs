@@ -282,7 +282,9 @@ mod test {
         // 遍历测试用例
         for expected_symbol in test_cases {
             match second_local.resolve(&expected_symbol.name) {
-                Some(actual_symbol) => assert_eq(&expected_symbol, &actual_symbol, || {
+                Some(actual_symbol) => assert_eq(
+                    &expected_symbol, &actual_symbol,
+                    || {
                     println!(
                         "{}",
                         format!(
