@@ -16,9 +16,7 @@ pub fn parse_class_member_expression(
 
     match right_expression {
         None => {
-            parser.push_err(format!(
-                "missing expression.",
-            ));
+            parser.push_err(format!("missing expression.",));
             None
         }
         Some(right_expression) => Some(Box::new(create_class_member_expression(

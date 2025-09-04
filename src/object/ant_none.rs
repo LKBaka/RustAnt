@@ -12,9 +12,7 @@ pub struct AntNone {
 
 impl AntNone {
     pub fn new() -> Object {
-        Object::AntNone(Self {
-            id: next_id(),
-        })
+        Object::AntNone(Self { id: next_id() })
     }
 }
 

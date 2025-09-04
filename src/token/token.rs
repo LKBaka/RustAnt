@@ -13,7 +13,13 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, value: String, file: String, line: usize, column: usize) -> Token {
+    pub fn new(
+        token_type: TokenType,
+        value: String,
+        file: String,
+        line: usize,
+        column: usize,
+    ) -> Token {
         Token {
             token_type,
             value,

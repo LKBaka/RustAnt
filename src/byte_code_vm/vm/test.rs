@@ -10,10 +10,15 @@ mod tests {
     use colored::Colorize;
 
     use crate::{
-        big_dec, big_dec_from_str, byte_code_vm::{compiler::utils::compile_it, vm::vm::Vm}, convert_type_use_box, obj_enum::object::Object, object::{
+        big_dec, big_dec_from_str,
+        byte_code_vm::{compiler::utils::compile_it, vm::vm::Vm},
+        convert_type_use_box,
+        obj_enum::object::Object,
+        object::{
             ant_array::AntArray,
-            object::{IAntObject, DOUBLE, INT},
-        }, try_unwrap
+            object::{DOUBLE, IAntObject, INT},
+        },
+        try_unwrap,
     };
 
     struct VmTestCase<T: Debug + Clone + 'static> {
@@ -88,9 +93,7 @@ mod tests {
 
     #[test]
     fn test_none_literal() {
-        let tests = vec![
-            VmTestCase::<()>::new("none".into(), ()),
-        ];
+        let tests = vec![VmTestCase::<()>::new("none".into(), ())];
 
         run_vm_tests(tests);
     }
@@ -153,7 +156,10 @@ mod tests {
             VmTestCase::<BigDecimal>::new("[0.1, -0.2, 0.3][-1]".into(), big_dec_from_str!(0.3)),
             VmTestCase::<BigDecimal>::new("[-42][-1]".into(), big_dec!(-42)),
             VmTestCase::<BigDecimal>::new("[-1, 2, -3, 4, -5][-4]".into(), big_dec!(2)),
-            VmTestCase::<BigDecimal>::new("[1.23, -4.56, 7.89][-2]".into(), big_dec_from_str!(-4.56)),
+            VmTestCase::<BigDecimal>::new(
+                "[1.23, -4.56, 7.89][-2]".into(),
+                big_dec_from_str!(-4.56),
+            ),
             VmTestCase::<BigDecimal>::new("[-1000, 2000, -3000][-1]".into(), big_dec!(-3000)),
             VmTestCase::<BigDecimal>::new("[[1, 1, 1]][0][0]".into(), big_dec!(1)),
             VmTestCase::<BigDecimal>::new("[[1, 4, 7]][-1][-1]".into(), big_dec!(7)),
@@ -398,8 +404,7 @@ mod tests {
 
     fn run_vm_tests<T: Debug + Clone>(tests: Vec<VmTestCase<T>>) {
         for test_case in tests {
-            let compile_result =
-                compile_it(test_case.input.clone(), "__run_vm_tests__".into());
+            let compile_result = compile_it(test_case.input.clone(), "__run_vm_tests__".into());
 
             if let Err(msg) = compile_result {
                 panic!("{}", format!("compiler error: {msg}").red());
@@ -551,8 +556,7 @@ mod tests {
     }
 
     fn test_string_object(expected: String, actual: &Object) -> Result<(), String> {
-        let str_obj = try_unwrap!(actual, Object::AntString(_))
-            .expect("expected an string");
+        let str_obj = try_unwrap!(actual, Object::AntString(_)).expect("expected an string");
 
         if str_obj.value != expected {
             Err(format!(
@@ -568,17 +572,14 @@ mod tests {
         let o = try_unwrap!(actual, Object::AntNone(_));
 
         if o.is_none() {
-            Err(format!(
-                "object is not nothing!",
-            ))
+            Err(format!("object is not nothing!",))
         } else {
             Ok(())
         }
     }
 
     fn test_boolean_object(expected: bool, actual: &Object) -> Result<(), String> {
-        let bool_obj = try_unwrap!(actual, Object::AntBoolean(_))
-            .expect("expected an boolean");
+        let bool_obj = try_unwrap!(actual, Object::AntBoolean(_)).expect("expected an boolean");
 
         if bool_obj.value != expected {
             Err(format!(
@@ -591,8 +592,7 @@ mod tests {
     }
 
     fn test_integer_object(expected: BigDecimal, actual: &Object) -> Result<(), String> {
-        let int_obj = try_unwrap!(actual, Object::AntInt(_))
-            .expect("expected an integer");
+        let int_obj = try_unwrap!(actual, Object::AntInt(_)).expect("expected an integer");
 
         if int_obj.value != expected {
             Err(format!(
@@ -605,8 +605,7 @@ mod tests {
     }
 
     fn test_double_object(expected: BigDecimal, actual: &Object) -> Result<(), String> {
-        let double_obj = try_unwrap!(actual, Object::AntDouble(_))
-            .expect("expected an doubke");
+        let double_obj = try_unwrap!(actual, Object::AntDouble(_)).expect("expected an doubke");
 
         if double_obj.value != expected {
             Err(format!(
