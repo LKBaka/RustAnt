@@ -61,13 +61,15 @@ impl Parser {
                 Nonsense,
                 NULL_CHAR.to_string(),
                 "<uninit_parser>".to_string(),
-                -1,
+                0,
+                0,
             ),
             peek_token: Token::new(
                 Nonsense,
                 NULL_CHAR.to_string(),
                 "<uninit_parser>".to_string(),
-                -1,
+                0,
+                0,
             ),
             prefix_parse_fn_map: HashMap::with_capacity(12),
             infix_parse_fn_map: HashMap::with_capacity(12),
@@ -231,10 +233,11 @@ impl Parser {
             };
 
             self.errors.push(format!(
-                "no prefix parse function for {} found. at file <{}> line {}",
+                "no prefix parse function for {} found. at file <{}> line {}, column {}",
                 token_str,
                 self.cur_token.file,
-                self.cur_token.line
+                self.cur_token.line,
+                self.cur_token.column
             ));
 
             return None;
@@ -247,10 +250,11 @@ impl Parser {
             match infix_parse_fn.cloned() {
                 None => {
                     self.errors.push(format!(
-                        "no infix parse function for {} found. at file <{}> line {}",
+                        "no infix parse function for {} found. at file <{}> line {}, column {}",
                         self.cur_token.token_type.to_string(),
                         self.cur_token.file,
-                        self.cur_token.line
+                        self.cur_token.line,
+                        self.cur_token.column
                     ));
 
                     return None;
@@ -299,7 +303,8 @@ impl Parser {
                     Nonsense,
                     NULL_CHAR.to_string(),
                     "<uninit_parser>".to_string(),
-                    -1,
+                    0,
+                    0,
                 )
             },
             statements: vec![],
@@ -330,12 +335,23 @@ impl Parser {
             self.peek_token = if self.next_pos < self.tokens.len() {
                 self.tokens[self.next_pos].clone()
             } else {
-                Token::eof(self.cur_token.file.clone(), self.cur_token.line.clone())
+                Token::eof(
+                    self.cur_token.file.clone(), 
+                    self.cur_token.line,
+                    self.cur_token.column,
+                )
             };
         } else {
-            self.cur_token = Token::eof(self.cur_token.file.clone(), self.cur_token.line.clone());
-            self.peek_token =
-                Token::eof(self.peek_token.file.clone(), self.peek_token.line.clone());
+            self.cur_token = Token::eof(
+                self.cur_token.file.clone(), 
+                self.cur_token.line,
+                self.cur_token.column,
+            );
+            self.peek_token = Token::eof(
+                self.peek_token.file.clone(), 
+                self.peek_token.line,
+                self.peek_token.column,
+            );
         }
     }
 
@@ -350,10 +366,11 @@ impl Parser {
     pub fn expect_peek(&mut self, token_type: TokenType) -> bool {
         if self.peek_token.token_type != token_type {
             self.errors.push(format!(
-                "missing {}. at file <{}>, line {}",
+                "missing {}. at file <{}>, line {}, column {}",
                 token_type.to_string(),
                 self.cur_token.file,
-                self.cur_token.line
+                self.cur_token.line,
+                self.cur_token.column
             ));
             return false;
         }
@@ -364,10 +381,11 @@ impl Parser {
     pub fn expect_cur(&mut self, token_type: TokenType) -> bool {
         if self.cur_token.token_type != token_type {
             self.errors.push(format!(
-                "missing {}. at file <{}>, line {}",
+                "missing {}. at file <{}>, line {}, column {}",
                 token_type.to_string(),
                 self.cur_token.file,
-                self.cur_token.line
+                self.cur_token.line,
+                self.cur_token.column
             ));
 
             return false;
@@ -382,12 +400,15 @@ impl Parser {
 
     pub fn push_error(&mut self, msg: String, token: &Token) {
         self.errors
-            .push(format!("{} at file <{}>, line {}", msg, token.file, token.line));
+            .push(format!("{} at file <{}>, line {}, column {}", msg, token.file, token.line, token.column));
     }
 
     pub fn push_err(&mut self, msg: String) {
         self.errors
-            .push(format!("{} at file <{}>, line {}", msg, self.cur_token.file, self.cur_token.line));
+            .push(format!(
+                "{} at file <{}>, line {}, column {}", 
+                msg, self.cur_token.file, self.cur_token.line, self.cur_token.column
+            ));
     }
 
     pub fn print_errors(&self) {
