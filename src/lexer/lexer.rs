@@ -11,7 +11,8 @@ pub struct Lexer {
     cur_char: char,
     pos: usize,
     next_pos: usize,
-    line: i64,
+    line: usize,
+    column: usize,
     code_vec: Vec<char>,
 }
 
@@ -25,6 +26,7 @@ impl Lexer {
             pos: 0,
             next_pos: 0,
             line: 1,
+            column: 1,
             code_vec: vec![],
         };
 
@@ -57,10 +59,14 @@ impl Lexer {
 
         if self.cur_char == NEW_LINE {
             self.line += 1;
+            self.column = 0;
         }
+
+        self.column += 1;
 
         self.pos = self.next_pos;
         self.next_pos += 1;
+
         self.cur_char
     }
 
@@ -105,6 +111,7 @@ impl Lexer {
     fn read_string(&mut self) -> String {
         let start = self.pos + 1;
         let start_line = self.line;
+        let start_column = self.column;
 
         loop {
             self.read_char();
@@ -122,8 +129,8 @@ impl Lexer {
 
             if self.eof() {
                 self.errors.push(format!(
-                    "unclosed string. file: <{}>. line: {}.",
-                    self.file, start_line
+                    "unclosed string. at file: <{}>, line {}, column {}",
+                    self.file, start_line, start_column
                 ));
                 break;
             }
@@ -157,7 +164,8 @@ impl Lexer {
             TokenType::Illegal,
             self.cur_char.to_string(),
             self.file.clone(),
-            self.line.clone(),
+            self.line,
+            self.column - 1,
         );
 
         if TOKEN_TYPE_MAP.contains_key(&self.cur_char.to_string()) {
