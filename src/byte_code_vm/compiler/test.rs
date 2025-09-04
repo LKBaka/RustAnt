@@ -11,7 +11,7 @@ mod tests {
     use crate::{
         big_dec, byte_code_vm::{
             code::code::{
-                instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE
+                instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NONE, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE
             },
             compiler::compiler::Compiler,
         }, convert_type_use_box, obj_enum::object::Object, object::{ant_int::AntInt, ant_string::AntString}, parser::utils::parse
@@ -274,6 +274,29 @@ mod tests {
 
         run_compiler_tests(tests)
     }
+
+    #[test]
+    fn test_none_literal() {
+        let tests: Vec<CompilerTestCase<()>> = vec![
+            CompilerTestCase::new(
+                "none; nOne; NONE; None".into(),
+                vec![],
+                vec![
+                    make(OP_NONE, &vec![]),
+                    make(OP_POP, &vec![]),
+                    make(OP_NONE, &vec![]),
+                    make(OP_POP, &vec![]),
+                    make(OP_NONE, &vec![]),
+                    make(OP_POP, &vec![]),
+                    make(OP_NONE, &vec![]),
+                    make(OP_POP, &vec![]),
+                ],
+            ),
+        ];
+
+        run_compiler_tests(tests)
+    }
+
 
     #[test]
     fn test_global_let_statements() {

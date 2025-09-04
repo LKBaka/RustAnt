@@ -87,6 +87,15 @@ mod tests {
     }
 
     #[test]
+    fn test_none_literal() {
+        let tests = vec![
+            VmTestCase::<()>::new("none".into(), ()),
+        ];
+
+        run_vm_tests(tests);
+    }
+
+    #[test]
     fn test_global_let_statements() {
         let tests = vec![
             VmTestCase::new("let one = 1; one".into(), big_dec!(1)),
@@ -390,7 +399,7 @@ mod tests {
     fn run_vm_tests<T: Debug + Clone>(tests: Vec<VmTestCase<T>>) {
         for test_case in tests {
             let compile_result =
-                compile_it(test_case.input.clone(), "__run_compiler_tests__".into());
+                compile_it(test_case.input.clone(), "__run_vm_tests__".into());
 
             if let Err(msg) = compile_result {
                 panic!("{}", format!("compiler error: {msg}").red());
@@ -474,6 +483,20 @@ mod tests {
                     }
                 }
 
+                id if id == TypeId::of::<()>() => {
+                    let result = test_none_object(
+                        &last_popped
+                            .clone()
+                            .expect("No value popped from stack")
+                            .borrow()
+                            .clone(),
+                    );
+
+                    if let Err(msg) = result {
+                        panic!("testNoneObject failed: {}", msg.red());
+                    }
+                }
+
                 id if id == TypeId::of::<Vec<BigDecimal>>() => {
                     let vec = convert_type_use_box!(Vec<BigDecimal>, test_case.expected.clone());
 
@@ -535,6 +558,18 @@ mod tests {
             Err(format!(
                 "object has wrong value. got = {}, want = {}",
                 str_obj.value, expected
+            ))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn test_none_object(actual: &Object) -> Result<(), String> {
+        let o = try_unwrap!(actual, Object::AntNone(_));
+
+        if o.is_none() {
+            Err(format!(
+                "object is not nothing!",
             ))
         } else {
             Ok(())
