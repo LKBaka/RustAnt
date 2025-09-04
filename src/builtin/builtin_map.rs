@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 
-use crate::{builtin::builtin_func::{builtin_copy, builtin_len, builtin_now, builtin_print}, object::ant_native_function::{create_ant_native_function, AntNativeFunction}};
+use crate::{builtin::builtin_func::{builtin_copy, builtin_id, builtin_len, builtin_now, builtin_print}, object::ant_native_function::{create_ant_native_function, AntNativeFunction}};
 
 lazy_static! {
     pub static ref BUILTIN_MAP: hashbrown::HashMap<String, AntNativeFunction> = {
@@ -26,6 +26,11 @@ lazy_static! {
             create_ant_native_function(None, builtin_now)
         );
 
+        m.insert(
+            "id".into(),
+            create_ant_native_function(None, builtin_id)
+        );
+
         m
     };
 
@@ -35,6 +40,7 @@ lazy_static! {
             "len".into(),
             "copy".into(),
             "now".into(),
+            "id".into(),
         ]
     };
 }   
