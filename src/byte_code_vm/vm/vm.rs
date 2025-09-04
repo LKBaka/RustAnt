@@ -367,8 +367,6 @@ impl Vm {
                     let frame = self.current_frame();
                     let mut frame_mut = frame.borrow_mut();
 
-                    frame_mut.ip += 2;
-
                     let condition = if let Some(cond) = self.pop() {
                         cond
                             .borrow()
@@ -377,10 +375,12 @@ impl Vm {
                         return Err(String::from("expected an condition"));
                     };
                         
-
                     if !is_truthy(&condition) {
                         frame_mut.ip = (jump_to as isize) - 1;
+                        continue;
                     }
+
+                    frame_mut.ip += 2;
                 }
 
                 OP_SET_INDEX => {
