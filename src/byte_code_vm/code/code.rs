@@ -124,7 +124,7 @@ lazy_static! {
             Definition::new("OpCurrentClosure".into(), vec![]),
         );
         m.insert(OP_NONE, Definition::new("OpNone".into(), vec![]));
-        m.insert(OP_NONE, Definition::new("OpHash".into(), vec![2]));
+        m.insert(OP_HASH, Definition::new("OpHash".into(), vec![2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
