@@ -30,9 +30,7 @@ features = [
 opt-level = 0
 
 [profile.release]
-opt-level = 2
 lto = true
-# debug = true
 
 [features]
 get_code_run_seconds = []
