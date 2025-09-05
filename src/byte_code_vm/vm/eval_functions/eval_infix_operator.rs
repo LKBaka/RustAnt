@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use bigdecimal::BigDecimal;
 
 use crate::{
@@ -10,19 +12,25 @@ use crate::{
 };
 
 // 保留原本注释与语义：对多种数值/字符串类型做互操作
-fn add_native(left: Object, right: Object) -> Result<Object, String> {
+fn add_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
+    let left = &*left.borrow();
+    let right = &*right.borrow();
+
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value + &r.value))),
         (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
         (Object::AntInt(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
         (Object::AntDouble(l), Object::AntInt(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value))),
-        (Object::AntString(l), Object::AntString(r)) => Ok(Object::AntString(AntString::new(l.value + &r.value))),
+        (Object::AntString(l), Object::AntString(r)) => Ok(Object::AntString(AntString::new(l.value.clone() + &r.value))),
 
         (l, r) => Err(format!("unimplemented for types: {} and {}", l.get_type(), r.get_type())),
     }
 }
 
-fn subtract_native(left: Object, right: Object) -> Result<Object, String> {
+fn subtract_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
+    let left = &*left.borrow();
+    let right = &*right.borrow();
+
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value - &r.value))),
         (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value))),
@@ -33,7 +41,10 @@ fn subtract_native(left: Object, right: Object) -> Result<Object, String> {
     }
 }
 
-fn multiply_native(left: Object, right: Object) -> Result<Object, String> {
+fn multiply_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
+    let left = &*left.borrow();
+    let right = &*right.borrow();
+
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(Object::AntInt(AntInt::from(&l.value * &r.value))),
         (Object::AntDouble(l), Object::AntDouble(r)) => Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value))),
@@ -44,7 +55,10 @@ fn multiply_native(left: Object, right: Object) -> Result<Object, String> {
     }
 }
 
-fn divide_native(left: Object, right: Object) -> Result<Object, String> {
+fn divide_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
+    let left = &*left.borrow();
+    let right = &*right.borrow();
+
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => {
             if r.value == BigDecimal::from(0) {
@@ -94,7 +108,10 @@ fn divide_native(left: Object, right: Object) -> Result<Object, String> {
     }
 }
 
-fn gt_native(left: Object, right: Object) -> Result<Object, String> {
+fn gt_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
+    let left = &*left.borrow();
+    let right = &*right.borrow();
+
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
         (Object::AntDouble(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
@@ -105,7 +122,10 @@ fn gt_native(left: Object, right: Object) -> Result<Object, String> {
     }
 }
 
-fn eq_native(left: Object, right: Object) -> Result<Object, String> {
+fn eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
+    let left = &*left.borrow();
+    let right = &*right.borrow();
+
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
         (Object::AntDouble(l), Object::AntDouble(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
@@ -117,7 +137,7 @@ fn eq_native(left: Object, right: Object) -> Result<Object, String> {
     }
 }
 
-fn not_eq_native(left: Object, right: Object) -> Result<Object, String> {
+fn not_eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
     match eq_native(left, right) {
         Ok(obj) => {
             if let Object::AntBoolean(b) = obj {
@@ -131,7 +151,7 @@ fn not_eq_native(left: Object, right: Object) -> Result<Object, String> {
     }
 }
 
-pub fn eval_infix_operator(op: OpCode, left: Object, right: Object) -> Result<Object, String> {
+pub fn eval_infix_operator(op: OpCode, left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
     // 移除类型检查限制，允许不同类型的操作数进行互操作
     match op {
         OP_ADD => add_native(left, right),

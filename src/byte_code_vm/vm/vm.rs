@@ -173,8 +173,8 @@ impl Vm {
 
                     let eval_operator_result = eval_infix_operator(
                         op,
-                        left_obj.borrow().clone(),
-                        right_obj.borrow().clone(),
+                        left_obj,
+                        right_obj,
                     );
 
                     if let Err(err) = eval_operator_result {
