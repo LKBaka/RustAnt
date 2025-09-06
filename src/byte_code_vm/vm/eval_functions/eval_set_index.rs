@@ -4,7 +4,7 @@ use bigdecimal::Signed;
 use num_traits::ToPrimitive;
 
 use crate::{
-    big_dec, obj_enum::object::Object, object::object::{IAntObject, ARRAY, INT}, try_unwrap_ref
+    big_dec, obj_enum::object::Object, object::object::{IAntObject, ARRAY, HASH_MAP, INT}, try_unwrap_ref
 };
 
 fn eval_set_index_array(
@@ -57,6 +57,27 @@ fn eval_set_index_array(
     }
 }
 
+fn eval_set_value_hash_map(
+    value: Object,
+    index: Rc<RefCell<Object>>,
+    target: Rc<RefCell<Object>>,
+) -> Result<(), String> {
+    let key = index.borrow().clone();
+
+    // 直接借用 target 并在匹配到 AntArray 时就地修改 items，保持直接可变性
+    let mut target_borrow = target.borrow_mut();
+
+    match *target_borrow {
+        Object::AntHashMap(ref mut map) => {
+            map.map.insert(key, value);
+
+            Ok(())
+        }
+
+        _ => panic!("expected an hash map, but got: {:?}", target),
+    }
+}
+
 pub fn eval_set_index(
     value: Object,
     index: Rc<RefCell<Object>>,
@@ -64,7 +85,9 @@ pub fn eval_set_index(
 ) -> Result<(), String> {
     if target.borrow().get_type() == ARRAY && index.borrow().get_type() == INT {
         return eval_set_index_array(value, index, target);
-    }
+    } else if target.borrow().get_type() == HASH_MAP {
+        return eval_set_value_hash_map(value, index, target);
+    } 
 
     Err(format!("cannot set index of object {:?}", target.borrow()))
 }

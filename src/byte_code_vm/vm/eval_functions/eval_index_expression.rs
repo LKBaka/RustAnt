@@ -2,7 +2,7 @@ use num_traits::Signed;
 use num_traits::cast::ToPrimitive;
 
 use crate::{
-    big_dec, obj_enum::object::Object, object::{ant_array::AntArray, ant_int::AntInt, object::{IAntObject, INT}}, try_unwrap
+    big_dec, obj_enum::object::Object, object::{ant_array::AntArray, ant_int::AntInt, object::{IAntObject, INT, STRING}}, try_unwrap
 };
 
 fn eval_array_index_expression(arr: &AntArray, index: &AntInt) -> Result<Object, String> {
@@ -47,6 +47,18 @@ pub fn eval_index_expression(obj: Object, index: Object) -> Result<Object, Strin
             };
                 
             eval_array_index_expression(&arr, &index)
+        }
+
+        Object::AntHashMap(map) => {
+            let result = map.map.get(&index);
+            if let Some(o) = result {
+                return Ok(o.clone())
+            }
+
+            Err(format!(
+                "cannot found key '{}'", 
+                if index.get_type() != STRING {index.inspect()} else {format!("\"{}\"", index.inspect())}
+            ))
         }
 
         _ => Err(format!("object {:?} is not a subscriptable", obj))
