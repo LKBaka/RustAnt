@@ -27,6 +27,12 @@ pub fn is_truthy(obj: &Object) -> bool {
         !(obj.value == BigDecimal::from(0))
     } else if let Object::AntDouble(obj) = obj {
         !(obj.value == BigDecimal::from(0))
+    } else if let Object::AntNone(_) = obj {
+        false
+    } else if let Object::AntString(s) = obj {
+        !s.value.is_empty()
+    } else if let Object::AntArray(arr) = obj {
+        !arr.items.is_empty()
     } else {
         false
     }
@@ -43,6 +49,12 @@ pub fn rrc_is_truthy(obj: &Rc<RefCell<Object>>) -> bool {
         !(obj.value == BigDecimal::from(0))
     } else if let Object::AntDouble(obj) = obj {
         !(obj.value == BigDecimal::from(0))
+    } else if let Object::AntNone(_) = obj {
+        false
+    } else if let Object::AntString(s) = obj {
+        !s.value.is_empty()
+    } else if let Object::AntArray(arr) = obj {
+        !arr.items.is_empty()
     } else {
         false
     }
