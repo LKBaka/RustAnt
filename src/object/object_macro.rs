@@ -17,7 +17,8 @@ macro_rules! impl_object {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
                 write!(
                     f,
-                    "[Debug] TypeName: {}, Inspect: {}",
+                    "[Debug] Id: {}, TypeName: {}, Inspect: {}",
+                    self.get_id(),
                     self.get_type(),
                     self.inspect()
                 )
