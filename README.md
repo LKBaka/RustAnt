@@ -174,7 +174,7 @@ src/
 ├── byte_code_vm/    # 字节码编译器和虚拟机
 ├── object/          # 运行时对象系统
 ├── runner/          # 代码执行器
-├── module_system/   # 模块系统 (没写呢)
+├── module_importer/   # 模块系统 (没写呢)
 └── utils.rs         # 工具函数
 ```
 
