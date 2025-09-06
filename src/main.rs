@@ -11,7 +11,6 @@ mod token;
 mod utils;
 mod builtin;
 mod obj_enum;
-mod map;
 // mod lg_ir_gen;
 
 extern crate lazy_static;

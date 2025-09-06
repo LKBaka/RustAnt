@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use bigdecimal::BigDecimal;
 
 use crate::constants::{ant_false, ant_true};
@@ -28,6 +31,23 @@ pub fn is_truthy(obj: &Object) -> bool {
         false
     }
 }
+
+pub fn rrc_is_truthy(obj: &Rc<RefCell<Object>>) -> bool {
+    let obj = &*obj.borrow();
+
+    if obj == &*ant_true {
+        true
+    } else if obj == &*ant_false {
+        false
+    } else if let Object::AntInt(obj) = obj {
+        !(obj.value == BigDecimal::from(0))
+    } else if let Object::AntDouble(obj) = obj {
+        !(obj.value == BigDecimal::from(0))
+    } else {
+        false
+    }
+}
+
 
 pub fn create_error(message: String) -> Object {
     Object::AntError(AntError {

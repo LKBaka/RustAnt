@@ -39,6 +39,8 @@ pub const OP_GET_BUILTIN: u8 = 28;
 pub const OP_CURRENT_CLOSURE: u8 = 29;
 pub const OP_NONE: u8 = 30;
 pub const OP_HASH: u8 = 31;
+pub const OP_AND: u8 = 32;
+pub const OP_OR: u8 = 33;
 pub const OP_TEST_PRINT: u8 = 254;
 pub const OP_NOP: u8 = 255;
 
@@ -50,6 +52,8 @@ pub const INFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_ma
     ">" => OP_GT,
     "==" => OP_EQ,
     "!=" => OP_NOTEQ,
+    "and" => OP_AND,
+    "or" => OP_OR,
 };
 
 pub const PREFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_map! {
@@ -124,6 +128,8 @@ lazy_static! {
             Definition::new("OpCurrentClosure".into(), vec![]),
         );
         m.insert(OP_NONE, Definition::new("OpNone".into(), vec![]));
+        m.insert(OP_AND, Definition::new("OpAnd".into(), vec![]));
+        m.insert(OP_OR, Definition::new("OpOr".into(), vec![]));
         m.insert(OP_HASH, Definition::new("OpHash".into(), vec![2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));

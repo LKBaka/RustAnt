@@ -35,7 +35,7 @@ pub fn compile_infix_expression(
         return Err(format!("error compiling right expression: {}", right_err));
     };
 
-    let operator_opcode = INFIX_OPERATOR_TO_OPCODE.get(&infix_expr.operator);
+    let operator_opcode = INFIX_OPERATOR_TO_OPCODE.get(&infix_expr.operator.to_lowercase());
 
     if let Some(op) = operator_opcode {
         compiler.emit(*op, vec![]);

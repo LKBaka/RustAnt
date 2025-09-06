@@ -176,6 +176,12 @@ impl Parser {
         parser
             .infix_parse_fn_map
             .insert(TokenType::NotEq, parse_infix_expression);
+        parser
+            .infix_parse_fn_map
+            .insert(TokenType::BoolAnd, parse_infix_expression);
+        parser
+            .infix_parse_fn_map
+            .insert(TokenType::BoolOr, parse_infix_expression);
 
         parser.next_token(); // 初始化当前词法单元
 

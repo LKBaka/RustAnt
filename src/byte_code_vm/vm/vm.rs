@@ -5,22 +5,19 @@ use crate::object::id_counter::next_id;
 use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
-            read_uint16, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
-        },
-        compiler::compiler::ByteCode,
-        constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJ},
-        vm::{
+            read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+        }, compiler::compiler::ByteCode, constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJ}, utils::native_boolean_to_object, vm::{
             eval_functions::{
                 eval_array_literal_utils::build_array, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
             },
             frame::Frame,
             function_utils::{self, push_closure},
-        },
+        }
     }, obj_enum::object::Object, object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
         object::{IAntObject, UNINIT},
-        utils::is_truthy,
+        utils::rrc_is_truthy,
     }, rc_ref_cell
 };
 
@@ -95,10 +92,12 @@ impl Vm {
         }
     }
 
+    #[inline(always)]
     pub fn current_frame(&self) -> Rc<RefCell<Frame>> {
         self.frames[self.frame_index - 1].clone()
     }
 
+    #[inline(always)]
     pub fn push_frame(&mut self, frame: Rc<RefCell<Frame>>) {
         if self.frame_index >= self.frames.len() {
             self.frames.push(frame.clone());
@@ -109,6 +108,7 @@ impl Vm {
         self.frame_index += 1;
     }
 
+    #[inline(always)]
     pub fn pop_frame(&mut self) -> Rc<RefCell<Frame>> {
         self.frame_index -= 1;
         self.frames[self.frame_index].clone()
@@ -141,12 +141,7 @@ impl Vm {
                     let const_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
                     self.current_frame().borrow_mut().ip += 2;
 
-                    let result =
-                        self.push(rc_ref_cell!(self.constants[const_index as usize].clone()));
-
-                    if result.is_err() {
-                        return result;
-                    }
+                    self.push(rc_ref_cell!(self.constants[const_index as usize].clone()))?
                 }
 
                 OP_POP => {
@@ -178,11 +173,63 @@ impl Vm {
                         return Err(format!("error evaluating infix operator {}: {}", op, err));
                     }
 
-                    let push_result = self.push(rc_ref_cell!(eval_operator_result?));
+                    self.push(rc_ref_cell!(eval_operator_result?))?
+                }
 
-                    if push_result.is_err() {
-                        return push_result;
+                OP_AND => {
+                    let right = self.pop();
+                    let left = self.pop();
+
+                    if left.is_none() || right.is_none() {
+                        return Err(format!(
+                            "expected two objects of opcode {}. got {} objects",
+                            op,
+                            left.is_some() as u8 + right.is_some() as u8
+                        ));
                     }
+
+                    let left_obj = left.unwrap();
+                    let right_obj = right.unwrap();
+
+                    if !rrc_is_truthy(&left_obj) {
+                        self.push(rc_ref_cell!(native_boolean_to_object(false)))?;
+                        continue;
+                    }
+
+                    if !rrc_is_truthy(&right_obj) {
+                        self.push(rc_ref_cell!(native_boolean_to_object(false)))?;
+                        continue;
+                    }
+
+                    self.push(rc_ref_cell!(native_boolean_to_object(true)))?;
+                }
+
+                OP_OR => {
+                    let right = self.pop();
+                    let left = self.pop();
+
+                    if left.is_none() || right.is_none() {
+                        return Err(format!(
+                            "expected two objects of opcode {}. got {} objects",
+                            op,
+                            left.is_some() as u8 + right.is_some() as u8
+                        ));
+                    }
+
+                    let left_obj = left.unwrap();
+                    let right_obj = right.unwrap();
+
+                    if rrc_is_truthy(&left_obj) {
+                        self.push(rc_ref_cell!(native_boolean_to_object(true)))?;
+                        continue;
+                    }
+
+                    if rrc_is_truthy(&right_obj) {
+                        self.push(rc_ref_cell!(native_boolean_to_object(true)))?;
+                        continue;
+                    }
+
+                    self.push(rc_ref_cell!(native_boolean_to_object(false)))?;
                 }
 
                 OP_TRUE..=OP_FALSE => {
@@ -211,11 +258,7 @@ impl Vm {
                         return Err(format!("error evaluating prefix operator {}: {}", op, err));
                     }
 
-                    let push_result = self.push(rc_ref_cell!(eval_operator_result.unwrap()));
-
-                    if push_result.is_err() {
-                        return push_result;
-                    }
+                    self.push(rc_ref_cell!(eval_operator_result.unwrap()))?
                 }
 
                 OP_SET_GLOBAL => {
@@ -369,8 +412,6 @@ impl Vm {
                     let frame = self.current_frame();
                     let mut frame_mut = frame.borrow_mut();
 
-                    frame_mut.ip += 2;
-
                     frame_mut.ip = (jump_to as isize) - 1
                 }
 
@@ -381,14 +422,12 @@ impl Vm {
                     let mut frame_mut = frame.borrow_mut();
 
                     let condition = if let Some(cond) = self.pop() {
-                        cond
-                            .borrow()
-                            .clone()
+                        cond.clone()
                     } else {
                         return Err(String::from("expected an condition"));
                     };
                         
-                    if !is_truthy(&condition) {
+                    if !rrc_is_truthy(&condition) {
                         frame_mut.ip = (jump_to as isize) - 1;
                         continue;
                     }
@@ -505,7 +544,7 @@ impl Vm {
         self.stack.get(self.sp).cloned()
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn push(&mut self, obj: Rc<RefCell<Object>>) -> Result<(), String> {
         if self.sp >= STACK_SIZE as usize {
             return Err("Stack overflow".to_string());
@@ -523,7 +562,7 @@ impl Vm {
         Ok(())
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn pop(&mut self) -> Option<Rc<RefCell<Object>>> {
         if self.sp == 0 { return None }
 

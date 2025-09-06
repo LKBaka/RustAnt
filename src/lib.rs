@@ -7,7 +7,6 @@ pub mod constants;
 pub mod lexer;
 pub mod object;
 pub mod parser;
-pub mod map;
 pub mod runner;
 pub mod token;
 pub mod utils;
