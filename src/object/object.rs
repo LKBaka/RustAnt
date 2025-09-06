@@ -22,6 +22,7 @@ pub const NATIVE_FUNCTION: &str = "NativeFunction";
 pub const COMPILED_FUNCTION: &str = "CompiledFunction";
 pub const CLOSURE: &str = "Closure";
 pub const ARRAY: &str = "Array";
+pub const HASH_MAP: &str = "HashMap";
 
 pub trait AsAnyMut {
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -50,7 +51,11 @@ impl Eq for Object {}
 
 impl Hash for dyn IAntObject {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.get_id().hash(state);
+        // 64-bit MurmurMixer 常量，可防连续低位
+        let mut x = self.get_id() as u64;
+        x = x.wrapping_mul(0x9e3779b97f4a7c15);
+        x ^= x >> 32;
+        x.hash(state);
     }
 }
 
