@@ -38,7 +38,7 @@ pub fn compile_with_state(
     code: String,
     file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
-    constants: Rc<RefCell<Vec<Object>>>,
+    constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 ) -> Result<ByteCode, String> {
     let program = parse(code, file);
 

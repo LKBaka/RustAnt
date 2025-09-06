@@ -7,13 +7,13 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct Frame {
-    pub closure: Rc<RefCell<Closure>>,
+    pub closure: Closure,
     pub ip: isize,
     pub base_pointer: usize,
 }
 
 impl Frame {
-    pub fn new(closure: Rc<RefCell<Closure>>, base_pointer: usize) -> Self {
+    pub fn new(closure: Closure, base_pointer: usize) -> Self {
         Self {
             closure,
             ip: -1,
@@ -21,22 +21,20 @@ impl Frame {
         }
     }
 
-    pub fn instructions(&self) -> Rc<RefCell<Instructions>> {
-        self.closure.borrow().func.borrow().instructions.clone()
+    pub fn instructions(&self) -> Rc<Instructions> {
+        self.closure.func.instructions.clone()
     }
 }
 
-pub fn fmt_compiled_function(func: Rc<RefCell<CompiledFunction>>, indent: &str) -> String {
+pub fn fmt_compiled_function(func: CompiledFunction, indent: &str) -> String {
     let mut s = String::new();
-
-    let borrow_func = func.borrow();
 
     s.push_str("CompiledFunction: \n");
     s.push_str(&format!("{indent}Instructions:\n"));
     s.push_str(&format!(
         "{}\n",
         instruction_to_str_with_indent(
-            &borrow_func.instructions.borrow().clone(),
+            &func.instructions,
             &indent.repeat(2)
         )
     ));
@@ -44,17 +42,15 @@ pub fn fmt_compiled_function(func: Rc<RefCell<CompiledFunction>>, indent: &str) 
     s
 }
 
-pub fn fmt_closure(closure: Rc<RefCell<Closure>>, indent: &str) -> String {
+pub fn fmt_closure(closure: Closure, indent: &str) -> String {
     let mut s = String::new();
-
-    let borrow_closure = closure.borrow();
 
     s.push_str("Closure: \n");
     s.push_str(&format!(
         "{indent}{}\n",
-        fmt_compiled_function(borrow_closure.func.clone(), indent)
+        fmt_compiled_function(closure.func.clone(), indent)
     ));
-    s.push_str(&format!("{indent}{:#?}\n", borrow_closure.free.clone()));
+    s.push_str(&format!("{indent}{:#?}\n", closure.free.clone()));
 
     s
 }

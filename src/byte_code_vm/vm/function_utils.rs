@@ -4,7 +4,7 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJ},
         vm::{frame::Frame, vm::Vm},
-    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_compiled_function::CompiledFunction, ant_native_function::AntNativeFunction, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
+    }, obj_enum::object::Object, object::{ant_closure::Closure, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
@@ -20,12 +20,12 @@ pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
 }
 
 pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
-    let calling_obj = if let Some(it) = obj
-        .borrow()
-        .as_any()
-        .downcast_ref::<AntNativeFunction>()
+    let obj_borrow = obj.borrow();
+
+    let calling_obj = 
+    if let Object::AntNativeFunction(it) = &*obj_borrow
     {
-        it.clone()
+        it
     } else {
         return Err(format!("calling non-native-function"));
     };
@@ -54,33 +54,30 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
 }
 
 pub fn call_function(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
-    let calling_obj = if let Some(it) = obj
-        .borrow()
-        .as_any()
-        .downcast_ref::<Closure>()
-    {
+    let obj_borrow = obj.borrow();
+
+    let calling_obj = if let Object::Closure(it) = &*obj_borrow {
         it.clone()
     } else {
         return Err(format!("calling non-function"));
     };
 
     let func = calling_obj.func.clone();
-    let func_borrow = func.borrow();
 
-    if arg_count != func_borrow.param_count {
+    if arg_count != func.param_count {
         return Err(format!(
-            "expected {arg_count} args, got {} args",
-            func_borrow.param_count
+            "expected {} args, got {arg_count} args",
+            func.param_count
         ));
     }
 
-    let local_count = func_borrow.local_count;
+    let local_count = func.local_count;
 
-    let frame = Frame::new(rc_ref_cell!(calling_obj), vm.sp - arg_count);
+    let frame = Frame::new(calling_obj, vm.sp - arg_count);
 
     let frame_base_pointer = frame.base_pointer;
 
-    vm.push_frame(rc_ref_cell!(frame));
+    vm.push_frame(frame);
 
     vm.sp = frame_base_pointer + local_count;
 
@@ -88,15 +85,12 @@ pub fn call_function(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) ->
 }
 
 pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<(), String> {
-    let constant = &vm.constants[const_index as usize];
+    let constant = vm.constants[const_index as usize].clone();
+    let constant_borrow = constant.borrow();
 
-    let func = if let Some(it) = constant
-        .as_any()
-        .downcast_ref::<CompiledFunction>() 
-    {
-        it
-    } else {
-        return Err(format!("not a function: {:?}", constant));
+    let func = match &*constant_borrow {
+        Object::CompiledFunction(f) => f,
+        _ => return Err(format!("not a function: {:?}", constant))
     };
 
     let free_count_usize = free_count as usize;
@@ -111,7 +105,7 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
     vm.sp -= free_count_usize;
 
     let closure = Closure {
-        func: rc_ref_cell!(func.clone()),
+        func: func.clone(),
         free: rc_ref_cell!(free),
     };
 

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 #[cfg(feature = "debug")]
 use crate::object::id_counter::next_id;
 use crate::{
@@ -7,7 +9,7 @@ use crate::{
     }, byte_code_vm::{
         code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
         compiler::compiler::Compiler,
-    }, convert_type_to_owned, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction, rc_ref_cell
+    }, convert_type_to_owned, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction
 };
 
 pub fn compile_function_expression(
@@ -74,7 +76,7 @@ pub fn compile_function_expression(
     let compiled_function = CompiledFunction {
         #[cfg(feature = "debug")]
         id: next_id(),
-        instructions: rc_ref_cell!(instructions),
+        instructions: Rc::new(instructions),
         local_count,
         param_count,
     };
@@ -92,11 +94,7 @@ pub fn compile_function_expression(
             },
             vec![symbol_index.unwrap()],
         );
-
-        return Ok(());
     }
-
-    compiler.emit(OP_POP, vec![]);
 
     Ok(())
 }

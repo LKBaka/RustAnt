@@ -9,7 +9,7 @@ use crate::object::object::{CLOSURE, IAntObject, ObjectType};
 
 #[derive(Clone)]
 pub struct Closure {
-    pub func: Rc<RefCell<CompiledFunction>>,
+    pub func: CompiledFunction,
     pub free: Rc<RefCell<Vec<Object>>>,
 }
 
@@ -19,7 +19,7 @@ impl IAntObject for Closure {
     }
 
     fn get_value(&self) -> Box<dyn Any> {
-        Box::new(self.func.borrow().instructions.clone())
+        Box::new(self.func.instructions.clone())
     }
 
     fn get_base(&self) -> Option<Object> {
@@ -33,7 +33,7 @@ impl IAntObject for Closure {
     fn inspect(&self) -> String {
         format!(
             "<Closure compiled_function: {}, free: {:?}>",
-            self.func.borrow().inspect(),
+            self.func.inspect(),
             &self.free
         )
     }

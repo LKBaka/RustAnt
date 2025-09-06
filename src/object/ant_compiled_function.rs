@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::byte_code_vm::code::code::{Instructions, instruction_to_str};
@@ -10,7 +9,7 @@ use crate::object::object::{COMPILED_FUNCTION, IAntObject, ObjectType};
 pub struct CompiledFunction {
     #[cfg(feature = "debug")]
     pub id: usize,
-    pub instructions: Rc<RefCell<Instructions>>,
+    pub instructions: Rc<Instructions>,
     pub local_count: usize,
     pub param_count: usize,
 }
@@ -55,7 +54,7 @@ impl IAntObject for CompiledFunction {
             self.id,
             self.local_count,
             self.param_count,
-            instruction_to_str(&self.instructions.borrow().clone())
+            instruction_to_str(&self.instructions)
         );
 
         #[cfg(not(feature = "debug"))]
@@ -63,7 +62,7 @@ impl IAntObject for CompiledFunction {
             "<CompiledFunction locals_count: {} param_count: {} {}>",
             self.local_count,
             self.param_count,
-            instruction_to_str(&self.instructions.borrow().clone())
+            instruction_to_str(&self.instructions)
         )
     }
 

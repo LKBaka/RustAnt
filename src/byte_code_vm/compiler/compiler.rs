@@ -14,8 +14,7 @@ use crate::{
             array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, hash_literal::HashLiteral, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
         },
         statements::{
-            block_statement::BlockStatement, let_statement::LetStatement,
-            while_statement::WhileStatement,
+            block_statement::BlockStatement, let_statement::LetStatement, while_statement::WhileStatement
         },
     }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
@@ -77,11 +76,11 @@ impl EmittedInstruction {
 #[derive(Debug, Clone)]
 pub struct ByteCode {
     pub instructions: Instructions,
-    pub constants: Vec<Object>,
+    pub constants: Vec<Rc<RefCell<Object>>>,
 }
 
 impl ByteCode {
-    pub fn new(instructions: Instructions, constants: Vec<Object>) -> Self {
+    pub fn new(instructions: Instructions, constants: Vec<Rc<RefCell<Object>>>) -> Self {
         Self {
             instructions,
             constants,
@@ -92,7 +91,7 @@ impl ByteCode {
 pub type CompileHandler = fn(&mut Compiler, Box<dyn Node>) -> Result<(), String>;
 
 pub struct Compiler {
-    constants: Rc<RefCell<Vec<Object>>>,
+    constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 
     compile_map: HashBrownMap<TypeId, CompileHandler>,
     pub symbol_table: Rc<RefCell<SymbolTable>>,
@@ -148,7 +147,7 @@ impl Compiler {
 
     pub fn with_state(
         symbol_table: Rc<RefCell<SymbolTable>>,
-        constants: Rc<RefCell<Vec<Object>>>,
+        constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
     ) -> Self {
         let main_scope = CompilationScope::new(
             rc_ref_cell!(vec![]),
@@ -187,12 +186,13 @@ impl Compiler {
                 let expr_stmt = convert_type_to_owned!(ExpressionStatement, node);
 
                 if let Some(expr) = expr_stmt.expression {
-                    let is_func_expr = 
-                        (expr.as_ref() as &dyn Any).is::<FunctionExpression>();
+                    let need_skip_pop = 
+                        (expr.as_ref() as &dyn Any).is::<FunctionExpression>() ||
+                        (expr.as_ref() as &dyn Any).is::<AssignmentExpression>();
 
                     self.compile(expr)?;
 
-                    if is_func_expr {return Ok(())}
+                    if need_skip_pop {return Ok(())}
                     self.emit(OP_POP, vec![]);
                 }
 
@@ -531,8 +531,9 @@ impl Compiler {
     }
 
     pub fn add_constant(&mut self, obj: Object) -> usize {
-        self.constants.borrow_mut().push(obj);
-        self.constants.borrow().len() - 1 // this number is the index of the constant, use it as a identifier for constant
+        let mut constant_borrow_mut = self.constants.borrow_mut();
+        constant_borrow_mut.push(rc_ref_cell!(obj));
+        constant_borrow_mut.len() - 1 // this number is the index of the constant, use it as a identifier for constant
     }
 
     pub fn emit(&mut self, op: OpCode, operands: Vec<u16>) -> usize {

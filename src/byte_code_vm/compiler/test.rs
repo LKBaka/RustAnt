@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
     use std::{
-        any::{Any, TypeId},
-        fmt::Debug,
+        any::{Any, TypeId}, cell::RefCell, fmt::Debug, rc::Rc
     };
 
     use bigdecimal::BigDecimal;
@@ -543,7 +542,7 @@ mod tests {
 
     fn test_constants<T: Debug + Clone + 'static>(
         expected: Vec<T>,
-        actual: Vec<Object>,
+        actual: Vec<Rc<RefCell<Object>>>,
     ) -> Result<(), String> {
         if expected.len() != actual.len() {
             return Err(format!(
@@ -558,7 +557,7 @@ mod tests {
                 id if id == TypeId::of::<BigDecimal>() => {
                     let result = test_integer_object(
                         convert_type_use_box!(BigDecimal, constant.clone()),
-                        actual[i].clone(),
+                        actual[i].borrow().clone(),
                     );
 
                     if let Err(msg) = result {
@@ -572,7 +571,7 @@ mod tests {
                 id if id == TypeId::of::<String>() => {
                     let result = test_string_object(
                         convert_type_use_box!(String, constant.clone()),
-                        actual[i].clone(),
+                        actual[i].borrow().clone(),
                     );
 
                     if let Err(msg) = result {

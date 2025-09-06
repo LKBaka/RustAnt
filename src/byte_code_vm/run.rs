@@ -17,7 +17,7 @@ pub fn run(
     code: String,
     file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
-    constants: Rc<RefCell<Vec<Object>>>,
+    constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
     globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 ) -> Result<Option<Object>, RunError> {
     #[cfg(feature = "debug")]

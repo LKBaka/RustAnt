@@ -26,10 +26,10 @@ pub const GLOBALS_SIZE: u16 = 65535;
 
 
 pub struct Vm {
-    pub constants: Vec<Object>,
+    pub constants: Vec<Rc<RefCell<Object>>>,
     pub stack: Vec<Rc<RefCell<Object>>>,
     globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-    frames: Vec<Rc<RefCell<Frame>>>,
+    frames: Vec<Frame>,
     frame_index: usize,
     pub sp: usize, // stack next pos
 }
@@ -41,23 +41,23 @@ impl Vm {
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
             id: next_id(),
-            instructions: rc_ref_cell!(bytecode.instructions),
+            instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
         };
 
         let main_closure = Closure {
-            func: rc_ref_cell!(main_func),
+            func: main_func,
             free: rc_ref_cell!(vec![]),
         };
 
-        let main_frame = Frame::new(rc_ref_cell!(main_closure), 0);
+        let main_frame = Frame::new(main_closure, 0);
 
         Vm {
             constants: bytecode.constants,
             stack: vec![],
             globals: rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]),
-            frames: vec![rc_ref_cell!(main_frame)],
+            frames: vec![main_frame],
             frame_index: 1,
             sp: 0,
         }
@@ -70,48 +70,48 @@ impl Vm {
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
             id: next_id(),
-            instructions: rc_ref_cell!(bytecode.instructions),
+            instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
         };
 
         let main_closure = Closure {
-            func: rc_ref_cell!(main_func),
+            func: main_func,
             free: rc_ref_cell!(vec![]),
         };
 
-        let main_frame = Frame::new(rc_ref_cell!(main_closure), 0);
+        let main_frame = Frame::new(main_closure, 0);
 
         Vm {
             constants: bytecode.constants,
             stack: vec![],
             globals,
-            frames: vec![rc_ref_cell!(main_frame)],
+            frames: vec![main_frame],
             frame_index: 1,
             sp: 0,
         }
     }
 
     #[inline(always)]
-    pub fn current_frame(&self) -> Rc<RefCell<Frame>> {
-        self.frames[self.frame_index - 1].clone()
+    pub fn current_frame(&mut self) -> &mut Frame {
+        &mut self.frames[self.frame_index - 1]
     }
 
     #[inline(always)]
-    pub fn push_frame(&mut self, frame: Rc<RefCell<Frame>>) {
+    pub fn push_frame(&mut self, frame: Frame) {
         if self.frame_index >= self.frames.len() {
-            self.frames.push(frame.clone());
+            self.frames.push(frame);
         } else {
-            self.frames[self.frame_index] = frame.clone();
+            self.frames[self.frame_index] = frame;
         }
 
         self.frame_index += 1;
     }
 
     #[inline(always)]
-    pub fn pop_frame(&mut self) -> Rc<RefCell<Frame>> {
+    pub fn pop_frame(&mut self) -> &Frame {
         self.frame_index -= 1;
-        self.frames[self.frame_index].clone()
+        &self.frames[self.frame_index]
     }
 
     pub fn run(&mut self) -> Result<(), String> {
@@ -123,25 +123,24 @@ impl Vm {
 
         while {
             let current_frame = self.current_frame();
-            let current_frame_borrow = current_frame.borrow();
 
-            current_frame_borrow.ip
-                < current_frame_borrow.instructions().borrow().len() as isize - 1
+            current_frame.ip
+                < current_frame.instructions().len() as isize - 1
         } {
-            self.current_frame().borrow_mut().ip += 1;
+            self.current_frame().ip += 1;
 
-            ip = self.current_frame().borrow().ip as usize;
+            ip = self.current_frame().ip as usize;
 
-            instructions = self.current_frame().borrow().instructions();
+            instructions = self.current_frame().instructions();
 
-            op = instructions.borrow()[ip];
+            op = instructions[ip];
 
             match op {
                 OP_CONSTANTS => {
-                    let const_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 2;
+                    let const_index = read_uint16(&instructions[(ip + 1)..]);
+                    self.current_frame().ip += 2;
 
-                    self.push(rc_ref_cell!(self.constants[const_index as usize].clone()))?
+                    self.push(self.constants[const_index as usize].clone())?
                 }
 
                 OP_POP => {
@@ -262,9 +261,9 @@ impl Vm {
                 }
 
                 OP_SET_GLOBAL => {
-                    let global_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
+                    let global_index = read_uint16(&instructions[(ip + 1)..]);
 
-                    self.current_frame().borrow_mut().ip += 2;
+                    self.current_frame().ip += 2;
 
                     if let Some(obj) = self.pop() {
                         self.globals.borrow_mut()[global_index as usize] = obj.clone();
@@ -272,8 +271,8 @@ impl Vm {
                 }
 
                 OP_GET_GLOBAL => {
-                    let global_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 2;
+                    let global_index = read_uint16(&instructions[(ip + 1)..]);
+                    self.current_frame().ip += 2;
 
                     let obj_clone = {
                         let obj: &Rc<RefCell<Object>> =
@@ -294,8 +293,8 @@ impl Vm {
                 }
 
                 OP_ARRAY => {
-                    let array_len = read_uint16(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 2;
+                    let array_len = read_uint16(&instructions[(ip + 1)..]);
+                    self.current_frame().ip += 2;
 
                     let array_obj = build_array(&self.stack, self.sp - array_len as usize, self.sp);
 
@@ -308,8 +307,8 @@ impl Vm {
                 }
 
                 OP_HASH => {
-                    let items_len = read_uint16(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 2;
+                    let items_len = read_uint16(&instructions[(ip + 1)..]);
+                    self.current_frame().ip += 2;
 
                     let array_obj = build_hash_map(&self.stack, self.sp - items_len as usize, self.sp);
 
@@ -350,8 +349,8 @@ impl Vm {
                 }
 
                 OP_CALL => {
-                    let arg_count = read_uint16(&instructions.borrow()[(ip + 1)..]);
-                    self.current_frame().borrow_mut().ip += 2;
+                    let arg_count = read_uint16(&instructions[(ip + 1)..]);
+                    self.current_frame().ip += 2;
 
                     if let Err(msg) = function_utils::call(self, arg_count as usize) {
                         return Err(format!("error calling function: {msg}"));
@@ -361,14 +360,14 @@ impl Vm {
                 OP_RETURN_VALUE => {
                     let return_value = self.pop();
 
-                    let frame = self.pop_frame(); // 弹出当前帧
-
-                    if self.frame_index == 0 {
+                    if self.frame_index == 1 {
                         // 没栈帧可榨了 说明已经到了主栈帧 直接报错
                         return Err(format!("cannot return outside function"))
                     }
 
-                    self.sp = frame.borrow().base_pointer - 1;
+                    let frame = self.pop_frame(); // 弹出当前帧
+
+                    self.sp = frame.base_pointer - 1;
 
                     if let Some(value) = return_value {
                         if let Err(msg) = self.push(value) {
@@ -378,13 +377,13 @@ impl Vm {
                 }
 
                 OP_SET_LOCAL => {
-                    let local_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
+                    let local_index = read_uint16(&instructions[(ip + 1)..]);
 
-                    self.current_frame().borrow_mut().ip += 2;
+                    self.current_frame().ip += 2;
 
                     let frame = self.current_frame();
 
-                    let index = frame.borrow().base_pointer + local_index as usize;
+                    let index = frame.base_pointer + local_index as usize;
 
                     self.stack[index] = self
                         .pop()
@@ -392,14 +391,13 @@ impl Vm {
                 }
 
                 OP_GET_LOCAL => {
-                    let local_index = read_uint16(&instructions.borrow()[(ip + 1)..]);
+                    let local_index = read_uint16(&instructions[(ip + 1)..]);
 
                     let frame = self.current_frame();
-                    let mut frame_mut = frame.borrow_mut();
 
-                    frame_mut.ip += 2;
+                    frame.ip += 2;
 
-                    let index = frame_mut.base_pointer + local_index as usize;
+                    let index = frame.base_pointer + local_index as usize;
 
                     if let Err(msg) = self.push(self.stack[index].clone()) {
                         return Err(format!("error get local variable: {msg}"));
@@ -407,19 +405,15 @@ impl Vm {
                 }
 
                 OP_JUMP => {
-                    let jump_to = read_uint16(&instructions.borrow()[(ip + 1)..]);
+                    let jump_to = read_uint16(&instructions[(ip + 1)..]);
 
                     let frame = self.current_frame();
-                    let mut frame_mut = frame.borrow_mut();
 
-                    frame_mut.ip = (jump_to as isize) - 1
+                    frame.ip = (jump_to as isize) - 1
                 }
 
                 OP_JUMP_NOT_TRUTHY => {
-                    let jump_to = read_uint16(&instructions.borrow()[(ip + 1)..]);
-
-                    let frame = self.current_frame();
-                    let mut frame_mut = frame.borrow_mut();
+                    let jump_to = read_uint16(&instructions[(ip + 1)..]);
 
                     let condition = if let Some(cond) = self.pop() {
                         cond.clone()
@@ -427,12 +421,14 @@ impl Vm {
                         return Err(String::from("expected an condition"));
                     };
                         
+                    let frame = self.current_frame();
+
                     if !rrc_is_truthy(&condition) {
-                        frame_mut.ip = (jump_to as isize) - 1;
+                        frame.ip = (jump_to as isize) - 1;
                         continue;
                     }
 
-                    frame_mut.ip += 2;
+                    frame.ip += 2;
                 }
 
                 OP_SET_INDEX => {
@@ -457,12 +453,10 @@ impl Vm {
                 }
 
                 OP_CLOSURE => {
-                    let instructions = instructions.borrow();
-
                     let const_index = read_uint16(&instructions[ip + 1..]);
                     let free_count = read_uint16(&instructions[ip + 3..]);
 
-                    self.current_frame().borrow_mut().ip += 4;
+                    self.current_frame().ip += 4;
 
                     if let Err(msg) = push_closure(self, const_index, free_count) {
                         return Err(format!("error push closure: {msg}"));
@@ -471,14 +465,13 @@ impl Vm {
 
                 OP_GET_FREE => {
                     let current_frame = self.current_frame();
-                    let mut frame_mut = current_frame.borrow_mut();
 
-                    let free_index = read_uint16(&instructions.borrow()[ip + 1..]);
-                    frame_mut.ip += 2;
+                    let free_index = read_uint16(&instructions[ip + 1..]);
+                    current_frame.ip += 2;
 
-                    let current_closure = frame_mut.closure.clone();
+                    let current_closure = current_frame.closure.clone();
                     if let Err(msg) = self.push(rc_ref_cell!(
-                        current_closure.borrow().free.borrow()[free_index as usize].clone()
+                        current_closure.free.borrow()[free_index as usize].clone()
                     )) {
                         return Err(format!("error push free variable: {msg}"));
                     }
@@ -487,7 +480,7 @@ impl Vm {
                 OP_CURRENT_CLOSURE => {
                     let current_frame = self.current_frame();
 
-                    let current_closure = current_frame.borrow().closure.borrow().clone();
+                    let current_closure = current_frame.closure.clone();
 
                     if let Err(msg) = self.push(rc_ref_cell!(Object::Closure(current_closure))) {
                         return Err(format!("error push current closure: {msg}"));
@@ -495,8 +488,8 @@ impl Vm {
                 }
 
                 OP_GET_BUILTIN => {
-                    let builtin_index = read_uint16(&instructions.borrow()[ip + 1..]);
-                    self.current_frame().borrow_mut().ip += 2;
+                    let builtin_index = read_uint16(&instructions[ip + 1..]);
+                    self.current_frame().ip += 2;
 
                     if let Err(msg) = self.push(
                         rc_ref_cell!(Object::AntNativeFunction(
@@ -574,6 +567,6 @@ impl Vm {
     }
 
     pub fn frames(&self) -> Vec<Frame> {
-        self.frames.iter().map(|f| f.borrow().clone()).collect()
+        self.frames.iter().map(|f| f.clone()).collect()
     }
 }
