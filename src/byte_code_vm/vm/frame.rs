@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 
 use crate::{
     byte_code_vm::code::code::{Instructions, instruction_to_str_with_indent},
