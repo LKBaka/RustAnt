@@ -28,12 +28,12 @@ macro_rules! struct_type_id {
 
 pub fn run_command(command: &str) -> io::Result<ExitStatus> {
     // 根据不同操作系统选择 shell
-    let (shell, flag) = if cfg!(target_os = "windows") {
-        ("cmd.exe", "/C")
-    } else {
-        ("/bin/sh", "-c")
-    };
+    #[cfg(windows)]
+    let (shell, flag) = ("cmd.exe", "/C");
 
+    #[cfg(not(windows))]
+    let (shell, flag) = ("/bin/sh", "-c");
+    
     // 构建并执行命令
     let status = Command::new(shell)
         .arg(flag)

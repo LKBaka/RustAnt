@@ -11,6 +11,7 @@ mod token;
 mod utils;
 mod builtin;
 mod obj_enum;
+mod module_importer;
 // mod lg_ir_gen;
 
 extern crate lazy_static;
