@@ -4,3 +4,4 @@ pub mod compile_if_expression;
 pub mod compile_infix_expression;
 pub mod compile_prefix_expression;
 pub mod compile_while_statement;
+pub mod compile_hash_literal;

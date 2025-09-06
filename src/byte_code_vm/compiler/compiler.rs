@@ -11,7 +11,7 @@ use crate::{
     ast::{
         ast::{ExpressionStatement, Node, Program},
         expressions::{
-            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
+            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, hash_literal::HashLiteral, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
         },
         statements::{
             block_statement::BlockStatement, let_statement::LetStatement,
@@ -23,12 +23,7 @@ use crate::{
         },
         compiler::{
             compile_handlers::{
-                compile_call_expression::compile_call_expression,
-                compile_function_expression::compile_function_expression,
-                compile_if_expression::compile_if_expression,
-                compile_infix_expression::compile_infix_expression,
-                compile_prefix_expression::compile_prefix_expression,
-                compile_while_statement::compile_while_statement,
+                compile_call_expression::compile_call_expression, compile_function_expression::compile_function_expression, compile_hash_literal::compile_hash_literal, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement
             },
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
@@ -116,6 +111,7 @@ impl Compiler {
             compile_function_expression,
         );
         m.insert(struct_type_id!(CallExpression), compile_call_expression);
+        m.insert(struct_type_id!(HashLiteral), compile_hash_literal);
         m.insert(struct_type_id!(WhileStatement), compile_while_statement);
     }
 

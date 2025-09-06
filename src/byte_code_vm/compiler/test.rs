@@ -11,7 +11,7 @@ mod tests {
     use crate::{
         big_dec, byte_code_vm::{
             code::code::{
-                instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NONE, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE
+                instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NONE, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE
             },
             compiler::compiler::Compiler,
         }, convert_type_use_box, obj_enum::object::Object, object::{ant_int::AntInt, ant_string::AntString}, parser::utils::parse
@@ -297,6 +297,59 @@ mod tests {
         run_compiler_tests(tests)
     }
 
+    #[test]
+    fn test_hash_literal() {
+        let tests: Vec<CompilerTestCase<Box<BigDecimal>>> = vec![
+            CompilerTestCase::new(
+                "{}".into(),
+                vec![],
+                vec![
+                    make(OP_HASH, &vec![0]),
+                    make(OP_POP, &vec![]),
+                ],
+            ),
+            CompilerTestCase::new(
+                "{1: 2, 3: 4, 5: 6}".into(),
+                vec![
+                    Box::new(big_dec!(1)), Box::new(big_dec!(2)),
+                    Box::new(big_dec!(3)), Box::new(big_dec!(4)),
+                    Box::new(big_dec!(5)), Box::new(big_dec!(6))
+                ],
+                vec![
+                    make(OP_CONSTANTS, &vec![0]),
+                    make(OP_CONSTANTS, &vec![1]),
+                    make(OP_CONSTANTS, &vec![2]),
+                    make(OP_CONSTANTS, &vec![3]),
+                    make(OP_CONSTANTS, &vec![4]),
+                    make(OP_CONSTANTS, &vec![5]),
+                    make(OP_HASH, &vec![6]),
+                    make(OP_POP, &vec![]),
+                ],
+            ),
+            CompilerTestCase::new(
+                "{1: 2 + 3, 4: 5 * 6}".into(),
+                vec![
+                    Box::new(big_dec!(1)), Box::new(big_dec!(2)),
+                    Box::new(big_dec!(3)), Box::new(big_dec!(4)),
+                    Box::new(big_dec!(5)), Box::new(big_dec!(6))
+                ],
+                vec![
+                    make(OP_CONSTANTS, &vec![0]),
+                    make(OP_CONSTANTS, &vec![1]),
+                    make(OP_CONSTANTS, &vec![2]),
+                    make(OP_ADD, &vec![]),
+                    make(OP_CONSTANTS, &vec![3]),
+                    make(OP_CONSTANTS, &vec![4]),
+                    make(OP_CONSTANTS, &vec![5]),
+                    make(OP_MULTIPLY, &vec![]),
+                    make(OP_HASH, &vec![4]),
+                    make(OP_POP, &vec![]),
+                ],
+            ),
+        ];
+
+        run_compiler_tests(tests)
+    }
 
     #[test]
     fn test_global_let_statements() {
