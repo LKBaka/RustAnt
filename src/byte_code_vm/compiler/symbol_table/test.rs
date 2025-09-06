@@ -3,8 +3,7 @@ mod test {
     use colored::Colorize;
 
     use crate::{
-        byte_code_vm::compiler::symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
-        map, rc_ref_cell,
+        byte_code_vm::compiler::symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable}, rc_ref_cell,
         utils::assert_eq,
     };
 
@@ -15,19 +14,14 @@ mod test {
 
     #[test]
     fn test_define() {
-        let expected = map![
-            "a",
-            Symbol::new("a".into(), SymbolScope::Global, 0),
-            "b",
-            Symbol::new("b".into(), SymbolScope::Global, 1),
+        let expected = vec![
+            ("a", Symbol::new("a".into(), SymbolScope::Global, 0)),
+            ("b", Symbol::new("b".into(), SymbolScope::Global, 1)),
         ];
 
         let mut global = SymbolTable::new();
 
-        for pair in expected {
-            let name = pair.key;
-            let expected_symbol = pair.value;
-
+        for (name, expected_symbol) in expected {
             let result = global.define(name);
 
             if result != expected_symbol {
