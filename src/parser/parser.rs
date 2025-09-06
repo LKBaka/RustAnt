@@ -13,6 +13,7 @@ use crate::parser::parse_functions::parse_none::parse_none;
 use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
 use crate::parser::parse_functions::parse_test_print_expression::parse_test_print_expression;
 use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expression;
+use crate::parser::parse_functions::parse_use_statement::parse_use_statement;
 use crate::parser::precedence::*;
 use crate::token::token::Token;
 use crate::token::token_type::TokenType;
@@ -86,6 +87,9 @@ impl Parser {
         parser
             .statement_parse_fn_map
             .insert(TokenType::While, parse_while_statement);
+        parser
+            .statement_parse_fn_map
+            .insert(TokenType::Use, parse_use_statement);
 
         parser
             .prefix_parse_fn_map

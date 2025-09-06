@@ -63,6 +63,7 @@ pub enum TokenType {
     GetClassMember,
     Comment,
     TestPrint,
+    Use,
     Eof,
 }
 
@@ -133,6 +134,7 @@ impl TokenType {
             TokenType::TestPrint => "TestPrint",
             TokenType::Comment => "Comment",
             TokenType::None => "None",
+            TokenType::Use => "Use"
         }
     }
 }
@@ -195,5 +197,6 @@ pub static TOKEN_TYPE_MAP: phf::Map<&'static str, TokenType> = phf_map! {
     "::" => TokenType::GetClassMember,
     "TESTPRINT" => TokenType::TestPrint,
     "NONE" => TokenType::None,
+    "USE" => TokenType::Use,
     "\0" => TokenType::Eof,
 };
