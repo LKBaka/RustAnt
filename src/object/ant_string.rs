@@ -7,7 +7,7 @@ use crate::object::object::{IAntObject, ObjectType, STRING};
 
 #[derive(Clone)]
 pub struct AntString {
-    id: usize,
+    pub id: usize,
     pub value: String,
 }
 

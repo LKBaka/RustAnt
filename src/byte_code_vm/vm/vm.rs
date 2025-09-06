@@ -5,16 +5,13 @@ use crate::object::id_counter::next_id;
 use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
-            read_uint16, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            read_uint16, OP_ADD, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::compiler::ByteCode,
         constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJ},
         vm::{
             eval_functions::{
-                eval_array_literal_utils::build_array,
-                eval_index_expression::eval_index_expression,
-                eval_infix_operator::eval_infix_operator,
-                eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index,
+                eval_array_literal_utils::build_array, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
             },
             frame::Frame,
             function_utils::{self, push_closure},
@@ -264,6 +261,20 @@ impl Vm {
                     let push_result = self.push(rc_ref_cell!(Object::AntArray(array_obj)));
                     if let Err(msg) = push_result {
                         return Err(format!("error push array object: {msg}"));
+                    }
+                }
+
+                OP_HASH => {
+                    let items_len = read_uint16(&instructions.borrow()[(ip + 1)..]);
+                    self.current_frame().borrow_mut().ip += 2;
+
+                    let array_obj = build_hash_map(&self.stack, self.sp - items_len as usize, self.sp);
+
+                    self.sp -= items_len as usize;
+
+                    let push_result = self.push(rc_ref_cell!(Object::AntHashMap(array_obj)));
+                    if let Err(msg) = push_result {
+                        return Err(format!("error push hash map object: {msg}"));
                     }
                 }
 

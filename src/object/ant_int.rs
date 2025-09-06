@@ -9,7 +9,7 @@ use crate::object::object::{IAntObject, INT, ObjectType};
 
 #[derive(Clone)]
 pub struct AntInt {
-    id: usize,
+    pub id: usize,
     pub value: BigDecimal,
 }
 
