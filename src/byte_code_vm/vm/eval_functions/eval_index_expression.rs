@@ -2,7 +2,7 @@ use num_traits::Signed;
 use num_traits::cast::ToPrimitive;
 
 use crate::{
-    big_dec, obj_enum::object::Object, object::{ant_array::AntArray, ant_int::AntInt, object::{IAntObject, INT, STRING}}, try_unwrap
+    big_dec, obj_enum::object::Object, object::{ant_array::AntArray, ant_int::AntInt, ant_string::AntString, object::{IAntObject, INT, STRING}}, try_unwrap
 };
 
 fn eval_array_index_expression(arr: &AntArray, index: &AntInt) -> Result<Object, String> {
@@ -59,6 +59,31 @@ pub fn eval_index_expression(obj: Object, index: Object) -> Result<Object, Strin
                 "cannot found key '{}'", 
                 if index.get_type() != STRING {index.inspect()} else {format!("\"{}\"", index.inspect())}
             ))
+        }
+
+        Object::AntString(s) => {
+            let index_type = index.get_type();
+
+            let i = try_unwrap!(index, Object::AntInt(idx));
+            let index = if i.is_none() {
+                return Err(format!(
+                    "string indices must be {INT}, not {}",
+                    index_type
+                ))
+            } else {
+                i.unwrap()
+            };
+
+            let idx = index.value.to_usize().unwrap();
+            let ch = s.value.chars().nth(idx).ok_or_else(|| {
+                format!(
+                    "string index out of range, index: {}, string length: {}",
+                    idx,
+                    s.value.chars().count()
+                )
+            })?;
+            
+            Ok(Object::AntString(AntString::new(ch.to_string())))
         }
 
         _ => Err(format!("object {:?} is not a subscriptable", obj))
