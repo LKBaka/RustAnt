@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use crate::impl_object;
 use crate::obj_enum::object::Object;
 use crate::object::id_counter::next_id;
-use crate::object::object::{IAntObject, ObjectType, ARRAY, HASH_MAP, STRING};
+use crate::object::object::{IAntObject, ObjectType, HASH_MAP, STRING};
 
 #[derive(Clone)]
 pub struct AntHashMap {
