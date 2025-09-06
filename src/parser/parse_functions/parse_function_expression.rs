@@ -11,13 +11,13 @@ use crate::parser::parser::Parser;
 pub fn parse_function_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let token = parser.cur_token.clone();
 
-    if !parser.expect_peek(TokenType::Ident) {
-        return None;
-    }
+    let name = if parser.peek_token_is(TokenType::Ident) {
+        parser.next_token(); // 前进到标识符
 
-    parser.next_token(); // 前进到标识符
-
-    let name = Some(parser.cur_token.value.clone());
+        Some(parser.cur_token.value.clone())
+    } else {
+        None
+    };
 
     if !parser.expect_peek(TokenType::LParen) {
         return None;
