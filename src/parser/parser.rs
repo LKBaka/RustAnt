@@ -7,6 +7,7 @@ use crate::parser::parse_functions::parse_assignment_expression::parse_assignmen
 use crate::parser::parse_functions::parse_boolean::parse_boolean;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
 use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
+use crate::parser::parse_functions::parse_hash_literal::parse_hash_literal;
 use crate::parser::parse_functions::parse_index_expression::parse_index_expression;
 use crate::parser::parse_functions::parse_none::parse_none;
 use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
@@ -125,6 +126,9 @@ impl Parser {
         parser
             .prefix_parse_fn_map
             .insert(TokenType::None, parse_none);
+        parser
+            .prefix_parse_fn_map
+            .insert(TokenType::LBrace, parse_hash_literal);
         parser
             .prefix_parse_fn_map
             .insert(TokenType::TestPrint, parse_test_print_expression);
