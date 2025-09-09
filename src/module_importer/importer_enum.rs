@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, str::FromStr};
 
-use crate::{constants::MODULE_PATHS, module_importer::ant_module_importer::AntModuleImporter, obj_enum::object::Object, object::ant_class::AntClass};
+use crate::{constants::MODULE_PATHS, module_importer::{ant_module_importer::AntModuleImporter, native_module_importer::NativeModuleImporter}, obj_enum::object::Object, object::ant_class::AntClass};
 
 pub struct ModuleImporter;
 
@@ -28,11 +28,21 @@ impl ModuleImporter {
                 let mut try_ant_mod = path_buf.clone();
                 try_ant_mod.push(format!("{import}.ant"));
 
-                // let mut try_native_mod = path_buf.clone();
-                // try_native_mod.push(format!("{import}.dll"));
+                let mut try_native_mod = path_buf.clone();
+
+                #[cfg(target_os = "windows")]
+                try_native_mod.push(format!("{import}.dll"));
+
+                #[cfg(target_os = "linux")]
+                try_native_mod.push(format!("{import}.so"));
 
                 if try_ant_mod.exists() {
                     results.push(Self::import_ant_module(&try_ant_mod));
+                    continue;
+                }
+
+                if try_native_mod.exists() {
+                    results.push(Self::import_native_module(&try_native_mod));
                     continue;
                 }
             }
@@ -50,5 +60,16 @@ impl ModuleImporter {
         };
 
         ant_mod_importer.import()
+    }
+
+    fn import_native_module(file: &Path) -> Result<AntClass, String> {
+        let native_mod_importer = NativeModuleImporter {
+            file: file
+                .to_str()
+                .unwrap()
+                .to_string()
+        };
+
+        native_mod_importer.import()
     }
 }
