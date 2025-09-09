@@ -41,8 +41,11 @@ pub const OP_NONE: u8 = 30;
 pub const OP_HASH: u8 = 31;
 pub const OP_AND: u8 = 32;
 pub const OP_OR: u8 = 33;
-pub const OP_TEST_PRINT: u8 = 254;
-pub const OP_NOP: u8 = 255;
+pub const OP_GET_FIELD: u8 = 34;
+pub const OP_SET_FIELD: u8 = 35;
+pub const OP_CLASS: u8 = 37;
+pub const OP_TEST_PRINT: u8 = 38;
+pub const OP_NOP: u8 = 39;
 
 pub const INFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_map! {
     "+" => OP_ADD,
@@ -108,7 +111,7 @@ lazy_static! {
         );
         m.insert(OP_ARRAY, Definition::new("OpArray".into(), vec![2]));
         m.insert(OP_INDEX, Definition::new("OpIndex".into(), vec![]));
-        m.insert(OP_CALL, Definition::new("OpCall".into(), vec![2]));
+        m.insert(OP_CALL, Definition::new("OpCall".into(), vec![1]));
         m.insert(
             OP_RETURN_VALUE,
             Definition::new("OpReturnValue".into(), vec![]),
@@ -131,6 +134,9 @@ lazy_static! {
         m.insert(OP_AND, Definition::new("OpAnd".into(), vec![]));
         m.insert(OP_OR, Definition::new("OpOr".into(), vec![]));
         m.insert(OP_HASH, Definition::new("OpHash".into(), vec![2]));
+        m.insert(OP_GET_FIELD, Definition::new("OpGetField".into(), vec![2]));
+        m.insert(OP_SET_FIELD, Definition::new("OpSetField".into(), vec![0]));
+        m.insert(OP_CLASS, Definition::new("OpClass".into(), vec![2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
@@ -138,7 +144,7 @@ lazy_static! {
     };
 }
 
-#[inline]
+#[inline(always)]
 pub fn lookup(op: u8) -> Result<Definition, String> {
     let definition = definitions.get(&op);
 
@@ -148,6 +154,7 @@ pub fn lookup(op: u8) -> Result<Definition, String> {
     }
 }
 
+#[inline(always)]
 pub fn make(op: OpCode, operands: &Vec<u16>) -> Vec<u8> {
     let definition = definitions.get(&op);
 
@@ -308,12 +315,12 @@ pub fn read_operands(def: &Definition, ins: &Instructions) -> (Vec<i32>, usize) 
     (operands, offset)
 }
 
-#[inline]
+#[inline(always)]
 pub fn read_uint16(ins: &[u8]) -> u16 {
     BigEndian::read_u16(ins)
 }
 
-#[inline]
+#[inline(always)]
 pub fn read_uint8(ins: &[u8]) -> u8 {
     ins[0]
 }
