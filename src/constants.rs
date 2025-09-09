@@ -1,8 +1,13 @@
+use std::sync::{Arc, Mutex};
+
 use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 
 use crate::obj_enum::object::Object;
+use crate::object::ant_array::AntArray;
 use crate::object::ant_boolean::AntBoolean;
 use crate::object::ant_none::AntNone;
+use crate::object::ant_string::AntString;
 use crate::object::ant_uninit::AntUninit;
 
 pub const NULL_CHAR: char = '\0';
@@ -26,3 +31,15 @@ lazy_static! {
         Object::AntBoolean(AntBoolean::from(false))
     };
 }
+
+pub static MODULE_PATHS: Lazy<Arc<Mutex<AntArray>>> = Lazy::new(
+    || Arc::new(Mutex::new(AntArray::from(vec![
+        Object::AntString(AntString::new(
+            std::env::current_dir()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string()
+        ))
+    ])))
+);

@@ -4,14 +4,14 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJ},
         vm::{frame::Frame, vm::Vm},
-    }, obj_enum::object::Object, object::{ant_closure::Closure, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
+    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_compiled_function::CompiledFunction, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
     let calling_obj = &vm.stack[vm.sp - 1 - arg_count];
 
     if calling_obj.borrow().get_type() == CLOSURE {
-        call_function(vm, calling_obj.clone(), arg_count)
+        call_closure(vm, calling_obj.clone(), arg_count)
     } else if calling_obj.borrow().get_type() == NATIVE_FUNCTION {
         call_native(vm, calling_obj.clone(), arg_count)
     } else {
@@ -53,7 +53,7 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
     Ok(())
 }
 
-pub fn call_function(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
+pub fn call_closure(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
     let obj_borrow = obj.borrow();
 
     let calling_obj = if let Object::Closure(it) = &*obj_borrow {
