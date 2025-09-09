@@ -23,6 +23,7 @@ pub const COMPILED_FUNCTION: &str = "CompiledFunction";
 pub const CLOSURE: &str = "Closure";
 pub const ARRAY: &str = "Array";
 pub const HASH_MAP: &str = "HashMap";
+pub const CLASS: &str = "Class";
 
 pub trait AsAnyMut {
     fn as_any_mut(&mut self) -> &mut dyn Any;

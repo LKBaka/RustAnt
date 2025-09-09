@@ -1,19 +1,21 @@
 use std::any::Any;
 
+use hashbrown::HashMap;
+
 use crate::impl_object;
 use crate::obj_enum::object::Object;
-use crate::object::object::{IAntObject, ObjectType};
+use crate::object::id_counter::next_id;
+use crate::object::object::{IAntObject, ObjectType, CLASS};
 
 #[derive(Clone)]
 pub struct AntClass {
     pub id: usize,
-    pub name: String,
-    pub base: Option<Box<Object>>,
+    pub map: HashMap<Object, Object>,
 }
 
 impl IAntObject for AntClass {
     fn get_type(&self) -> ObjectType {
-        "CLASS".to_string()
+        CLASS.to_string()
     }
 
     fn get_value(&self) -> Box<dyn Any> {
@@ -29,7 +31,7 @@ impl IAntObject for AntClass {
     }
 
     fn inspect(&self) -> String {
-        format!("<Class {}>", self.id)
+        format!("<Class Id: {}, IdentMap: {:#?}>", self.id, self.map)
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
@@ -42,3 +44,12 @@ impl IAntObject for AntClass {
 }
 
 impl_object!(AntClass);
+
+impl From<HashMap<Object, Object>> for AntClass {
+    fn from(value: HashMap<Object, Object>) -> Self {
+        Self {
+            id: next_id(),
+            map: value
+        }
+    }
+}
