@@ -20,7 +20,7 @@ pub fn parse_use_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
     // 设置标识符
     ident = create_identifier(parser.cur_token.clone(), parser.cur_token.value.clone());
 
-    if parser.peek_token_is(Semicolon) {
+    if !parser.peek_token_is(TokenType::As) {
         parser.next_token();
         return Some(Box::new(create_use_statement(token, ident, None)));
     }
