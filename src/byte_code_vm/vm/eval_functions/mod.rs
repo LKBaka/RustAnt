@@ -4,3 +4,4 @@ pub mod eval_infix_operator;
 pub mod eval_prefix_operator;
 pub mod eval_set_index;
 pub mod eval_hash_literal_utils;
+pub mod eval_class_utils;
