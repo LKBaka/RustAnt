@@ -5,10 +5,10 @@ use crate::object::id_counter::next_id;
 use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
-            read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         }, compiler::compiler::ByteCode, constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJ}, utils::native_boolean_to_object, vm::{
             eval_functions::{
-                eval_array_literal_utils::build_array, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
+                eval_array_literal_utils::build_array, eval_class_utils::build_class, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
             },
             frame::Frame,
             function_utils::{self, push_closure},
@@ -16,7 +16,7 @@ use crate::{
     }, obj_enum::object::Object, object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
-        object::{IAntObject, UNINIT},
+        object::{IAntObject, STRING, UNINIT},
         utils::rrc_is_truthy,
     }, rc_ref_cell
 };
@@ -24,11 +24,10 @@ use crate::{
 pub const STACK_SIZE: u16 = 2048;
 pub const GLOBALS_SIZE: u16 = 65535;
 
-
 pub struct Vm {
     pub constants: Vec<Rc<RefCell<Object>>>,
     pub stack: Vec<Rc<RefCell<Object>>>,
-    globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    pub globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
     frames: Vec<Frame>,
     frame_index: usize,
     pub sp: usize, // stack next pos
@@ -55,7 +54,7 @@ impl Vm {
 
         Vm {
             constants: bytecode.constants,
-            stack: vec![],
+            stack: vec![uninit.clone(); STACK_SIZE as usize],
             globals: rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]),
             frames: vec![main_frame],
             frame_index: 1,
@@ -82,9 +81,11 @@ impl Vm {
 
         let main_frame = Frame::new(main_closure, 0);
 
+        let uninit = rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()));
+
         Vm {
             constants: bytecode.constants,
-            stack: vec![],
+            stack: vec![uninit.clone(); STACK_SIZE as usize],
             globals,
             frames: vec![main_frame],
             frame_index: 1,
@@ -238,11 +239,7 @@ impl Vm {
                         FALSE.clone()
                     };
 
-                    let push_result = self.push(rc_ref_cell!(Object::AntBoolean(obj)));
-
-                    if push_result.is_err() {
-                        return push_result;
-                    }
+                    self.push(rc_ref_cell!(Object::AntBoolean(obj)))?
                 }
 
                 OP_MINUS..=OP_BANG => {
@@ -310,11 +307,11 @@ impl Vm {
                     let items_len = read_uint16(&instructions[(ip + 1)..]);
                     self.current_frame().ip += 2;
 
-                    let array_obj = build_hash_map(&self.stack, self.sp - items_len as usize, self.sp);
+                    let map = build_hash_map(&self.stack, self.sp - items_len as usize, self.sp);
 
                     self.sp -= items_len as usize;
 
-                    let push_result = self.push(rc_ref_cell!(Object::AntHashMap(array_obj)));
+                    let push_result = self.push(rc_ref_cell!(Object::AntHashMap(map)));
                     if let Err(msg) = push_result {
                         return Err(format!("error push hash map object: {msg}"));
                     }
@@ -349,8 +346,8 @@ impl Vm {
                 }
 
                 OP_CALL => {
-                    let arg_count = read_uint16(&instructions[(ip + 1)..]);
-                    self.current_frame().ip += 2;
+                    let arg_count = instructions[ip + 1];
+                    self.current_frame().ip += 1;
 
                     if let Err(msg) = function_utils::call(self, arg_count as usize) {
                         return Err(format!("error calling function: {msg}"));
@@ -373,6 +370,23 @@ impl Vm {
                         if let Err(msg) = self.push(value) {
                             return Err(format!("error push return value: {msg}"));
                         }
+                    }
+                }
+
+                OP_RETURN => {
+                    let return_value = NONE_OBJ.clone();
+
+                    if self.frame_index == 1 {
+                        // 没栈帧可榨了 说明已经到了主栈帧 直接报错
+                        return Err(format!("cannot return outside function"))
+                    }
+
+                    let frame = self.pop_frame(); // 弹出当前帧
+
+                    self.sp = frame.base_pointer - 1;
+
+                    if let Err(msg) = self.push(rc_ref_cell!(return_value)) {
+                        return Err(format!("error push return value: {msg}"));
                     }
                 }
 
@@ -500,6 +514,103 @@ impl Vm {
                     }
                 }
 
+                OP_CLASS => {
+                    let symbols_len = read_uint16(&instructions[(ip + 1)..]);
+                    self.current_frame().ip += 2;
+
+                    let clazz = build_class(
+                        &self.stack, self.sp - symbols_len as usize, self.sp
+                    );
+
+                    self.sp -= symbols_len as usize;
+
+                    let push_result = self.push(rc_ref_cell!(Object::AntClass(clazz)));
+                    if let Err(msg) = push_result {
+                        return Err(format!("error push class object: {msg}"));
+                    }
+                }
+
+                OP_GET_FIELD => {
+                    let field_obj_index = read_uint16(&instructions[ip + 1..]);
+                    self.current_frame().ip += 2;
+
+                    let field_obj = self.constants[field_obj_index as usize].clone();
+
+                    let obj = self.pop();
+
+                    // 天哪那么多缩进我不会被拉去皮豆吧
+                    if let Some(o) = obj {
+                        let o_borrow = o.borrow();
+
+                        if let Object::AntClass(clazz) = &*o_borrow {
+                            let field_obj = field_obj.borrow().clone();
+
+                            let value = if let Some(it) = clazz.map
+                                .get(&field_obj) 
+                            {
+                                it    
+                            } else {
+                                return Err(format!(
+                                    "object '{}' has no field '{}'", clazz.inspect(), field_obj.inspect()
+                                ))
+                            };
+
+                            if let Err(msg) = self.push(
+                                rc_ref_cell!(value.clone())
+                            ) {
+                                return Err(format!("error push field: {msg}"))
+                            }
+
+                            continue;
+                        }
+
+                        return Err(format!(
+                            "expected an class to get field"
+                        ))
+                    } else {
+                        return Err(format!(
+                            "expected an object to get field"
+                        ))   
+                    }
+                }
+
+                OP_SET_FIELD => {
+                    let target = match self.pop() {
+                        Some(it) => it,
+                        None => return Err(format!("expected an object to set field value")),
+                    };
+
+                    let ident = match self.pop() {
+                        Some(it) => it,
+                        None => return Err(format!("expected an field to set value")),
+                    };
+
+                    let value = match self.pop() {
+                        Some(it) => it,
+                        None => return Err(format!("expected an value to set field")),
+                    }
+                    .borrow()
+                    .clone();
+
+                    let mut target_borrow = target.borrow_mut();
+                    let ident_borrow = ident.borrow();
+                    
+                    match &mut *target_borrow {
+                        Object::AntClass(clazz) => {
+                            if ident_borrow.get_type() != STRING {
+                                return Err(format!("field must be a stirng, not {}", ident_borrow.get_type()))
+                            }
+
+                            clazz.map.insert(ident_borrow.clone(), value);
+                        }
+
+                        _ => return Err(format!(
+                            "expected an class to set field value, got {}",
+                            target_borrow.get_type()
+                        ))
+                    }
+                }
+
                 OP_NONE => {
                     if let Err(msg) = self.push(rc_ref_cell!(NONE_OBJ.clone())) {
                         return Err(format!("error push none object: {msg}"));
@@ -543,11 +654,6 @@ impl Vm {
             return Err("Stack overflow".to_string());
         }
 
-        if self.sp >= self.stack.len() {
-            self.stack
-                .resize(self.sp + 1, rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone())));
-        }
-
         self.stack[self.sp] = obj;
 
         self.sp += 1;
@@ -559,7 +665,7 @@ impl Vm {
     pub fn pop(&mut self) -> Option<Rc<RefCell<Object>>> {
         if self.sp == 0 { return None }
 
-        let result = self.stack.get(self.sp - 1)?;
+        let result = &self.stack[self.sp - 1];
 
         self.sp -= 1;
 
