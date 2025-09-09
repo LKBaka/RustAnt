@@ -11,23 +11,23 @@ use crate::{
     ast::{
         ast::{ExpressionStatement, Node, Program},
         expressions::{
-            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, hash_literal::HashLiteral, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
+            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, hash_literal::HashLiteral, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, object_member_expression::ObjectMemberExpression, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
         },
         statements::{
-            block_statement::BlockStatement, let_statement::LetStatement, while_statement::WhileStatement
+            block_statement::BlockStatement, class_statement::ClassStatement, let_statement::LetStatement, use_statement::UseStatement, while_statement::WhileStatement
         },
     }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
-                compile_call_expression::compile_call_expression, compile_function_expression::compile_function_expression, compile_hash_literal::compile_hash_literal, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement
+                compile_call_expression::compile_call_expression, compile_class::compile_class, compile_function_expression::compile_function_expression, compile_hash_literal::compile_hash_literal, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement
             },
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-    }, convert_type_to_owned, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, struct_type_id
+    }, convert_type_to_owned, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, struct_type_id
 };
 
 #[derive(Debug, Clone)]
@@ -112,6 +112,7 @@ impl Compiler {
         m.insert(struct_type_id!(CallExpression), compile_call_expression);
         m.insert(struct_type_id!(HashLiteral), compile_hash_literal);
         m.insert(struct_type_id!(WhileStatement), compile_while_statement);
+        m.insert(struct_type_id!(ClassStatement), compile_class);
     }
 
     pub fn init_builtin_map(table: Rc<RefCell<SymbolTable>>) {
@@ -329,17 +330,34 @@ impl Compiler {
                         },
                         vec![symbol.index as u16],
                     );
-                } else if let Ok(index_expr) = anyed_expr.downcast::<IndexExpression>() {
-                    if let Err(msg) = self.compile(index_expr.index) {
+                } else if let Some(index_expr) = anyed_expr.downcast_ref::<IndexExpression>() {
+                    if let Err(msg) = self.compile(index_expr.index.clone()) {
                         return Err(format!("error compile index: {msg}"));
                     }
 
-                    if let Err(msg) = self.compile(index_expr.expr) {
-                        return Err(format!("error compile index: {msg}"));
+                    if let Err(msg) = self.compile(index_expr.expr.clone()) {
+                        return Err(format!("error compile target: {msg}"));
                     }
 
                     self.emit(OP_SET_INDEX, vec![]);
-                }
+                } else if let Ok(obj_member) = 
+                    anyed_expr.downcast::<ObjectMemberExpression>() 
+                {
+                    if let Some(field) = (
+                        obj_member.right.as_ref() as &dyn Any
+                    ).downcast_ref::<Identifier>() {
+                        let field_obj = Object::AntString(AntString::new(field.value.clone()));
+                        let field_index = self.add_constant(field_obj) as u16;
+
+                        self.emit(OP_CONSTANTS, vec![field_index]);
+
+                        if let Err(msg) = self.compile(obj_member.left) {
+                            return Err(format!("error compile object: {msg}"));
+                        }
+
+                        self.emit(OP_SET_FIELD, vec![]);
+                    }
+                } 
 
                 Ok(())
             }
@@ -415,6 +433,74 @@ impl Compiler {
                 Ok(())
             }
 
+            id if id == TypeId::of::<ObjectMemberExpression>() => {
+                let obj_member_expr = convert_type_to_owned!(ObjectMemberExpression, node);
+
+                if let Err(msg) = self.compile(obj_member_expr.left) {
+                    return Err(format!("error compile object: {msg}"))    
+                }
+                
+                let field = if let Ok(it) = (
+                    obj_member_expr.right as Box<dyn Any>
+                ).downcast::<Identifier>() {
+                    *it
+                } else {
+                    return Err(format!("expected an identifier of object member"))
+                };
+                
+                let field_obj = Object::AntString(AntString::new(field.value));
+
+                let field_constant_index = self.add_constant(field_obj) as u16;
+
+                self.emit(
+                    OP_GET_FIELD,
+                    vec![field_constant_index]
+                );
+
+                Ok(())
+            }
+            
+            id if id == TypeId::of::<UseStatement>() => {
+                let use_statement = convert_type_to_owned!(UseStatement, node);
+
+                let m = ModuleImporter::import(vec![
+                    &use_statement.name.value
+                ]);
+
+                if m.is_empty() {
+                    return Err(format!("cannot found module '{}'", use_statement.name.value))
+                }
+
+                let module = match &m[0] {
+                    Ok(it) => it.clone(),
+                    Err(msg) => return Err(format!("error importing module: {msg}"))
+                };
+
+                let mod_index = self.add_constant(Object::AntClass(module));
+                self.emit(OP_CONSTANTS, vec![mod_index as u16]);
+
+                let name = if let Some(name) = &use_statement.alias {
+                    &name.value
+                } else {
+                    &use_statement.name.value
+                };
+
+                let symbol = self.symbol_table.borrow_mut().define(
+                    &name
+                );
+
+                self.emit(
+                    if self.symbol_table.borrow().outer.is_none() {
+                        OP_SET_GLOBAL
+                    } else {
+                        OP_SET_LOCAL
+                    },
+                    vec![symbol.index as u16],
+                );
+
+                Ok(())
+            }
+            
             id if id == TypeId::of::<TestPrintExpression>() => {
                 let test_print_expr = convert_type_to_owned!(TestPrintExpression, node);
 
@@ -440,7 +526,7 @@ impl Compiler {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn load_symbol(&mut self, symbol: &Symbol) {
         match symbol.scope {
             SymbolScope::Global => self.emit(OP_GET_GLOBAL, vec![symbol.index as u16]),
@@ -448,6 +534,7 @@ impl Compiler {
             SymbolScope::Free => self.emit(OP_GET_FREE, vec![symbol.index as u16]),
             SymbolScope::Function => self.emit(OP_CURRENT_CLOSURE, vec![]),
             SymbolScope::Builtin => self.emit(OP_GET_BUILTIN, vec![symbol.index as u16]),
+            _ => panic!("unknown symbol scope: {:?}", symbol.scope)
         };
     }
 

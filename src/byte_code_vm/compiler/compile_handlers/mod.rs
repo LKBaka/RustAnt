@@ -5,3 +5,4 @@ pub mod compile_infix_expression;
 pub mod compile_prefix_expression;
 pub mod compile_while_statement;
 pub mod compile_hash_literal;
+pub mod compile_class;
