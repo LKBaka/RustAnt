@@ -6,15 +6,21 @@ pub fn build_class(
     stack: &Vec<Rc<RefCell<Object>>>,
     start_index: usize,
     end_index: usize,
-) -> AntClass {
+) -> Result<AntClass, String> {
     let mut m = hashbrown::HashMap::with_capacity(end_index - start_index);
 
     for i in (start_index..end_index).step_by(2) {
         let k  = stack[i].borrow().clone();
+
+        let key = match k {
+            Object::AntString(s) => s.value,
+            _ => return Err(format!("expected an string field, got: {k:#?}"))
+        };
+
         let v  = stack[i + 1].borrow().clone();
 
-        m.insert(k, v);
+        m.insert(key, v);
     }
 
-    AntClass::from(m)
+    Ok(AntClass::from(m))
 }

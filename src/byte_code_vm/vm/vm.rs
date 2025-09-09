@@ -520,7 +520,7 @@ impl Vm {
 
                     let clazz = build_class(
                         &self.stack, self.sp - symbols_len as usize, self.sp
-                    );
+                    )?;
 
                     self.sp -= symbols_len as usize;
 
@@ -543,7 +543,12 @@ impl Vm {
                         let o_borrow = o.borrow();
 
                         if let Object::AntClass(clazz) = &*o_borrow {
-                            let field_obj = field_obj.borrow().clone();
+                            let field_obj = match field_obj.borrow().clone() {
+                                Object::AntString(s) => s.value,
+                                _ => return Err(format!(
+                                    "expected an string field, got: {:?}", field_obj.borrow().clone()
+                                ))
+                            };
 
                             let value = if let Some(it) = clazz.map
                                 .get(&field_obj) 
@@ -551,7 +556,7 @@ impl Vm {
                                 it    
                             } else {
                                 return Err(format!(
-                                    "object '{}' has no field '{}'", clazz.inspect(), field_obj.inspect()
+                                    "object '{}' has no field '{}'", clazz.inspect(), field_obj
                                 ))
                             };
 
@@ -601,7 +606,7 @@ impl Vm {
                                 return Err(format!("field must be a stirng, not {}", ident_borrow.get_type()))
                             }
 
-                            clazz.map.insert(ident_borrow.clone(), value);
+                            clazz.map.insert(ident_borrow.inspect(), value);
                         }
 
                         _ => return Err(format!(

@@ -10,7 +10,7 @@ use crate::object::object::{IAntObject, ObjectType, CLASS};
 #[derive(Clone)]
 pub struct AntClass {
     pub id: usize,
-    pub map: HashMap<Object, Object>,
+    pub map: HashMap<String, Object>,
 }
 
 impl IAntObject for AntClass {
@@ -45,8 +45,8 @@ impl IAntObject for AntClass {
 
 impl_object!(AntClass);
 
-impl From<HashMap<Object, Object>> for AntClass {
-    fn from(value: HashMap<Object, Object>) -> Self {
+impl From<HashMap<String, Object>> for AntClass {
+    fn from(value: HashMap<String, Object>) -> Self {
         Self {
             id: next_id(),
             map: value

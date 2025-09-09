@@ -2,7 +2,7 @@ use std::fs;
 
 use hashbrown::HashMap;
 
-use crate::{builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{compiler::{compiler::Compiler, symbol_table::symbol_table::Symbol}, vm::vm::Vm}, obj_enum::object::Object, object::{ant_class::AntClass, ant_string::AntString, object::{IAntObject, UNINIT}}, parser::utils::parse};
+use crate::{builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{compiler::compiler::Compiler, vm::vm::Vm}, object::ant_class::AntClass, parser::utils::parse};
 
 pub struct AntModuleImporter {
     pub file: String
@@ -58,7 +58,7 @@ impl AntModuleImporter {
                     let global = vm_globals[symbol.index].borrow().clone();
 
                     globals.insert(
-                        Object::AntString(AntString::new(name.to_string())),
+                        name.clone(),
                         global
                     );
                 });
