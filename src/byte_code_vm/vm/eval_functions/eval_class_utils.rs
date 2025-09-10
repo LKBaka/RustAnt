@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{obj_enum::object::Object, object::ant_class::AntClass};
 
@@ -7,7 +7,7 @@ pub fn build_class(
     start_index: usize,
     end_index: usize,
 ) -> Result<AntClass, String> {
-    let mut m = hashbrown::HashMap::with_capacity(end_index - start_index);
+    let mut m = HashMap::with_capacity(end_index - start_index);
 
     for i in (start_index..end_index).step_by(2) {
         let k  = stack[i].borrow().clone();

@@ -1,6 +1,5 @@
 use std::any::Any;
-
-use hashbrown::HashMap;
+use std::collections::HashMap;
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;

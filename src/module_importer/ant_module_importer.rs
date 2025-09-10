@@ -1,6 +1,4 @@
-use std::fs;
-
-use hashbrown::HashMap;
+use std::{collections::HashMap, fs};
 
 use crate::{builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{compiler::compiler::Compiler, vm::vm::Vm}, object::ant_class::AntClass, parser::utils::parse};
 
