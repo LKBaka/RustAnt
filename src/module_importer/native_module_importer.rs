@@ -18,7 +18,7 @@ impl NativeModuleImporter {
                 Err(err) => return Err(err.to_string())
             };
 
-            let get_all_exports: Symbol<fn() -> AntClass> = match lib.get(b"get_all_exports") {
+            let get_all_exports: Symbol<fn() -> AntClass> = match lib.get(b"get_all_exports\0") {
                 Ok(it) => it,
                 Err(err) => return Err(err.to_string())
             };
@@ -48,7 +48,6 @@ fn ensure_library_loaded(path: &str) -> Result<&'static Library, Error> {
 
     // 加载新库并保持
     let library = unsafe {
-        let _ = Library::new(path);
         Library::new(path)?
     };
 
