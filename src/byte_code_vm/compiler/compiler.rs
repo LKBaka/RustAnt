@@ -318,7 +318,7 @@ impl Compiler {
                         } else {
                             return Err(format!(
                                 "undefined identifier: {}. at line: {}, at file: {}",
-                                ident.token.line, ident.token.file, ident.value
+                                ident.value, ident.token.line, ident.token.file
                             ));
                         };
 
