@@ -36,7 +36,7 @@ impl IAntObject for AntNativeFunction {
     }
 
     fn inspect(&self) -> String {
-        format!("<NativeFunction id: {}>", self.id)
+        format!("<NativeFunction id: {} func: {:?}>", self.id, self.function)
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
