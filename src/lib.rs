@@ -3,7 +3,6 @@ pub mod arg_structure;
 pub mod ast;
 pub mod builtin;
 pub mod byte_code_vm;
-pub mod char_string;
 pub mod constants;
 pub mod lexer;
 pub mod object;

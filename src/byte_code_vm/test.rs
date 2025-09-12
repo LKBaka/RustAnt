@@ -1,6 +1,4 @@
-use crate::obj_enum::object::Object;
-use crate::object::object::IAntObject;
-
+#[cfg(test)]
 pub fn test_byte_code_rust_ant_main() {
     use std::cell::RefCell;
     use std::io;
@@ -12,6 +10,9 @@ pub fn test_byte_code_rust_ant_main() {
     use crate::byte_code_vm::constants::UNINIT_OBJ;
     use crate::byte_code_vm::vm::vm::GLOBALS_SIZE;
     use crate::rc_ref_cell;
+
+    use crate::obj_enum::object::Object;
+    use crate::object::object::IAntObject;
 
     let mut code;
 

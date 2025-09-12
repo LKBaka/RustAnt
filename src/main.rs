@@ -1,7 +1,6 @@
 mod arg_structure;
 mod ast;
 mod byte_code_vm;
-mod char_string;
 mod constants;
 mod lexer;
 mod object;

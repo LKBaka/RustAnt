@@ -4,7 +4,7 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJ},
         vm::{frame::Frame, vm::Vm},
-    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_compiled_function::CompiledFunction, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
+    }, obj_enum::object::Object, object::{ant_closure::Closure, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
@@ -38,7 +38,7 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
     vm.sp = base_pointer_of_function;
 
     // 将返回值放到栈顶（作为函数调用表达式的值）
-    if let Some(it) = result {
+    if let Some(it) = result? {
         if let Err(msg) = vm.push(rc_ref_cell!(it)) {
             return Err(format!("error push native function result: {msg}"))
         }

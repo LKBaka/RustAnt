@@ -506,9 +506,7 @@ impl Vm {
                     self.current_frame().ip += 2;
 
                     if let Err(msg) = self.push(
-                        rc_ref_cell!(Object::AntNativeFunction(
-                            BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone()
-                        ))
+                        rc_ref_cell!(BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone())
                     ) {
                         return Err(format!("error push builtin function: {msg}"))
                     }

@@ -4,80 +4,79 @@ use bigdecimal::BigDecimal;
 
 use crate::{obj_enum::object::Object, object::{ant_int::AntInt, ant_string::AntString, object::IAntObject}, utils::run_command};
 
-pub fn builtin_print(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_print(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
         .borrow();
 
     println!("{}", obj.inspect());
 
-    None
+    Ok(None)
 }
 
-pub fn builtin_len(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_len(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
         .borrow();
 
     match &*obj {
         Object::AntArray(arr) => {
-            Some(Object::AntInt(AntInt::from(arr.items.len())))
+            Ok(Some(Object::AntInt(AntInt::from(arr.items.len()))))
         }
 
         Object::AntString(s) => {
-            Some(Object::AntInt(AntInt::from(s.value.chars().count())))
+            Ok(Some(Object::AntInt(AntInt::from(s.value.chars().count()))))
         }
 
-        _ => panic!("expected an array or string of function len")
+        _ => Err(format!("expected an array or string of function len, got: {}", obj.inspect()))
     }
 }
 
-pub fn builtin_copy(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_copy(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
         .borrow()
         .clone();
 
-    Some(obj)
+    Ok(Some(obj))
 }
 
-pub fn builtin_id(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_id(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
         .borrow();
 
-    Some(Object::AntInt(AntInt::from(obj.get_id())))
+    Ok(Some(Object::AntInt(AntInt::from(obj.get_id()))))
 }
 
-pub fn builtin_obj_info(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_obj_info(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
         .borrow();
 
-    Some(Object::AntString(AntString::new(format!("{obj:#?}"))))
+    Ok(Some(Object::AntString(AntString::new(format!("{obj:#?}")))))
 }
 
-pub fn builtin_shell(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_shell(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
         .borrow();
 
     match &*obj {
         Object::AntString(s) => {
             let _ = run_command(&s.value);
+            Ok(None)
         }
 
-        _ => panic!("expected an string to execute") 
+        _ => Err(format!("expected an string to execute, got: {}", obj.inspect())) 
     }
-
-    None
 }
 
-pub fn builtin_clear(_args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_clear(_args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     #[cfg(windows)]
     let _ = run_command("cls");
 
     #[cfg(not(windows))]
     let _ = run_command("clear");
 
-    None
+    Ok(None)
 }
 
-pub fn builtin_force_exit(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
+pub fn builtin_force_exit(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
         .borrow();
 
@@ -94,17 +93,17 @@ pub fn builtin_force_exit(args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
             )
         }
 
-        _ => panic!("expected an integer to return") 
+        _ => Err(format!("expected an integer to return, got: {}", obj.inspect())) 
     }
 }
 
-pub fn builtin_now(_args: Vec<Rc<RefCell<Object>>>) -> Option<Object> {
-    Some(Object::AntInt(AntInt::from(
+pub fn builtin_now(_args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    Ok(Some(Object::AntInt(AntInt::from(
         BigDecimal::from(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_secs()
         )
-    )))
+    ))))
 }
