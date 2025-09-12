@@ -1,0 +1,6 @@
+use mod1;
+print(mod1.bro_give_you)
+
+print("native mod:")
+use test_mod;
+print(test_mod.__donot_call_me_please__())
