@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, str::FromStr};
+use std::{collections::HashMap, fs, path::{Path, PathBuf}, str::FromStr};
 
 use crate::{constants::MODULE_PATHS, module_importer::{ant_module_importer::AntModuleImporter, native_module_importer::NativeModuleImporter}, obj_enum::object::Object, object::ant_class::AntClass};
 
@@ -25,6 +25,13 @@ impl ModuleImporter {
                 let path_buf = PathBuf::from_str(&module_path)
                     .expect(&format!("invaild path: {module_path}"));
 
+                let mut try_folder = path_buf.clone();
+                try_folder.push(import);
+
+                if try_folder.exists() && try_folder.is_dir() {
+
+                }
+
                 let mut try_ant_mod = path_buf.clone();
                 try_ant_mod.push(format!("{import}.ant"));
 
@@ -43,6 +50,11 @@ impl ModuleImporter {
 
                 if try_native_mod.exists() {
                     results.push(Self::import_native_module(&try_native_mod));
+                    continue;
+                }
+
+                if try_folder.exists() {
+                    results.push(Self::import_folder(&try_folder));
                     continue;
                 }
             }
@@ -71,5 +83,72 @@ impl ModuleImporter {
         };
 
         native_mod_importer.import()
+    }
+
+    fn import_folder(path: &Path) -> Result<AntClass, String> {
+        let mut m = HashMap::new();
+
+        fn walk(dir: &Path, map: &mut HashMap<String, Object>) -> Result<(), String> {
+            let entries = fs::read_dir(dir).map_err(|e| format!("read_dir failed: {e}"))?;
+
+            for entry in entries {
+                let entry = entry.map_err(|e| format!("dir entry failed: {e}"))?;
+                let path = entry.path();
+
+                let file_name = path.file_stem().unwrap().to_str().unwrap().to_string();
+
+                if path.is_dir() {
+                    let mut dir_map = HashMap::new();
+
+                    // 递归子目录
+                    walk(&path, &mut dir_map)?;
+
+                    let dir_obj = AntClass::from(dir_map);
+                    
+                    map.insert(
+                        file_name,
+                        Object::AntClass(dir_obj)
+                    );
+                } else if path
+                    .extension()
+                    .and_then(
+                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
+                    ) == Some(String::from("ant"))
+                {
+                    map.insert(
+                        file_name,
+                        Object::AntClass(ModuleImporter::import_ant_module(&path)?)
+                    );
+                } else if path
+                    .extension()
+                    .and_then(
+                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
+                    ) == Some(String::from("dll")) 
+                    ||
+                    path
+                    .extension()
+                    .and_then(
+                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
+                    ) == Some(String::from("so"))
+                    ||
+                    path
+                    .extension()
+                    .and_then(
+                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
+                    ) == Some(String::from("dylib"))
+                {
+                    map.insert(
+                        file_name,
+                        Object::AntClass(ModuleImporter::import_native_module(&path)?)
+                    );
+                }
+            }
+
+            Ok(())
+        }
+
+        walk(path, &mut m)?;
+
+        Ok(AntClass::from(m))
     }
 }
