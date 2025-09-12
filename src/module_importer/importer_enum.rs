@@ -28,10 +28,6 @@ impl ModuleImporter {
                 let mut try_folder = path_buf.clone();
                 try_folder.push(import);
 
-                if try_folder.exists() && try_folder.is_dir() {
-
-                }
-
                 let mut try_ant_mod = path_buf.clone();
                 try_ant_mod.push(format!("{import}.ant"));
 
