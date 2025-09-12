@@ -9,7 +9,7 @@ use crate::object::object::{IAntObject, NATIVE_FUNCTION, ObjectType};
 
 use super::type_hint::TypeHintMap;
 
-pub type NativeFunction = fn(args: Vec<Rc<RefCell<Object>>>) -> Option<Object>;
+pub type NativeFunction = fn(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String>;
 
 #[derive(Clone)]
 pub struct AntNativeFunction {
