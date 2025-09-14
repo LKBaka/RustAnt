@@ -11,6 +11,7 @@ pub mod ant_native_function;
 pub mod ant_none;
 pub mod ant_hash_map;
 pub mod ant_string;
+pub mod ant_method;
 pub mod ant_uninit;
 pub mod object;
 pub mod object_macro;

@@ -12,6 +12,7 @@ use crate::object::ant_compiled_function::CompiledFunction;
 use crate::object::ant_double::AntDouble;
 use crate::object::ant_error::AntError;
 use crate::object::ant_int::AntInt;
+use crate::object::ant_method::Method;
 use crate::object::ant_native_function::AntNativeFunction;
 use crate::object::ant_none::AntNone;
 use crate::object::ant_string::AntString;
@@ -30,13 +31,14 @@ pub enum Object {
     AntClass,
     Closure,
     CompiledFunction,
+    Method,
     AntDouble,
     AntError,
     AntInt,
     AntNativeFunction,
     AntNone,
     AntString,
-    AntUninit
+    AntUninit,
 }
 
 impl AsAnyMut for Object {

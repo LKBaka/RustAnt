@@ -21,6 +21,7 @@ pub const ERROR: &str = "Error";
 pub const NATIVE_FUNCTION: &str = "NativeFunction";
 pub const COMPILED_FUNCTION: &str = "CompiledFunction";
 pub const CLOSURE: &str = "Closure";
+pub const METHOD: &str = "Method";
 pub const ARRAY: &str = "Array";
 pub const HASH_MAP: &str = "HashMap";
 pub const CLASS: &str = "Class";
