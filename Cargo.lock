@@ -195,7 +195,7 @@ dependencies = [
 [[package]]
 name = "global_env"
 version = "0.1.0"
-source = "git+https://github.com/LKBaka/global_env.git#5d31753229f5ce8626f16bbd5683bf73da0bab80"
+source = "git+https://github.com/LKBaka/global_env.git#8021cd5ec0740894b6ee11582759dfbdf6023f17"
 dependencies = [
  "windows",
  "winreg",
