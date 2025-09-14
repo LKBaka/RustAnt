@@ -1,4 +1,4 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
@@ -6,7 +6,7 @@ pub struct NoneLiteral {
     pub token: Token,
 }
 
-impl Node for NoneLiteral {
+impl INode for NoneLiteral {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -16,7 +16,7 @@ impl Node for NoneLiteral {
     }
 }
 
-impl Expression for NoneLiteral {}
+impl IExpression for NoneLiteral {}
 
 pub fn create_none_literal(token: Token) -> NoneLiteral {
     NoneLiteral { token }

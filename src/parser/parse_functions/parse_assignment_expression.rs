@@ -1,12 +1,12 @@
-use crate::ast::ast::Expression;
+use crate::ast::expr::Expression;
 use crate::ast::expressions::assignment_expression::create_assignment_expression;
 use crate::parser::parser::Parser;
 use crate::parser::precedence::Precedence::Lowest;
 
 pub fn parse_assignment_expression(
     parser: &mut Parser,
-    left: Box<dyn Expression>,
-) -> Option<Box<dyn Expression>> {
+    left: Expression,
+) -> Option<Expression> {
     let token = parser.cur_token.clone();
     let left_expression = left;
 
@@ -15,10 +15,10 @@ pub fn parse_assignment_expression(
     let value = parser.parse_expression(Lowest);
 
     if let Some(value) = value {
-        return Some(Box::new(create_assignment_expression(
+        return Some(Expression::AssignmentExpression(create_assignment_expression(
             token,
-            left_expression,
-            value,
+            Box::new(left_expression),
+            Box::new(value),
         )));
     }
 

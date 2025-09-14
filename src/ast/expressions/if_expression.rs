@@ -1,17 +1,19 @@
-use crate::ast::ast::{Expression, Node, Statement};
+use crate::ast::ast::{IExpression, INode};
 
+use crate::ast::expr::Expression;
+use crate::ast::stmt::Statement;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct IfExpression {
     pub token: Token,
-    pub condition: Box<dyn Expression>,          // 条件
-    pub consequence: Box<dyn Statement>,         // 默认块
-    pub alternative: Option<Box<dyn Statement>>, // Else 分支块
-    pub else_if_expressions: Option<Vec<Box<dyn Expression>>>, // ElseIf 分支块
+    pub condition: Box<Expression>,          // 条件
+    pub consequence: Statement,         // 默认块
+    pub alternative: Option<Statement>, // Else 分支块
+    pub else_if_expressions: Option<Vec<Box<Expression>>>, // ElseIf 分支块
 }
 
-impl Node for IfExpression {
+impl INode for IfExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -53,14 +55,14 @@ impl Node for IfExpression {
     }
 }
 
-impl Expression for IfExpression {}
+impl IExpression for IfExpression {}
 
 pub fn create_if_expression(
     token: Token,
-    condition: Box<dyn Expression>,
-    consequence: Box<dyn Statement>,
-    alternative: Option<Box<dyn Statement>>,
-    else_if_expressions: Option<Vec<Box<dyn Expression>>>,
+    condition: Box<Expression>,
+    consequence: Statement,
+    alternative: Option<Statement>,
+    else_if_expressions: Option<Vec<Box<Expression>>>,
 ) -> IfExpression {
     IfExpression {
         token,
@@ -84,11 +86,11 @@ impl Clone for ElseIfExpression {
 #[derive(Debug)]
 pub struct ElseIfExpression {
     pub token: Token,
-    pub condition: Box<dyn Expression>,  // 条件
-    pub consequence: Box<dyn Statement>, // 默认块
+    pub condition: Box<Expression>,  // 条件
+    pub consequence: Statement, // 默认块
 }
 
-impl Node for ElseIfExpression {
+impl INode for ElseIfExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -102,12 +104,12 @@ impl Node for ElseIfExpression {
     }
 }
 
-impl Expression for ElseIfExpression {}
+impl IExpression for ElseIfExpression {}
 
 pub fn create_else_if_expression(
     token: Token,
-    condition: Box<dyn Expression>,
-    consequence: Box<dyn Statement>,
+    condition: Box<Expression>,
+    consequence: Statement,
 ) -> ElseIfExpression {
     ElseIfExpression {
         token,

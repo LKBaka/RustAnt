@@ -2,12 +2,12 @@ use crate::ast::expressions::if_expression::create_if_expression;
 use crate::parser::parse_functions::parse_block_statement::parse_block_statement;
 use crate::parser::parse_functions::parse_else_if_expression::parse_else_if_expression;
 use crate::parser::precedence::Precedence;
+use crate::ast::expr::Expression;
 use crate::token::token_type::TokenType;
 
-use crate::ast::ast::Expression;
 use crate::parser::parser::Parser;
 
-pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
+pub fn parse_if_expression(parser: &mut Parser) -> Option<Expression> {
     let token = parser.cur_token.clone();
 
     parser.next_token(); // 离开 if 词法单元
@@ -48,7 +48,7 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
             let else_if_expression = parse_else_if_expression(parser);
             if let Some(else_if_expression) = else_if_expression {
-                else_if_expressions.push(else_if_expression);
+                else_if_expressions.push(Box::new(else_if_expression));
             }
 
             continue;
@@ -71,18 +71,18 @@ pub fn parse_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
             return None;
         }
 
-        return Some(Box::new(create_if_expression(
+        return Some(Expression::IfExpression(create_if_expression(
             token,
-            condition,
+            Box::new(condition),
             consequence,
             Some(else_block),
             Some(else_if_expressions),
         )));
     }
 
-    Some(Box::new(create_if_expression(
+    Some(Expression::IfExpression(create_if_expression(
         token,
-        condition,
+        Box::new(condition),
         consequence,
         None,
         Some(else_if_expressions),

@@ -1,13 +1,13 @@
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
 
-use crate::ast::ast::Expression;
+use crate::ast::expr::Expression;
 use crate::ast::expressions::double_literal::create_double_literal;
 use crate::ast::expressions::integer_literal::create_integer_literal;
 use crate::parser::parser::Parser;
 use crate::token::token_type::TokenType;
 
-pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
+pub fn parse_number(parser: &mut Parser) -> Option<Expression> {
     let token = parser.cur_token.clone();
 
     let parse_result = BigDecimal::from_str(&parser.cur_token.value);
@@ -22,7 +22,7 @@ pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
     let value = parse_result.unwrap();
 
     if !parser.peek_token_is(TokenType::Dot) {
-        return Some(Box::new(create_integer_literal(
+        return Some(Expression::IntegerLiteral(create_integer_literal(
             token,
             BigDecimal::from(value),
         )));
@@ -42,5 +42,5 @@ pub fn parse_number(parser: &mut Parser) -> Option<Box<dyn Expression>> {
 
     let value = parse_result.unwrap();
 
-    return Some(Box::new(create_double_literal(token, value)));
+    return Some(Expression::DoubleLiteral(create_double_literal(token, value)));
 }

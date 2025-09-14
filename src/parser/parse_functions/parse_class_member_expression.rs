@@ -1,12 +1,12 @@
-use crate::ast::ast::Expression;
+use crate::ast::expr::Expression;
 use crate::ast::expressions::class_member_expression::create_class_member_expression;
 use crate::parser::parser::Parser;
 use crate::parser::precedence::Precedence;
 
 pub fn parse_class_member_expression(
     parser: &mut Parser,
-    left: Box<dyn Expression>,
-) -> Option<Box<dyn Expression>> {
+    left: Expression,
+) -> Option<Expression> {
     let token = parser.cur_token.clone();
     let left_expression = left;
 
@@ -21,10 +21,10 @@ pub fn parse_class_member_expression(
             ));
             None
         }
-        Some(right_expression) => Some(Box::new(create_class_member_expression(
+        Some(right_expression) => Some(Expression::ClassMemberExpression(create_class_member_expression(
             token,
-            left_expression,
-            right_expression,
+            Box::new(left_expression),
+            Box::new(right_expression),
         ))),
     }
 }

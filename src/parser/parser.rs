@@ -1,12 +1,14 @@
 use hashbrown::HashMap;
 
-use crate::ast::ast::{Expression, ExpressionStatement, Program, Statement};
+use crate::ast::ast::{ExpressionStatement, Program};
+use crate::ast::stmt::Statement;
 use crate::constants::NULL_CHAR;
 use crate::parser::parse_functions::parse_array_literal::parse_array_literal;
 use crate::parser::parse_functions::parse_assignment_expression::parse_assignment_expression;
 use crate::parser::parse_functions::parse_boolean::parse_boolean;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
 use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
+use crate::parser::parse_functions::parse_decorator::parse_decorator;
 use crate::parser::parse_functions::parse_hash_literal::parse_hash_literal;
 use crate::parser::parse_functions::parse_index_expression::parse_index_expression;
 use crate::parser::parse_functions::parse_none::parse_none;
@@ -16,6 +18,7 @@ use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expressi
 use crate::parser::parse_functions::parse_use_statement::parse_use_statement;
 use crate::parser::precedence::*;
 use crate::token::token::Token;
+use crate::ast::expr::Expression;
 use crate::token::token_type::TokenType;
 use crate::token::token_type::TokenType::{Comma, Eof, Nonsense, Semicolon};
 
@@ -33,9 +36,9 @@ use super::parse_functions::parse_object_member_expression::parse_object_member_
 use super::parse_functions::parse_return_expression::parse_return_expression;
 use super::parse_functions::parse_while_statement::parse_while_statement;
 
-type PrefixParseFn = fn(&mut Parser) -> Option<Box<dyn Expression>>;
-type InfixParseFn = fn(&mut Parser, Box<dyn Expression>) -> Option<Box<dyn Expression>>;
-type StmtParseFn = fn(&mut Parser) -> Option<Box<dyn Statement>>;
+type PrefixParseFn = fn(&mut Parser) -> Option<Expression>;
+type InfixParseFn = fn(&mut Parser, Expression) -> Option<Expression>;
+type StmtParseFn = fn(&mut Parser) -> Option<Statement>;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -135,6 +138,9 @@ impl Parser {
             .insert(TokenType::LBrace, parse_hash_literal);
         parser
             .prefix_parse_fn_map
+            .insert(TokenType::NumberSign, parse_decorator);
+        parser
+            .prefix_parse_fn_map
             .insert(TokenType::TestPrint, parse_test_print_expression);
         parser
             .prefix_parse_fn_map
@@ -192,7 +198,7 @@ impl Parser {
         parser
     }
 
-    pub fn parse_expression_list(&mut self, end: TokenType) -> Vec<Box<dyn Expression>> {
+    pub fn parse_expression_list(&mut self, end: TokenType) -> Vec<Box<Expression>> {
         // 检查下一个词法单元是否为对应结束的词法单元
         if self.peek_token_is(end) {
             self.next_token();
@@ -204,7 +210,7 @@ impl Parser {
         let mut expressions = vec![];
         let expr = self.parse_expression(Lowest);
         if let Some(it) = expr {
-            expressions.push(it)
+            expressions.push(Box::new(it))
         }
 
         while self.peek_token_is(Comma) {
@@ -220,7 +226,7 @@ impl Parser {
 
             let expression = self.parse_expression(Lowest);
             if let Some(it) = expression {
-                expressions.push(it)
+                expressions.push(Box::new(it))
             }
         }
 
@@ -231,8 +237,8 @@ impl Parser {
         expressions
     }
 
-    pub fn parse_expression(&mut self, precedence: Precedence) -> Option<Box<dyn Expression>> {
-        let mut left: Box<dyn Expression>;
+    pub fn parse_expression(&mut self, precedence: Precedence) -> Option<Expression> {
+        let mut left: Expression;
 
         if self
             .prefix_parse_fn_map
@@ -283,19 +289,22 @@ impl Parser {
         Some(left)
     }
 
-    fn parse_expression_statement(&mut self) -> Box<dyn Statement> {
+    fn parse_expression_statement(&mut self) -> Statement {
         let expression_statement = ExpressionStatement {
-            expression: self.parse_expression(Precedence::Lowest),
+            expression: match self.parse_expression(Lowest) {
+                Some(it) => Some(Box::new(it)),
+                None => None,
+            }
         };
 
         if self.peek_token_is(Semicolon) {
             self.next_token();
         }
 
-        Box::new(expression_statement)
+        Statement::ExpressionStatement(expression_statement)
     }
 
-    pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
+    pub fn parse_statement(&mut self) -> Option<Statement> {
         if self
             .statement_parse_fn_map
             .contains_key(&self.cur_token.token_type)
@@ -410,11 +419,6 @@ impl Parser {
 
     pub fn contains_error(&self) -> bool {
         !self.errors.is_empty()
-    }
-
-    pub fn push_error(&mut self, msg: String, token: &Token) {
-        self.errors
-            .push(format!("{} at file <{}>, line {}, column {}", msg, token.file, token.line, token.column));
     }
 
     pub fn push_err(&mut self, msg: String) {

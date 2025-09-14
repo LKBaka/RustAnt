@@ -1,4 +1,4 @@
-use crate::ast::ast::Statement;
+use crate::ast::stmt::Statement;
 use crate::ast::expressions::identifier::create_identifier;
 use crate::ast::statements::let_statement::create_let_statement;
 use crate::parser::parser::Parser;
@@ -6,7 +6,7 @@ use crate::parser::precedence::Precedence;
 use crate::token::token_type::TokenType::Ident;
 use crate::token::token_type::TokenType::Semicolon;
 
-pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
+pub fn parse_let_statement(parser: &mut Parser) -> Option<Statement> {
     let token = parser.cur_token.clone();
     let ident;
 
@@ -34,7 +34,7 @@ pub fn parse_let_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
     }
 
     if let Some(value) = temp_value {
-        return Some(Box::new(create_let_statement(token, ident, value)));
+        return Some(Statement::LetStatement(create_let_statement(token, ident, Box::new(value))));
     }
 
     parser.push_err(format!(

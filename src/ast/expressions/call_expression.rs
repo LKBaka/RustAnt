@@ -1,15 +1,16 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct CallExpression {
-    pub func: Box<dyn Expression>,
-    pub args: Vec<Box<dyn Expression>>,
+    pub func: Box<Expression>,
+    pub args: Vec<Box<Expression>>,
     pub token: Token,
 }
 
-impl Node for CallExpression {
+impl INode for CallExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -25,12 +26,12 @@ impl Node for CallExpression {
     }
 }
 
-impl Expression for CallExpression {}
+impl IExpression for CallExpression {}
 
 pub fn create_call_expression(
     token: Token,
-    func: Box<dyn Expression>,
-    args: Vec<Box<dyn Expression>>,
+    func: Box<Expression>,
+    args: Vec<Box<Expression>>,
 ) -> CallExpression {
     CallExpression { token, func, args }
 }

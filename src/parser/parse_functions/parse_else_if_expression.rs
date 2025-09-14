@@ -2,11 +2,11 @@ use crate::ast::expressions::if_expression::create_else_if_expression;
 use crate::parser::parse_functions::parse_block_statement::parse_block_statement;
 use crate::parser::precedence::Precedence;
 
-use crate::ast::ast::Expression;
+use crate::ast::expr::Expression;
 use crate::parser::parser::Parser;
 use crate::token::token_type::TokenType;
 
-pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
+pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Expression> {
     let token = parser.cur_token.clone();
 
     parser.next_token(); // 离开 if 词法单元
@@ -14,9 +14,7 @@ pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Box<dyn Expressio
     let condition = match parser.parse_expression(Precedence::Lowest) {
         Some(expr) => expr,
         None => {
-            parser.push_err(format!(
-                "missing condition.",
-            ));
+            parser.push_err(format!("missing condition.",));
             return None;
         }
     };
@@ -26,9 +24,7 @@ pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Box<dyn Expressio
     let block = match parse_block_statement(parser) {
         Some(block) => block,
         None => {
-            parser.push_err(format!(
-                "missing else if body",
-            ));
+            parser.push_err(format!("missing else if body",));
             return None;
         }
     };
@@ -37,5 +33,9 @@ pub fn parse_else_if_expression(parser: &mut Parser) -> Option<Box<dyn Expressio
         return None;
     }
 
-    Some(Box::new(create_else_if_expression(token, condition, block)))
+    Some(Expression::ElseIfExpression(create_else_if_expression(
+        token,
+        Box::new(condition),
+        block,
+    )))
 }

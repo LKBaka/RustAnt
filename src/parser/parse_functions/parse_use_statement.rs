@@ -1,4 +1,4 @@
-use crate::ast::ast::Statement;
+use crate::ast::stmt::Statement;
 use crate::ast::expressions::identifier::create_identifier;
 use crate::ast::statements::use_statement::create_use_statement;
 use crate::parser::parser::Parser;
@@ -6,7 +6,7 @@ use crate::token::token_type::TokenType;
 use crate::token::token_type::TokenType::Ident;
 use crate::token::token_type::TokenType::Semicolon;
 
-pub fn parse_use_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
+pub fn parse_use_statement(parser: &mut Parser) -> Option<Statement> {
     let token = parser.cur_token.clone();
     let ident;
 
@@ -22,7 +22,7 @@ pub fn parse_use_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
 
     if !parser.peek_token_is(TokenType::As) {
         parser.next_token();
-        return Some(Box::new(create_use_statement(token, ident, None)));
+        return Some(Statement::UseStatement(create_use_statement(token, ident, None)));
     }
 
     // 前进，脱离标识符
@@ -45,8 +45,8 @@ pub fn parse_use_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
 
     if parser.peek_token_is(Semicolon) {
         parser.next_token();
-        return Some(Box::new(create_use_statement(token, ident, Some(alias))));
+        return Some(Statement::UseStatement(create_use_statement(token, ident, Some(alias))));
     }
 
-    Some(Box::new(create_use_statement(token, ident, Some(alias))))
+    Some(Statement::UseStatement(create_use_statement(token, ident, Some(alias))))
 }

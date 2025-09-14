@@ -1,19 +1,25 @@
 use std::rc::Rc;
 
 use crate::{
-    ast::{ast::Node, statements::class_statement::ClassStatement},
+    ast::{ast::Node, stmt::Statement},
     byte_code_vm::{code::code::{OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL}, compiler::{compiler::Compiler, symbol_table::symbol_table::SymbolScope}},
-    convert_type_to_owned, obj_enum::object::Object, object::{ant_compiled_function::CompiledFunction, ant_string::AntString},
+    obj_enum::object::Object, object::{ant_compiled_function::CompiledFunction, ant_string::AntString},
 };
 
-pub fn compile_class(compiler: &mut Compiler, node: Box<dyn Node>) -> Result<(), String> {
-    let clazz = convert_type_to_owned!(ClassStatement, node);
+pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), String> {
+    let clazz = match match node {
+        Node::Statement(stmt) => stmt,
+        _ => panic!()
+    } {
+        Statement::ClassStatement(it) => it,
+        _ => panic!()
+    };
 
     let symbol = compiler.symbol_table.borrow_mut().define(&clazz.name.value);
 
     compiler.enter_scope();
 
-    if let Err(msg) = compiler.compile(Box::new(clazz.block)) {
+    if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(clazz.block)) {
         return Err(format!("error compile class: {msg}"));
     }
 

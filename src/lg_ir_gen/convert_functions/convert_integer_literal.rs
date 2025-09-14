@@ -1,10 +1,10 @@
 use lg_rust_binding::ir::{types::{IRIntegerType, IRIntegerTypeSize}, IRConstantPoolEntry};
 
-use crate::{ast::{ast::Node, expressions::integer_literal::IntegerLiteral}, convert_type, lg_ir_gen::converter::LgIrConverter};
+use crate::{ast::{ast::INode, expressions::integer_literal::IntegerLiteral}, convert_type, lg_ir_gen::converter::LgIrConverter};
 
 pub fn convert_integer_literal(
     converter: &mut LgIrConverter,
-    node: Box<dyn Node>
+    node: Box<dyn INode>
 ) -> Result<(), String> {
     let integer_literal = convert_type!(IntegerLiteral, node);
 

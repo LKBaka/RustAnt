@@ -1,5 +1,6 @@
-use crate::ast::ast::{Expression, Node, Statement};
+use crate::ast::ast::{INode, IStatement};
 
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 use super::block_statement::BlockStatement;
@@ -7,11 +8,11 @@ use super::block_statement::BlockStatement;
 #[derive(Debug, Clone)]
 pub struct WhileStatement {
     pub token: Token,
-    pub condition: Box<dyn Expression>,
+    pub condition: Box<Expression>,
     pub block: BlockStatement,
 }
 
-impl Node for WhileStatement {
+impl INode for WhileStatement {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -25,11 +26,11 @@ impl Node for WhileStatement {
     }
 }
 
-impl Statement for WhileStatement {}
+impl IStatement for WhileStatement {}
 
 pub fn create_while_statement(
     token: Token,
-    condition: Box<dyn Expression>,
+    condition: Box<Expression>,
     block: BlockStatement,
 ) -> WhileStatement {
     WhileStatement {

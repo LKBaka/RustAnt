@@ -1,8 +1,8 @@
-use crate::{ast::ast::{ExpressionStatement, Node}, convert_type, lg_ir_gen::converter::LgIrConverter};
+use crate::{ast::ast::{ExpressionStatement, INode}, convert_type, lg_ir_gen::converter::LgIrConverter};
 
 pub fn convert_expression_statement(
     converter: &mut LgIrConverter,
-    node: Box<dyn Node>
+    node: Box<dyn INode>
 ) -> Result<(), String> {
     let expr_stmt = convert_type!(ExpressionStatement, node);
 

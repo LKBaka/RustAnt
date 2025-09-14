@@ -1,11 +1,11 @@
 use std::{any::{Any, TypeId}, collections::{BTreeMap, HashMap}};
 
-use crate::{ast::{ast::{ExpressionStatement, Node, Program}, expressions::integer_literal::IntegerLiteral}, lg_ir_gen::convert_functions::{convert_expression_statement::convert_expression_statement, convert_integer_literal::convert_integer_literal}, utils::type_of};
+use crate::{ast::{ast::{ExpressionStatement, INode, Program}, expressions::integer_literal::IntegerLiteral}, lg_ir_gen::convert_functions::{convert_expression_statement::convert_expression_statement, convert_integer_literal::convert_integer_literal}, utils::type_of};
 
 use indexmap::IndexMap;
 use lg_rust_binding::ir::{base::{IRControlFlowGraph, IRGlobalDataSection}, IRConstantPool, IRModule};
 
-pub type LgIrConvertHandler = fn(&mut LgIrConverter, Box<dyn Node>) -> Result<(), String>;
+pub type LgIrConvertHandler = fn(&mut LgIrConverter, Box<dyn INode>) -> Result<(), String>;
 
 pub struct LgIrConverter {
     program: Program,
@@ -46,7 +46,7 @@ impl LgIrConverter {
         }
     }
 
-    pub fn convert(&mut self, node: Box<dyn Node>) -> Result<(), String> {
+    pub fn convert(&mut self, node: Box<dyn INode>) -> Result<(), String> {
         let id = (node.as_ref() as &dyn Any).type_id();
 
         let id_name = node.type_name();

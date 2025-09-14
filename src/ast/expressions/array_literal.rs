@@ -1,14 +1,15 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct ArrayLiteral {
-    pub items: Vec<Box<dyn Expression>>,
+    pub items: Vec<Box<Expression>>,
     pub token: Token,
 }
 
-impl Node for ArrayLiteral {
+impl INode for ArrayLiteral {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -24,8 +25,8 @@ impl Node for ArrayLiteral {
     }
 }
 
-impl Expression for ArrayLiteral {}
+impl IExpression for ArrayLiteral {}
 
-pub fn create_array_literal(token: Token, items: Vec<Box<dyn Expression>>) -> ArrayLiteral {
+pub fn create_array_literal(token: Token, items: Vec<Box<Expression>>) -> ArrayLiteral {
     ArrayLiteral { token, items }
 }

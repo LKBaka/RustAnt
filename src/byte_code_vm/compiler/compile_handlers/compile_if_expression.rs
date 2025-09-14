@@ -1,20 +1,26 @@
+use core::panic;
+
 use crate::{
     ast::{
-        ast::Node,
-        expressions::if_expression::{ElseIfExpression, IfExpression},
+        ast::{INode, Node}, expr::Expression
     },
     byte_code_vm::{
         code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_POP},
         compiler::compiler::Compiler,
         constants::FAKE_OFFSET_JUMP,
     },
-    convert_type_to_owned,
 };
 
-pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Result<(), String> {
-    let if_expr = convert_type_to_owned!(IfExpression, node);
+pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), String> {
+    let if_expr = match match node {
+        Node::Expression(expr) => expr,
+        _ => panic!()
+    } {
+        Expression::IfExpression(it) => it,
+        _ => panic!()
+    };
 
-    let condition_result = compiler.compile(if_expr.condition);
+    let condition_result = compiler.compile_expr(*if_expr.condition);
     if let Err(msg) = condition_result {
         return Err(format!("error compile condition: {}", msg));
     }
@@ -22,7 +28,7 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Re
     // 先插入一个 OpJumpNotTruthy, 后面再修改他的操作数
     let jump_not_truthy_command_pos = compiler.emit(OP_JUMP_NOT_TRUTHY, vec![FAKE_OFFSET_JUMP]);
 
-    let consequence_result = compiler.compile(if_expr.consequence);
+    let consequence_result = compiler.compile_stmt(if_expr.consequence);
     if let Err(msg) = consequence_result {
         return Err(format!("error compile consequence: {}", msg));
     }
@@ -59,10 +65,13 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Re
 
     if let Some(expressions) = if_expr.else_if_expressions {
         for else_if in expressions {
-            let else_if = convert_type_to_owned!(ElseIfExpression, else_if);
+            let else_if = match *else_if {
+                Expression::ElseIfExpression(it) => it,
+                _ => panic!("cannot convert '{}' to else if expression", else_if.to_string())
+            };
 
             // 编译else if条件
-            let cond_result = compiler.compile(else_if.condition);
+            let cond_result = compiler.compile_expr(*else_if.condition);
             if let Err(msg) = cond_result {
                 return Err(format!("error compile else-if condition: {}", msg));
             }
@@ -71,7 +80,7 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Re
             let else_if_jump_pos = compiler.emit(OP_JUMP_NOT_TRUTHY, vec![FAKE_OFFSET_JUMP]);
 
             // 编译else if主体块
-            let block_result = compiler.compile(else_if.consequence);
+            let block_result = compiler.compile_stmt(else_if.consequence);
             if let Err(msg) = block_result {
                 return Err(format!("error compile else-if block: {}", msg));
             }
@@ -100,7 +109,7 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Box<dyn Node>) -> Re
     if let Some(alternative) = if_expr.alternative {
         // 编译 else 块
 
-        let alternative_result = compiler.compile(alternative);
+        let alternative_result = compiler.compile_stmt(alternative);
         if let Err(msg) = alternative_result {
             return Err(format!("error compile alternative: {}", msg));
         }

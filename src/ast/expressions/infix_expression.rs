@@ -1,16 +1,17 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct InfixExpression {
-    pub left: Box<dyn Expression>,
-    pub right: Box<dyn Expression>,
+    pub left: Box<Expression>,
+    pub right: Box<Expression>,
     pub operator: String,
     pub token: Token,
 }
 
-impl Node for InfixExpression {
+impl INode for InfixExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -25,12 +26,12 @@ impl Node for InfixExpression {
     }
 }
 
-impl Expression for InfixExpression {}
+impl IExpression for InfixExpression {}
 
 pub fn create_infix_expression(
     token: Token,
-    left: Box<dyn Expression>,
-    right: Box<dyn Expression>,
+    left: Box<Expression>,
+    right: Box<Expression>,
     operator: String,
 ) -> InfixExpression {
     InfixExpression {

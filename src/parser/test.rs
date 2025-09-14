@@ -1,6 +1,6 @@
 #[test]
 fn print_parse_object_member_expression_call() {
-    use crate::{ast::ast::Node, lexer::lexer::Lexer, parser::parser::Parser};
+    use crate::{ast::ast::INode, lexer::lexer::Lexer, parser::parser::Parser};
 
     let code = "let a = 1; a.plus(1).plus(1);";
     let file = "__print_parse_object_member_expression_call__".to_string();
@@ -14,7 +14,7 @@ fn print_parse_object_member_expression_call() {
 
 #[test]
 fn print_ast() {
-    use crate::{ast::ast::Node, lexer::lexer::Lexer, parser::parser::Parser};
+    use crate::{ast::ast::INode, lexer::lexer::Lexer, parser::parser::Parser};
 
     let code = "[1, 2, 3][1 + 1]";
     let file = "__print_ast__".to_string();
@@ -28,7 +28,7 @@ fn print_ast() {
 
 #[test]
 fn test_statement_termination() {
-    use crate::{ast::ast::Node, lexer::lexer::Lexer, parser::parser::Parser};
+    use crate::{ast::ast::INode, lexer::lexer::Lexer, parser::parser::Parser};
 
     // 测试分号结束的语句
     let code_with_semicolon = "let a = 1; let b = 2;";

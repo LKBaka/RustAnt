@@ -1,7 +1,5 @@
-use std::any::Any;
-
-use crate::ast::ast::Statement;
-use crate::ast::statements::block_statement::BlockStatement;
+use crate::ast::ast::INode;
+use crate::ast::stmt::Statement;
 use crate::ast::statements::while_statement::create_while_statement;
 use crate::parser::parser::Parser;
 use crate::parser::precedence::Precedence;
@@ -9,7 +7,7 @@ use crate::token::token_type::TokenType::LBrace;
 
 use super::parse_block_statement::parse_block_statement;
 
-pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
+pub fn parse_while_statement(parser: &mut Parser) -> Option<Statement> {
     let token = parser.cur_token.clone();
 
     parser.next_token(); // 离开 while 词法单元
@@ -38,12 +36,12 @@ pub fn parse_while_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
         return None;
     }
 
-    Some(Box::new(create_while_statement(
+    Some(Statement::WhileStatement(create_while_statement(
         token,
-        condition.unwrap(),
-        (block.unwrap() as Box<dyn Any>)
-            .downcast_ref::<BlockStatement>()
-            .expect("")
-            .clone(),
+        Box::new(condition.unwrap()),
+        match block.as_ref().unwrap() {
+            Statement::BlockStatement(it) => it.clone(),
+            _ => panic!("expected an block, got: {}", block.unwrap().to_string())
+        }
     )))
 }

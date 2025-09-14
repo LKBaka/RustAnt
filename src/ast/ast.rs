@@ -1,7 +1,10 @@
 use dyn_clone::{DynClone, clone_trait_object};
+use enum_dispatch::enum_dispatch;
 use std::any::Any;
 use std::fmt::Debug;
 
+use crate::ast::expr::Expression;
+use crate::ast::stmt::Statement;
 use crate::constants::NEW_LINE;
 
 use crate::token::token::Token;
@@ -10,13 +13,22 @@ pub trait TypeNameGetter {
     fn type_name(&self) -> String;
 }
 
-impl<T: Node> TypeNameGetter for T {
+impl<T: INode> TypeNameGetter for T {
     fn type_name(&self) -> String {
         self.to_string()
     }
 }
 
-pub trait Node: DynClone + Sync + Send + Any + Debug + TypeNameGetter {
+#[enum_dispatch(INode)]
+#[derive(Debug, Clone)]
+pub enum Node {
+    Program,
+    Statement,
+    Expression
+}
+
+#[enum_dispatch]
+pub trait INode: DynClone + Sync + Send + Any + Debug + TypeNameGetter {
     fn token_literal(&self) -> String;
     fn to_string(&self) -> String;
 
@@ -26,27 +38,20 @@ pub trait Node: DynClone + Sync + Send + Any + Debug + TypeNameGetter {
     {
         self
     }
-
-    fn into_any(self: Box<Self>) -> Box<dyn Any>
-    where
-        Self: Sized,
-    {
-        self
-    }
 }
 
-clone_trait_object!(Node);
+clone_trait_object!(INode);
 
-pub trait Expression: Node {}
-pub trait Statement: Node {}
+pub trait IExpression: INode {}
+pub trait IStatement: INode {}
 
-clone_trait_object!(Expression);
-clone_trait_object!(Statement);
+clone_trait_object!(IExpression);
+clone_trait_object!(IStatement);
 
 #[derive(Debug)]
 pub struct Program {
     pub token: Token,
-    pub(crate) statements: Vec<Box<dyn Statement>>,
+    pub(crate) statements: Vec<Statement>,
 }
 
 impl Clone for Program {
@@ -58,7 +63,7 @@ impl Clone for Program {
     }
 }
 
-impl Node for Program {
+impl INode for Program {
     fn token_literal(&self) -> String {
         if !self.statements.is_empty() {
             self.statements[0].token_literal()
@@ -92,10 +97,10 @@ impl Clone for ExpressionStatement {
 
 #[derive(Debug)]
 pub struct ExpressionStatement {
-    pub expression: Option<Box<dyn Expression>>,
+    pub expression: Option<Box<Expression>>,
 }
 
-impl Node for ExpressionStatement {
+impl INode for ExpressionStatement {
     fn token_literal(&self) -> String {
         if self.expression.is_none() {
             "".to_string()
@@ -113,11 +118,11 @@ impl Node for ExpressionStatement {
     }
 }
 
-impl Statement for ExpressionStatement {}
+impl IStatement for ExpressionStatement {}
 
 #[cfg(test)]
-pub fn create_expression_statement(expression: impl Expression + 'static) -> ExpressionStatement {
+pub fn create_expression_statement(expression: Expression) -> ExpressionStatement {
     ExpressionStatement {
-        expression: Some(Box::new(expression) as Box<dyn Expression>),
+        expression: Some(Box::new(expression)),
     }
 }

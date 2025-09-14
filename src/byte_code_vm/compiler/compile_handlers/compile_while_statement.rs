@@ -1,25 +1,30 @@
 use crate::{
-    ast::{ast::Node, statements::while_statement::WhileStatement},
+    ast::{ast::Node, stmt::Statement},
     byte_code_vm::{
         code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NOP},
         compiler::compiler::Compiler,
         constants::FAKE_OFFSET_JUMP,
     },
-    convert_type_to_owned,
 };
 
-pub fn compile_while_statement(compiler: &mut Compiler, node: Box<dyn Node>) -> Result<(), String> {
+pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<(), String> {
     let start_ip = compiler.current_instructions().borrow().len();
 
-    let while_stmt = convert_type_to_owned!(WhileStatement, node);
+    let while_stmt = match match node {
+        Node::Statement(stmt) => stmt,
+        _ => panic!()
+    } {
+        Statement::WhileStatement(it) => it,
+        _ => panic!()
+    };
 
-    if let Err(msg) = compiler.compile(while_stmt.condition) {
+    if let Err(msg) = compiler.compile_expr(*while_stmt.condition) {
         return Err(format!("error compile while loop condition: {msg}"));
     }
 
     let jump_not_truthy_command_pos = compiler.emit(OP_JUMP_NOT_TRUTHY, vec![FAKE_OFFSET_JUMP]);
 
-    if let Err(msg) = compiler.compile(Box::new(while_stmt.block)) {
+    if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(while_stmt.block)) {
         return Err(format!("error compile while loop body: {msg}"));
     }
 

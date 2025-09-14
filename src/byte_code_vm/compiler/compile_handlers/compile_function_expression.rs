@@ -4,21 +4,26 @@ use std::rc::Rc;
 use crate::object::id_counter::next_id;
 use crate::{
     ast::{
-        ast::Node,
-        expressions::{function_expression::FunctionExpression, identifier::Identifier},
+        ast::{Node, TypeNameGetter}, expr::Expression, expressions::identifier::Identifier, stmt::Statement
     }, byte_code_vm::{
         code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
         compiler::compiler::Compiler,
-    }, convert_type_to_owned, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction
+    }, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction
 };
 
 pub fn compile_function_expression(
     compiler: &mut Compiler,
-    node: Box<dyn Node>,
+    node: Node,
 ) -> Result<(), String> {
     let is_closure = compiler.symbol_table.borrow().outer.is_some();
 
-    let func_expr = convert_type_to_owned!(FunctionExpression, node);
+    let func_expr = match match node {
+        Node::Expression(expr) => expr,
+        _ => panic!()
+    } {
+        Expression::FunctionExpression(it) => it,
+        _ => panic!()
+    };
 
     let symbol_index = if let Some(name) = &func_expr.name {
         Some(compiler.symbol_table.borrow_mut().define(name).index as u16)
@@ -40,12 +45,13 @@ pub fn compile_function_expression(
         .params
         .iter()
         .map(|expr| {
-            (expr.as_ref() as &dyn std::any::Any)
-                .downcast_ref::<Identifier>()
-                .expect(&format!(
+            match &**expr {
+                Expression::Identifier(it) => it,
+                _ => panic!("{}",&format!(
                     "expected an identifier, got: {}",
                     expr.type_name()
                 ))
+            }
         })
         .collect();
 
@@ -53,7 +59,10 @@ pub fn compile_function_expression(
         compiler.symbol_table.borrow_mut().define(&param.value);
     }
 
-    let compile_body_result = compiler.compile(Box::new(func_expr.block.clone()));
+    let compile_body_result = compiler.compile_stmt(Statement::BlockStatement(
+        func_expr.block
+    ));
+    
     if let Err(msg) = compile_body_result {
         return Err(format!("error compile function body: {msg}"));
     }

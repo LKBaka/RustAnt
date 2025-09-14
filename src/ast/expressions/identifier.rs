@@ -1,4 +1,4 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
@@ -7,7 +7,7 @@ pub struct Identifier {
     pub token: Token,
 }
 
-impl Node for Identifier {
+impl INode for Identifier {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -17,7 +17,7 @@ impl Node for Identifier {
     }
 }
 
-impl Expression for Identifier {}
+impl IExpression for Identifier {}
 
 pub fn create_identifier(token: Token, value: String) -> Identifier {
     Identifier { token, value }

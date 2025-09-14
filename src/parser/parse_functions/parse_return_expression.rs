@@ -1,9 +1,9 @@
-use crate::ast::ast::Expression;
+use crate::ast::expr::Expression;
 use crate::ast::expressions::return_expression::create_return_expression;
 use crate::parser::parser::Parser;
 use crate::parser::precedence::Precedence;
 
-pub fn parse_return_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
+pub fn parse_return_expression(parser: &mut Parser) -> Option<Expression> {
     let token = parser.cur_token.clone();
 
     parser.next_token(); // 离开 return 词法单元
@@ -11,7 +11,7 @@ pub fn parse_return_expression(parser: &mut Parser) -> Option<Box<dyn Expression
     let expr = parser.parse_expression(Precedence::Lowest);
 
     if let Some(it) = expr {
-        Some(Box::new(create_return_expression(token, it)))
+        Some(Expression::ReturnExpression(create_return_expression(token, Box::new(it))))
     } else {
         parser.push_err(format!(
             "missing expression.",

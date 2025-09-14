@@ -1,4 +1,4 @@
-use crate::ast::ast::{Node, Statement};
+use crate::ast::ast::{INode, IStatement};
 use crate::ast::expressions::identifier::Identifier;
 
 use crate::token::token::Token;
@@ -10,7 +10,7 @@ pub struct UseStatement {
     pub alias: Option<Identifier>,
 }
 
-impl Node for UseStatement {
+impl INode for UseStatement {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -23,7 +23,7 @@ impl Node for UseStatement {
     }
 }
 
-impl Statement for UseStatement {}
+impl IStatement for UseStatement {}
 
 pub fn create_use_statement(
     token: Token,

@@ -1,4 +1,4 @@
-use crate::ast::ast::{Node, Statement};
+use crate::ast::ast::{INode, IStatement};
 use crate::ast::expressions::identifier::Identifier;
 
 use crate::token::token::Token;
@@ -13,7 +13,7 @@ pub struct ClassStatement {
     pub block: BlockStatement,
 }
 
-impl Node for ClassStatement {
+impl INode for ClassStatement {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -36,7 +36,7 @@ impl Node for ClassStatement {
     }
 }
 
-impl Statement for ClassStatement {}
+impl IStatement for ClassStatement {}
 
 pub fn create_class_statement(
     token: Token,

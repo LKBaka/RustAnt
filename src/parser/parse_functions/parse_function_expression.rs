@@ -1,14 +1,15 @@
 use std::any::Any;
 
-use crate::ast::statements::block_statement::BlockStatement;
+use crate::ast::ast::INode;
+use crate::ast::stmt::Statement;
 use crate::parser::parse_functions::parse_block_statement::parse_block_statement;
+use crate::ast::expr::Expression;
 use crate::token::token_type::TokenType;
 
-use crate::ast::ast::Expression;
 use crate::ast::expressions::function_expression::create_function_expression;
 use crate::parser::parser::Parser;
 
-pub fn parse_function_expression(parser: &mut Parser) -> Option<Box<dyn Expression>> {
+pub fn parse_function_expression(parser: &mut Parser) -> Option<Expression> {
     let token = parser.cur_token.clone();
 
     let name = if parser.peek_token_is(TokenType::Ident) {
@@ -33,16 +34,16 @@ pub fn parse_function_expression(parser: &mut Parser) -> Option<Box<dyn Expressi
 
     match block {
         Some(block) => {
-            let converted_block = (block.as_ref() as &dyn Any)
-                .downcast_ref::<BlockStatement>()
-                .expect(&format!(
+            let converted_block = match block {
+                Statement::BlockStatement(block) => block,
+                _ => panic!("{}", &format!(
                     "expected block statement, got {:?}, ast to string: {}",
                     block.type_id(),
                     block.to_string()
                 ))
-                .clone();
+            };
 
-            Some(Box::new(create_function_expression(
+            Some(Expression::FunctionExpression(create_function_expression(
                 token,
                 name,
                 params,

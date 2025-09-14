@@ -1,15 +1,16 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct ObjectMemberExpression {
-    pub left: Box<dyn Expression>,
-    pub right: Box<dyn Expression>,
+    pub left: Box<Expression>,
+    pub right: Box<Expression>,
     pub token: Token,
 }
 
-impl Node for ObjectMemberExpression {
+impl INode for ObjectMemberExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -19,12 +20,12 @@ impl Node for ObjectMemberExpression {
     }
 }
 
-impl Expression for ObjectMemberExpression {}
+impl IExpression for ObjectMemberExpression {}
 
 pub fn create_object_member_expression(
     token: Token,
-    left: Box<dyn Expression>,
-    right: Box<dyn Expression>,
+    left: Box<Expression>,
+    right: Box<Expression>,
 ) -> ObjectMemberExpression {
     ObjectMemberExpression { token, left, right }
 }

@@ -1,24 +1,29 @@
 use crate::{
-    ast::{ast::Node, expressions::infix_expression::InfixExpression},
+    ast::{ast::Node, expr::Expression},
     byte_code_vm::{
         code::code::{INFIX_OPERATOR_TO_OPCODE, OP_GT},
         compiler::compiler::Compiler,
     },
-    convert_type_to_owned,
 };
 
 pub fn compile_infix_expression(
     compiler: &mut Compiler,
-    node: Box<dyn Node>,
+    node: Node,
 ) -> Result<(), String> {
-    let infix_expr = convert_type_to_owned!(InfixExpression, node);
+    let infix_expr = match match node {
+        Node::Expression(expr) => expr,
+        _ => panic!()
+    } {
+        Expression::InfixExpression(it) => it,
+        _ => panic!()
+    };
 
     if infix_expr.operator == "<" {
-        if let Err(right_err) = compiler.compile(infix_expr.right) {
+        if let Err(right_err) = compiler.compile_expr(*infix_expr.right) {
             return Err(format!("error compiling right expression: {}", right_err));
         };
 
-        if let Err(left_err) = compiler.compile(infix_expr.left) {
+        if let Err(left_err) = compiler.compile_expr(*infix_expr.left) {
             return Err(format!("error compiling left expression: {}", left_err));
         };
 
@@ -27,11 +32,11 @@ pub fn compile_infix_expression(
         return Ok(());
     }
 
-    if let Err(left_err) = compiler.compile(infix_expr.left) {
+    if let Err(left_err) = compiler.compile_expr(*infix_expr.left) {
         return Err(format!("error compiling left expression: {}", left_err));
     };
 
-    if let Err(right_err) = compiler.compile(infix_expr.right) {
+    if let Err(right_err) = compiler.compile_expr(*infix_expr.right) {
         return Err(format!("error compiling right expression: {}", right_err));
     };
 

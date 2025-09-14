@@ -1,15 +1,12 @@
-use std::any::Any;
-
-use crate::ast::ast::Statement;
+use crate::ast::stmt::Statement;
 use crate::ast::expressions::identifier::Identifier;
-use crate::ast::statements::block_statement::BlockStatement;
 use crate::ast::statements::class_statement::create_class_statement;
 use crate::parser::parser::Parser;
 use crate::token::token_type::TokenType;
 
 use super::parse_block_statement::parse_block_statement;
 
-pub fn parse_class_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
+pub fn parse_class_statement(parser: &mut Parser) -> Option<Statement> {
     let token = parser.cur_token.clone();
 
     let mut parent_class_ident = None;
@@ -60,12 +57,12 @@ pub fn parse_class_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
                 return None;
             };
 
-            if let Some(block) = (block as Box<dyn Any>).downcast_ref::<BlockStatement>() {
-                Some(Box::new(create_class_statement(
+            if let Statement::BlockStatement(block) = block {
+                Some(Statement::ClassStatement(create_class_statement(
                     token,
                     class_ident,
                     parent_class_ident,
-                    block.clone(),
+                    block,
                 )))
             } else {
                 None

@@ -1,4 +1,4 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 
 use crate::token::token::Token;
 
@@ -8,7 +8,7 @@ pub struct BooleanLiteral {
     pub token: Token,
 }
 
-impl Node for BooleanLiteral {
+impl INode for BooleanLiteral {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -18,7 +18,7 @@ impl Node for BooleanLiteral {
     }
 }
 
-impl Expression for BooleanLiteral {}
+impl IExpression for BooleanLiteral {}
 
 pub fn create_boolean_literal(token: Token, value: bool) -> BooleanLiteral {
     BooleanLiteral { token, value }

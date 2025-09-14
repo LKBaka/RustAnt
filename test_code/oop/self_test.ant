@@ -1,0 +1,21 @@
+class A {
+	let v = none
+
+	let create = func () {
+		copy(A)
+	}
+
+	#[method]
+	let f = func (self) {
+		self.v
+	}
+}
+
+let o1 = A.create();
+o1.v = "o1"
+
+let o2 = A.create();
+o2.v = "o2"
+
+print(o1.f())
+print(o2.f())

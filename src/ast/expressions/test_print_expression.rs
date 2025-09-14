@@ -1,13 +1,14 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct TestPrintExpression {
-    pub value: Box<dyn Expression>,
+    pub value: Box<Expression>,
     pub token: Token,
 }
 
-impl Node for TestPrintExpression {
+impl INode for TestPrintExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -17,11 +18,11 @@ impl Node for TestPrintExpression {
     }
 }
 
-impl Expression for TestPrintExpression {}
+impl IExpression for TestPrintExpression {}
 
 pub fn create_test_print_expression(
     token: Token,
-    value: Box<dyn Expression>,
+    value: Box<Expression>,
 ) -> TestPrintExpression {
     TestPrintExpression { token, value }
 }

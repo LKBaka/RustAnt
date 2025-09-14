@@ -1,12 +1,12 @@
-use crate::ast::ast::Expression;
+use crate::ast::expr::Expression;
 use crate::ast::expressions::index_expression::create_index_expression;
 use crate::parser::parser::Parser;
 use crate::parser::precedence::Precedence;
 
 pub fn parse_index_expression(
     parser: &mut Parser,
-    left: Box<dyn Expression>,
-) -> Option<Box<dyn Expression>> {
+    left: Expression,
+) -> Option<Expression> {
     let token = parser.cur_token.clone();
 
     parser.next_token(); // 离开左括号
@@ -23,5 +23,5 @@ pub fn parse_index_expression(
 
     parser.next_token(); // 前进到右括号
 
-    Some(Box::new(create_index_expression(token, left, index)))
+    Some(Expression::IndexExpression(create_index_expression(token, Box::new(left), Box::new(index))))
 }

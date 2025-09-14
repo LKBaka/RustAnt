@@ -1,15 +1,16 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct IndexExpression {
-    pub expr: Box<dyn Expression>,
-    pub index: Box<dyn Expression>,
+    pub expr: Box<Expression>,
+    pub index: Box<Expression>,
     pub token: Token,
 }
 
-impl Node for IndexExpression {
+impl INode for IndexExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -19,12 +20,12 @@ impl Node for IndexExpression {
     }
 }
 
-impl Expression for IndexExpression {}
+impl IExpression for IndexExpression {}
 
 pub fn create_index_expression(
     token: Token,
-    expr: Box<dyn Expression>,
-    index: Box<dyn Expression>,
+    expr: Box<Expression>,
+    index: Box<Expression>,
 ) -> IndexExpression {
     IndexExpression { token, expr, index }
 }

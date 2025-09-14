@@ -1,6 +1,6 @@
 use bigdecimal::BigDecimal;
 
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
@@ -9,7 +9,7 @@ pub struct IntegerLiteral {
     pub token: Token,
 }
 
-impl Node for IntegerLiteral {
+impl INode for IntegerLiteral {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -19,7 +19,7 @@ impl Node for IntegerLiteral {
     }
 }
 
-impl Expression for IntegerLiteral {}
+impl IExpression for IntegerLiteral {}
 
 pub fn create_integer_literal(token: Token, value: BigDecimal) -> IntegerLiteral {
     IntegerLiteral { token, value }

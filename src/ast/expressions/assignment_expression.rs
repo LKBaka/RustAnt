@@ -1,15 +1,16 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
 
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct AssignmentExpression {
-    pub left: Box<dyn Expression + 'static>,
-    pub value: Box<dyn Expression>,
+    pub left: Box<Expression>,
+    pub value: Box<Expression>,
     pub token: Token,
 }
 
-impl Node for AssignmentExpression {
+impl INode for AssignmentExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -19,12 +20,12 @@ impl Node for AssignmentExpression {
     }
 }
 
-impl Expression for AssignmentExpression {}
+impl IExpression for AssignmentExpression {}
 
 pub fn create_assignment_expression(
     token: Token,
-    left: Box<dyn Expression>,
-    value: Box<dyn Expression>,
+    left: Box<Expression>,
+    value: Box<Expression>,
 ) -> AssignmentExpression {
     AssignmentExpression { token, left, value }
 }

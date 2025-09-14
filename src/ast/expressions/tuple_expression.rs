@@ -1,13 +1,14 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct TupleExpression {
-    pub expressions: Vec<Box<dyn Expression>>,
+    pub expressions: Vec<Box<Expression>>,
     pub token: Token,
 }
 
-impl Node for TupleExpression {
+impl INode for TupleExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -23,11 +24,11 @@ impl Node for TupleExpression {
     }
 }
 
-impl Expression for TupleExpression {}
+impl IExpression for TupleExpression {}
 
 pub fn create_tuple_expression(
     token: Token,
-    expressions: Vec<Box<dyn Expression>>,
+    expressions: Vec<Box<Expression>>,
 ) -> TupleExpression {
     TupleExpression { token, expressions }
 }

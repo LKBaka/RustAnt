@@ -1,14 +1,15 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct PrefixExpression {
     pub operator: String,
-    pub expression: Box<dyn Expression>,
+    pub expression: Box<Expression>,
     pub token: Token,
 }
 
-impl Node for PrefixExpression {
+impl INode for PrefixExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -18,12 +19,12 @@ impl Node for PrefixExpression {
     }
 }
 
-impl Expression for PrefixExpression {}
+impl IExpression for PrefixExpression {}
 
 pub fn create_prefix_expression(
     token: Token,
     operator: String,
-    expression: Box<dyn Expression>,
+    expression: Box<Expression>,
 ) -> PrefixExpression {
     PrefixExpression {
         token,

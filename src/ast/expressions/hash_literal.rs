@@ -1,13 +1,14 @@
-use crate::ast::ast::{Expression, Node};
+use crate::ast::ast::{IExpression, INode};
+use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct HashLiteral {
-    pub pairs: Vec<(Box<dyn Expression>, Box<dyn Expression>)>,
+    pub pairs: Vec<(Box<Expression>, Box<Expression>)>,
     pub token: Token,
 }
 
-impl Node for HashLiteral {
+impl INode for HashLiteral {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -25,8 +26,8 @@ impl Node for HashLiteral {
     }
 }
 
-impl Expression for HashLiteral {}
+impl IExpression for HashLiteral {}
 
-pub fn create_hash_literal(token: Token, pairs: Vec<(Box<dyn Expression>, Box<dyn Expression>)>) -> HashLiteral {
+pub fn create_hash_literal(token: Token, pairs: Vec<(Box<Expression>, Box<Expression>)>) -> HashLiteral {
     HashLiteral { token, pairs }
 }

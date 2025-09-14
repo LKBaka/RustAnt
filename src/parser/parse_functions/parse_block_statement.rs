@@ -1,9 +1,9 @@
-use crate::ast::ast::Statement;
+use crate::ast::stmt::Statement;
 use crate::ast::statements::block_statement::create_block_statement;
 use crate::parser::parser::Parser;
 use crate::token::token_type::TokenType::{self, LBrace, RBrace};
 
-pub fn parse_block_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> {
+pub fn parse_block_statement(parser: &mut Parser) -> Option<Statement> {
     let token = parser.cur_token.clone();
 
     if !parser.expect_cur(LBrace) {
@@ -25,5 +25,5 @@ pub fn parse_block_statement(parser: &mut Parser) -> Option<Box<dyn Statement>> 
 
     // WARNING: 有需要离开右括号的情况自行处理
 
-    Some(Box::new(create_block_statement(token, statements)))
+    Some(Statement::BlockStatement(create_block_statement(token, statements)))
 }
