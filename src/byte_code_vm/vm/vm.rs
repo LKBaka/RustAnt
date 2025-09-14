@@ -537,7 +537,7 @@ impl Vm {
                     let obj = self.pop();
 
                     // 天哪那么多缩进我不会被拉去皮豆吧
-                    if let Some(o) = obj {
+                    if let Some(ref o) = obj {
                         let o_borrow = o.borrow();
 
                         if let Object::AntClass(clazz) = &*o_borrow {
@@ -548,7 +548,7 @@ impl Vm {
                                 ))
                             };
 
-                            let value = if let Some(it) = clazz.map
+                            let value = match if let Some(it) = clazz.map
                                 .get(&field_obj) 
                             {
                                 it    
@@ -556,10 +556,19 @@ impl Vm {
                                 return Err(format!(
                                     "object '{}' has no field '{}'", clazz.inspect(), field_obj
                                 ))
+                            } {
+                                Object::Method(method) => {
+                                    let mut  m = method.clone();
+
+                                    m.me = obj.clone();
+
+                                    Object::Method(m)
+                                },
+                                other => other.clone()
                             };
 
                             if let Err(msg) = self.push(
-                                rc_ref_cell!(value.clone())
+                                rc_ref_cell!(value)
                             ) {
                                 return Err(format!("error push field: {msg}"))
                             }
