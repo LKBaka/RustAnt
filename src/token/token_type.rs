@@ -64,6 +64,7 @@ pub enum TokenType {
     Comment,
     TestPrint,
     Use,
+    NumberSign, // #
     Eof,
 }
 
@@ -134,7 +135,8 @@ impl TokenType {
             TokenType::TestPrint => "TestPrint",
             TokenType::Comment => "Comment",
             TokenType::None => "None",
-            TokenType::Use => "Use"
+            TokenType::Use => "Use",
+            TokenType::NumberSign => "#",
         }
     }
 }
@@ -198,5 +200,6 @@ pub static TOKEN_TYPE_MAP: phf::Map<&'static str, TokenType> = phf_map! {
     "TESTPRINT" => TokenType::TestPrint,
     "NONE" => TokenType::None,
     "USE" => TokenType::Use,
+    "#" => TokenType::NumberSign,
     "\0" => TokenType::Eof,
 };
