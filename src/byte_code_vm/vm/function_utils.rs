@@ -4,7 +4,7 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJ},
         vm::{frame::Frame, vm::Vm},
-    }, obj_enum::object::Object, object::{ant_closure::Closure, object::{IAntObject, CLOSURE, NATIVE_FUNCTION}}, rc_ref_cell
+    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_method::MethodType, object::{IAntObject, CLOSURE, METHOD, NATIVE_FUNCTION}}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
@@ -14,6 +14,8 @@ pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
         call_closure(vm, calling_obj.clone(), arg_count)
     } else if calling_obj.borrow().get_type() == NATIVE_FUNCTION {
         call_native(vm, calling_obj.clone(), arg_count)
+    } else if calling_obj.borrow().get_type() == METHOD {
+        call_method(vm, calling_obj.clone(), arg_count)
     } else {
         return Err(format!("calling non-function. obj: {:?}", calling_obj.borrow()))
     }
@@ -82,6 +84,34 @@ pub fn call_closure(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> 
     vm.sp = frame_base_pointer + local_count;
 
     Ok(())
+}
+
+pub fn call_method(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
+    let obj_borrow = obj.borrow();
+
+    let calling_obj = if let Object::Method(it) = &*obj_borrow {
+        it.clone()
+    } else {
+        return Err(format!("calling non-method"));
+    };
+
+    let mut arg_count = arg_count;
+
+    // 将方法对象替换为 self 对象
+    if let Some(o) = calling_obj.me {
+        vm.stack.insert(vm.sp - arg_count, o);
+        vm.sp += 1;
+        arg_count += 1
+    }
+
+    match calling_obj.func {
+        MethodType::Closure(cl) => call_closure(
+            vm, rc_ref_cell!(Object::Closure(cl)), arg_count,
+        ),
+        MethodType::NativeFunction(f) => call_native(
+            vm, rc_ref_cell!(Object::AntNativeFunction(f)), arg_count,
+        ),
+    }
 }
 
 pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<(), String> {
