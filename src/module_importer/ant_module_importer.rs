@@ -20,7 +20,7 @@ impl AntModuleImporter {
             {
                 use colored::Colorize;
 
-                use crate::ast::ast::Node;
+                use crate::ast::ast::INode;
 
                 println!("AST: {}", it.to_string().yellow());
             }

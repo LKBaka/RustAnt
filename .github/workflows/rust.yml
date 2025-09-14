@@ -1,22 +1,65 @@
-name: Rust
+name: RustAnt Executable
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
   pull_request:
-    branches: [ "master" ]
+    branches: [master]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build: [release, debug]
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v4
+
+      # 缓存 cargo 索引与依赖，加快后续运行
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.build }}-${{ hashFiles('**/Cargo.lock') }}
+
+      # 编译
+      - name: Build
+        run: |
+          if ("${{ matrix.build }}" -eq "release") { cargo build --release --verbose }
+          else { cargo build --verbose }
+        shell: pwsh
+
+      # 测试
+      - name: Test
+        run: cargo test --verbose --all-features
+
+      # 准备制品路径变量
+      - name: Prepare artifact names
+        id: art
+        shell: pwsh
+        run: |
+          $exe = if ($IsWindows) { "target/${{ matrix.build }}/rust_ant.exe" } else { "target/${{ matrix.build }}/rust_ant" }
+          $sym = if ($IsWindows) { "target/${{ matrix.build }}/rust_ant.pdb" }
+                  elseif ($IsMacOS) { "target/${{ matrix.build }}/rust_ant.dSYM" }
+                  else { "" }
+          "exe=$exe" >> $env:GITHUB_OUTPUT
+          "sym=$sym" >> $env:GITHUB_OUTPUT
+
+      # 上传
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rust-${{ runner.os }}-${{ matrix.build }}
+          path: |
+            ${{ steps.art.outputs.exe }}
+            ${{ steps.art.outputs.sym }}
+          retention-days: 90

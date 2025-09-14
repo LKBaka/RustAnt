@@ -40,6 +40,6 @@ pub static MODULE_PATHS: Lazy<Arc<Mutex<AntArray>>> = Lazy::new(
                 .to_str()
                 .unwrap()
                 .to_string()
-        ))
+        )),
     ])))
 );

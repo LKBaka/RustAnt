@@ -27,7 +27,7 @@ impl IAntObject for Closure {
     }
 
     fn get_id(&self) -> usize {
-        0x33550336
+        self.func.get_id()
     }
 
     fn inspect(&self) -> String {
@@ -51,5 +51,7 @@ impl IAntObject for Closure {
         self
     }
 }
+
+impl Eq for Closure {}
 
 impl_object!(Closure);

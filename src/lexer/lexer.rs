@@ -47,7 +47,7 @@ impl Lexer {
     }
 
     fn is_valid_char(&self, c: char) -> bool {
-        c.is_alphabetic() || c == '_' || c.is_emoji_char()
+        (c.is_alphabetic() || c == '_' || c.is_emoji_char()) && c != '#'
     }
 
     fn read_char(&mut self) -> char {

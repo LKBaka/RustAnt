@@ -11,7 +11,7 @@ use super::type_hint::TypeHintMap;
 
 pub type NativeFunction = fn(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String>;
 
-#[derive(Clone)]
+#[derive(Clone, Eq)]
 pub struct AntNativeFunction {
     pub id: usize,
     pub type_hint_map: Option<TypeHintMap>,

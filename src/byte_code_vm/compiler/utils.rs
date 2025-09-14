@@ -16,7 +16,7 @@ pub fn compile_it(code: String, file: String) -> Result<ByteCode, String> {
         {
             use colored::Colorize;
 
-            use crate::ast::ast::Node;
+            use crate::ast::ast::INode;
 
             println!("AST: {}", it.to_string().yellow());
         }
@@ -47,7 +47,7 @@ pub fn compile_with_state(
         {
             use colored::Colorize;
 
-            use crate::ast::ast::Node;
+            use crate::ast::ast::INode;
 
             println!("AST: {}", it.to_string().yellow());
         }
