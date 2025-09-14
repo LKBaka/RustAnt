@@ -135,7 +135,7 @@ lazy_static! {
         m.insert(OP_OR, Definition::new("OpOr".into(), vec![]));
         m.insert(OP_HASH, Definition::new("OpHash".into(), vec![2]));
         m.insert(OP_GET_FIELD, Definition::new("OpGetField".into(), vec![2]));
-        m.insert(OP_SET_FIELD, Definition::new("OpSetField".into(), vec![0]));
+        m.insert(OP_SET_FIELD, Definition::new("OpSetField".into(), vec![]));
         m.insert(OP_CLASS, Definition::new("OpClass".into(), vec![2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
@@ -318,9 +318,4 @@ pub fn read_operands(def: &Definition, ins: &Instructions) -> (Vec<i32>, usize) 
 #[inline(always)]
 pub fn read_uint16(ins: &[u8]) -> u16 {
     BigEndian::read_u16(ins)
-}
-
-#[inline(always)]
-pub fn read_uint8(ins: &[u8]) -> u8 {
-    ins[0]
 }
