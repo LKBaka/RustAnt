@@ -1,24 +1,15 @@
 use std::{
-    any::{Any, TypeId},
     cell::RefCell,
     mem,
     rc::Rc,
 };
 
-use hashbrown::HashMap as HashBrownMap;
-
 use crate::{
     ast::{
-        ast::{ExpressionStatement, Node, Program},
-        expressions::{
-            array_literal::ArrayLiteral, assignment_expression::AssignmentExpression, boolean_literal::BooleanLiteral, call_expression::CallExpression, double_literal::DoubleLiteral, function_expression::FunctionExpression, hash_literal::HashLiteral, identifier::Identifier, if_expression::IfExpression, index_expression::IndexExpression, infix_expression::InfixExpression, integer_literal::IntegerLiteral, none_literal::NoneLiteral, object_member_expression::ObjectMemberExpression, prefix_expression::PrefixExpression, return_expression::ReturnExpression, string_literal::StringLiteral, test_print_expression::TestPrintExpression, tuple_expression::TupleExpression
-        },
-        statements::{
-            block_statement::BlockStatement, class_statement::ClassStatement, let_statement::LetStatement, use_statement::UseStatement, while_statement::WhileStatement
-        },
+        ast::{Node, Program, TypeNameGetter}, expr::Expression, stmt::Statement
     }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
@@ -27,7 +18,7 @@ use crate::{
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-    }, convert_type_to_owned, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, struct_type_id
+    }, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell
 };
 
 #[derive(Debug, Clone)]
@@ -88,12 +79,9 @@ impl ByteCode {
     }
 }
 
-pub type CompileHandler = fn(&mut Compiler, Box<dyn Node>) -> Result<(), String>;
-
 pub struct Compiler {
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 
-    compile_map: HashBrownMap<TypeId, CompileHandler>,
     pub symbol_table: Rc<RefCell<SymbolTable>>,
 
     pub scopes: Vec<CompilationScope>,
@@ -101,20 +89,6 @@ pub struct Compiler {
 }
 
 impl Compiler {
-    pub fn init_compile_map(m: &mut HashBrownMap<TypeId, CompileHandler>) {
-        m.insert(struct_type_id!(InfixExpression), compile_infix_expression);
-        m.insert(struct_type_id!(PrefixExpression), compile_prefix_expression);
-        m.insert(struct_type_id!(IfExpression), compile_if_expression);
-        m.insert(
-            struct_type_id!(FunctionExpression),
-            compile_function_expression,
-        );
-        m.insert(struct_type_id!(CallExpression), compile_call_expression);
-        m.insert(struct_type_id!(HashLiteral), compile_hash_literal);
-        m.insert(struct_type_id!(WhileStatement), compile_while_statement);
-        m.insert(struct_type_id!(ClassStatement), compile_class);
-    }
-
     pub fn init_builtin_map(table: Rc<RefCell<SymbolTable>>) {
         let mut table_mut = table.borrow_mut();
 
@@ -130,16 +104,12 @@ impl Compiler {
             EmittedInstruction::default(),
         );
 
-        let mut m: HashBrownMap<TypeId, CompileHandler> = HashBrownMap::with_capacity(8);
-
         let symbol_table = rc_ref_cell!(SymbolTable::new());
 
         Self::init_builtin_map(symbol_table.clone());
-        Self::init_compile_map(&mut m);
 
         Self {
             constants: rc_ref_cell!(vec![]),
-            compile_map: m,
             symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
@@ -156,63 +126,25 @@ impl Compiler {
             EmittedInstruction::default(),
         );
 
-        let mut m: HashBrownMap<TypeId, CompileHandler> = HashBrownMap::with_capacity(8);
-
-        Self::init_compile_map(&mut m);
-
         Self {
             constants,
-            compile_map: m,
             symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
         }
     }
 
-    pub fn compile(&mut self, node: Box<dyn Node>) -> Result<(), String> {
-        let node_id = (node.as_ref() as &dyn Any).type_id();
-
-        match node_id {
-            id if id == struct_type_id!(BlockStatement) => {
-                let block = convert_type_to_owned!(BlockStatement, node);
-
-                for stmt in block.statements {
-                    self.compile(stmt)?;
-                }
-
-                Ok(())
-            }
-
-            id if id == struct_type_id!(ExpressionStatement) => {
-                let expr_stmt = convert_type_to_owned!(ExpressionStatement, node);
-
-                if let Some(expr) = expr_stmt.expression {
-                    let need_skip_pop = 
-                        (expr.as_ref() as &dyn Any).is::<FunctionExpression>() ||
-                        (expr.as_ref() as &dyn Any).is::<AssignmentExpression>();
-
-                    self.compile(expr)?;
-
-                    if need_skip_pop {return Ok(())}
-                    self.emit(OP_POP, vec![]);
-                }
-
-                Ok(())
-            }
-
-            id if id == struct_type_id!(TupleExpression) => {
-                let mut tuple_expr = convert_type_to_owned!(TupleExpression, node);
-
+    pub fn compile_expr(&mut self, node: Expression) -> Result<(), String> {
+        match node {
+            Expression::TupleExpression(mut tuple_expr) => {
                 if tuple_expr.expressions.len() == 1 {
-                    return self.compile(tuple_expr.expressions.remove(0));
+                    return self.compile_expr(*tuple_expr.expressions.remove(0));
                 }
 
                 Ok(())
             }
 
-            id if id == struct_type_id!(IntegerLiteral) => {
-                let mut integer_literal = convert_type_to_owned!(IntegerLiteral, node);
-
+            Expression::IntegerLiteral(integer_literal) => {
                 use num_traits::ToPrimitive;
 
                 // 常量池优化
@@ -221,7 +153,7 @@ impl Compiler {
                 {
                     CONSTANT_POOL_0_256[integer_literal.value.to_usize().unwrap()].clone()
                 } else {
-                    Object::AntInt(AntInt::from(mem::take(&mut integer_literal.value)))
+                    Object::AntInt(AntInt::from(integer_literal.value))
                 };
 
                 let constant_index = self.add_constant(integer);
@@ -230,21 +162,7 @@ impl Compiler {
                 Ok(())
             }
 
-            id if id == struct_type_id!(DoubleLiteral) => {
-                let mut double_literal = convert_type_to_owned!(DoubleLiteral, node);
-
-                let double =
-                    Object::AntDouble(AntDouble::from(mem::take(&mut double_literal.value)));
-
-                let constant_index = self.add_constant(double);
-                self.emit(OP_CONSTANTS, vec![constant_index as u16]);
-
-                Ok(())
-            }
-
-            id if id == struct_type_id!(StringLiteral) => {
-                let str_literal = convert_type_to_owned!(StringLiteral, node);
-
+            Expression::StringLiteral(str_literal) => {
                 let string = Object::AntString(AntString::new(str_literal.value));
 
                 let constant_index = self.add_constant(string);
@@ -253,9 +171,7 @@ impl Compiler {
                 Ok(())
             }
 
-            id if id == struct_type_id!(BooleanLiteral) => {
-                let boolean_literal = convert_type_to_owned!(BooleanLiteral, node);
-
+            Expression::BooleanLiteral(boolean_literal) => {
                 self.emit(
                     if boolean_literal.value {
                         OP_TRUE
@@ -268,7 +184,17 @@ impl Compiler {
                 Ok(())
             }
 
-            id if id == struct_type_id!(NoneLiteral) => {
+            Expression::DoubleLiteral(double_literal) => {
+                let double =
+                    Object::AntDouble(AntDouble::from(double_literal.value));
+
+                let constant_index = self.add_constant(double);
+                self.emit(OP_CONSTANTS, vec![constant_index as u16]);
+
+                Ok(())
+            }
+
+            Expression::NoneLiteral(_) => {
                 self.emit(
                     OP_NONE,
                     vec![],
@@ -277,12 +203,298 @@ impl Compiler {
                 Ok(())
             }
 
-            id if id == struct_type_id!(LetStatement) => {
-                let let_stmt = convert_type_to_owned!(LetStatement, node);
+            Expression::AssignmentExpression(assign_expr) => {
+                let result = self.compile_expr(*assign_expr.value);
 
+                if let Err(msg) = result {
+                    return Err(format!("error compile assignment expression: {msg}"));
+                }
+
+                match *assign_expr.left {
+                    Expression::Identifier(ident) => {
+                        let symbol =
+                        if let Some(it) = self.symbol_table.borrow_mut().resolve(&ident.value) {
+                            it
+                        } else {
+                            return Err(format!(
+                                "undefined identifier: {}. at line: {}, at file: {}",
+                                ident.value, ident.token.line, ident.token.file
+                            ));
+                        };
+
+                        self.emit(
+                            if symbol.scope == SymbolScope::Global {
+                                OP_SET_GLOBAL
+                            } else {
+                                OP_SET_LOCAL
+                            },
+                            vec![symbol.index as u16],
+                        );
+                    }
+
+                    Expression::IndexExpression(index_expr) => {
+                        if let Err(msg) = self.compile_expr(*index_expr.index) {
+                            return Err(format!("error compile index: {msg}"));
+                        }
+
+                        if let Err(msg) = self.compile_expr(*index_expr.expr) {
+                            return Err(format!("error compile target: {msg}"));
+                        }
+
+                        self.emit(OP_SET_INDEX, vec![]);
+                    }
+                
+                    Expression::ObjectMemberExpression(obj_member) => {
+                        if let Expression::Identifier(field) = *obj_member.right {
+                            let field_obj = Object::AntString(AntString::new(field.value.clone()));
+                            let field_index = self.add_constant(field_obj) as u16;
+
+                            self.emit(OP_CONSTANTS, vec![field_index]);
+
+                            if let Err(msg) = self.compile_expr(*obj_member.left) {
+                                return Err(format!("error compile object: {msg}"));
+                            }
+
+                            self.emit(OP_SET_FIELD, vec![]);
+                        }
+                    }
+
+                    _ => 
+                    return 
+                        Err(String::from("cannot assign to literal here. Maybe you meant '==' instead of '='?"))
+                }
+
+                Ok(())
+            }
+
+            Expression::Identifier(ident) => {
+                let symbol = self.symbol_table.borrow_mut().resolve(&ident.value);
+
+                if let Some(symbol) = symbol {
+                    self.load_symbol(&symbol);
+
+                    Ok(())
+                } else {
+                    Err(format!(
+                        "undefined identifier: {}. at line: {}, at file: {}",
+                        ident.value, ident.token.line, ident.token.file,
+                    ))
+                }
+            }
+
+            Expression::ArrayLiteral(arr) => {
+                let arr_len = arr.items.len();
+
+                for expr in arr.items {
+                    let compile_result = self.compile_expr(*expr);
+                    if let Err(msg) = compile_result {
+                        return Err(format!("error compile array item: {msg}"));
+                    }
+                }
+
+                self.emit(OP_ARRAY, vec![arr_len as u16]);
+
+                Ok(())
+            }
+
+            Expression::IndexExpression(index_expr) => {
+                if let Err(msg) = self.compile_expr(*index_expr.expr) {
+                    return Err(format!("error compile left expression: {msg}"));
+                }
+
+                if let Err(msg) = self.compile_expr(*index_expr.index) {
+                    return Err(format!("error compile index: {msg}"));
+                }
+
+                self.emit(OP_INDEX, vec![]);
+
+                Ok(())
+            }
+
+            Expression::ReturnExpression(return_expr) => {
+                // 第一件事 检查作用域
+                if self.symbol_table
+                    .borrow()
+                    .outer
+                    .is_none() 
+                {
+                    return Err(format!("cannot return outside function"))
+                }
+
+                if let Err(msg) = self.compile_expr(*return_expr.value) {
+                    return Err(format!("error compile return value: {msg}"));
+                }
+
+                self.emit(OP_RETURN_VALUE, vec![]);
+
+                Ok(())
+            }
+
+            Expression::ObjectMemberExpression(obj_member_expr) => {
+                if let Err(msg) = self.compile_expr(*obj_member_expr.left) {
+                    return Err(format!("error compile object: {msg}"))    
+                }
+                
+                let field = if let Expression::Identifier(it) = *obj_member_expr.right {
+                    it
+                } else {
+                    return Err(format!("expected an identifier of object member"))
+                };
+                
+                let field_obj = Object::AntString(AntString::new(field.value));
+
+                let field_constant_index = self.add_constant(field_obj) as u16;
+
+                self.emit(
+                    OP_GET_FIELD,
+                    vec![field_constant_index]
+                );
+
+                Ok(())
+            }
+
+            Expression::TestPrintExpression(test_print_expr) => {
+                if let Err(msg) = self.compile_expr(*test_print_expr.value) {
+                    return Err(format!("error compile return value: {msg}"));
+                }
+
+                self.emit(OP_TEST_PRINT, vec![]);
+
+                Ok(())
+            }
+
+            Expression::Decorator(decorator) => {
+                if let &Expression::Identifier(
+                    _
+                ) = &*decorator.decorator {
+                    if let Err(msg) = self.compile_expr(*decorator.decorator) {
+                        return Err(format!("error compile decorator: {msg}"))
+                    }
+
+                    if let Statement::LetStatement(let_stmt) = decorator.to_decorate {
+                        let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
+
+                        if let Err(msg) = self.compile_expr(*let_stmt.value) {
+                            return Err(format!("error compile decorate expression: {msg}"))
+                        }
+
+                        self.emit(OP_CALL, vec![1u16]);
+
+                        self.emit(
+                            if symbol.scope == SymbolScope::Global {
+                                OP_SET_GLOBAL
+                            } else {
+                                OP_SET_LOCAL
+                            },
+                            vec![symbol.index as u16],
+                        );
+
+                        return Ok(());
+                    }
+
+                    if let Err(msg) = self.compile_stmt(decorator.to_decorate) {
+                        return Err(format!("error compile decorate expression: {msg}"))
+                    }
+
+                    self.emit(OP_CALL, vec![1u16]);
+                } else if let Expression::CallExpression(mut it) = *decorator.decorator {
+                    if let Statement::LetStatement(ref let_stmt) = decorator.to_decorate {
+                        it.args.insert(
+                            0,
+                            match decorator.to_decorate {
+                                Statement::ExpressionStatement(expr_stmt) => expr_stmt,
+                                _ => panic!()
+                            }.expression.unwrap()
+                        );
+
+                        if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
+                            return Err(format!("error compile decorator: {msg}"))
+                        }
+
+                        let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
+
+                        self.emit(
+                            if symbol.scope == SymbolScope::Global {
+                                OP_SET_GLOBAL
+                            } else {
+                                OP_SET_LOCAL
+                            },
+                            vec![symbol.index as u16],
+                        );
+
+                        return Ok(());
+                    }
+
+                    it.args.insert(
+                        0,
+                        match decorator.to_decorate {
+                            Statement::ExpressionStatement(expr_stmt) => expr_stmt,
+                            _ => panic!()
+                        }.expression.unwrap()
+                    );
+
+                    if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
+                        return Err(format!("error compile decorator: {msg}"))
+                    }
+                }
+
+                Ok(())
+            }
+
+            Expression::CallExpression(expr) => 
+                compile_call_expression(self, Node::Expression(Expression::CallExpression(expr))),
+            Expression::FunctionExpression(expr) => 
+                compile_function_expression(self, Node::Expression(Expression::FunctionExpression(expr))),
+            Expression::HashLiteral(expr) => 
+                compile_hash_literal(self, Node::Expression(Expression::HashLiteral(expr))),
+            Expression::IfExpression(expr) => 
+                compile_if_expression(self, Node::Expression(Expression::IfExpression(expr))),
+            Expression::InfixExpression(expr) => 
+                compile_infix_expression(self, Node::Expression(Expression::InfixExpression(expr))),
+            Expression::PrefixExpression(expr) => 
+                compile_prefix_expression(self, Node::Expression(Expression::PrefixExpression(expr))),
+
+            _ => {
+                Err(format!(
+                    "no compile handler for node: {}",
+                    node.type_name()
+                ))
+            }
+        }
+    }
+
+    pub fn compile_stmt(&mut self, node: Statement) -> Result<(), String> {
+        match node {
+            Statement::BlockStatement(block) => {
+                for stmt in block.statements {
+                    self.compile_stmt(stmt)?;
+                }
+
+                Ok(())
+            }
+
+            Statement::ExpressionStatement(expr_stmt) => {
+                if let Some(expr) = expr_stmt.expression {
+                    let need_skip_pop = match &*expr {
+                        Expression::FunctionExpression(_) => true,
+                        Expression::Decorator(_) => true,
+                        Expression::AssignmentExpression(_) => true,
+                        _ => false
+                    };
+
+                    self.compile_expr(*expr)?;
+
+                    if need_skip_pop {return Ok(())}
+                    self.emit(OP_POP, vec![]);
+                }
+
+                Ok(())
+            }
+
+            Statement::LetStatement(let_stmt) => {
                 let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
 
-                let result = self.compile(let_stmt.value);
+                let result = self.compile_expr(*let_stmt.value);
 
                 if let Err(msg) = result {
                     return Err(format!("error compile let statement: {msg}"));
@@ -300,169 +512,7 @@ impl Compiler {
                 Ok(())
             }
 
-            id if id == struct_type_id!(AssignmentExpression) => {
-                let assign_expr = convert_type_to_owned!(AssignmentExpression, node);
-
-                let result = self.compile(assign_expr.value);
-
-                if let Err(msg) = result {
-                    return Err(format!("error compile assignment expression: {msg}"));
-                }
-
-                let anyed_expr = assign_expr.left as Box<dyn Any>;
-
-                if let Some(ident) = anyed_expr.downcast_ref::<Identifier>() {
-                    let symbol =
-                        if let Some(it) = self.symbol_table.borrow_mut().resolve(&ident.value) {
-                            it
-                        } else {
-                            return Err(format!(
-                                "undefined identifier: {}. at line: {}, at file: {}",
-                                ident.value, ident.token.line, ident.token.file
-                            ));
-                        };
-
-                    self.emit(
-                        if symbol.scope == SymbolScope::Global {
-                            OP_SET_GLOBAL
-                        } else {
-                            OP_SET_LOCAL
-                        },
-                        vec![symbol.index as u16],
-                    );
-                } else if let Some(index_expr) = anyed_expr.downcast_ref::<IndexExpression>() {
-                    if let Err(msg) = self.compile(index_expr.index.clone()) {
-                        return Err(format!("error compile index: {msg}"));
-                    }
-
-                    if let Err(msg) = self.compile(index_expr.expr.clone()) {
-                        return Err(format!("error compile target: {msg}"));
-                    }
-
-                    self.emit(OP_SET_INDEX, vec![]);
-                } else if let Ok(obj_member) = 
-                    anyed_expr.downcast::<ObjectMemberExpression>() 
-                {
-                    if let Some(field) = (
-                        obj_member.right.as_ref() as &dyn Any
-                    ).downcast_ref::<Identifier>() {
-                        let field_obj = Object::AntString(AntString::new(field.value.clone()));
-                        let field_index = self.add_constant(field_obj) as u16;
-
-                        self.emit(OP_CONSTANTS, vec![field_index]);
-
-                        if let Err(msg) = self.compile(obj_member.left) {
-                            return Err(format!("error compile object: {msg}"));
-                        }
-
-                        self.emit(OP_SET_FIELD, vec![]);
-                    }
-                } 
-
-                Ok(())
-            }
-
-            id if id == struct_type_id!(Identifier) => {
-                let ident = convert_type_to_owned!(Identifier, node);
-
-                let symbol = self.symbol_table.borrow_mut().resolve(&ident.value);
-
-                if let Some(symbol) = symbol {
-                    self.load_symbol(&symbol);
-
-                    Ok(())
-                } else {
-                    Err(format!(
-                        "undefined identifier: {}. at line: {}, at file: {}",
-                        ident.value, ident.token.line, ident.token.file,
-                    ))
-                }
-            }
-
-            id if id == struct_type_id!(ArrayLiteral) => {
-                let arr = convert_type_to_owned!(ArrayLiteral, node);
-
-                let arr_len = arr.items.len();
-
-                for expr in arr.items {
-                    let compile_result = self.compile(expr);
-                    if let Err(msg) = compile_result {
-                        return Err(format!("error compile array item: {msg}"));
-                    }
-                }
-
-                self.emit(OP_ARRAY, vec![arr_len as u16]);
-
-                Ok(())
-            }
-
-            id if id == TypeId::of::<IndexExpression>() => {
-                let index_expr = convert_type_to_owned!(IndexExpression, node);
-
-                if let Err(msg) = self.compile(index_expr.expr) {
-                    return Err(format!("error compile left expression: {msg}"));
-                }
-
-                if let Err(msg) = self.compile(index_expr.index) {
-                    return Err(format!("error compile index: {msg}"));
-                }
-
-                self.emit(OP_INDEX, vec![]);
-
-                Ok(())
-            }
-
-            id if id == TypeId::of::<ReturnExpression>() => {
-                // 第一件事 检查作用域
-                if self.symbol_table
-                    .borrow()
-                    .outer
-                    .is_none() 
-                {
-                    return Err(format!("cannot return outside function"))
-                }
-
-                let return_expr = convert_type_to_owned!(ReturnExpression, node);
-
-                if let Err(msg) = self.compile(return_expr.value) {
-                    return Err(format!("error compile return value: {msg}"));
-                }
-
-                self.emit(OP_RETURN_VALUE, vec![]);
-
-                Ok(())
-            }
-
-            id if id == TypeId::of::<ObjectMemberExpression>() => {
-                let obj_member_expr = convert_type_to_owned!(ObjectMemberExpression, node);
-
-                if let Err(msg) = self.compile(obj_member_expr.left) {
-                    return Err(format!("error compile object: {msg}"))    
-                }
-                
-                let field = if let Ok(it) = (
-                    obj_member_expr.right as Box<dyn Any>
-                ).downcast::<Identifier>() {
-                    *it
-                } else {
-                    return Err(format!("expected an identifier of object member"))
-                };
-                
-                let field_obj = Object::AntString(AntString::new(field.value));
-
-                let field_constant_index = self.add_constant(field_obj) as u16;
-
-                self.emit(
-                    OP_GET_FIELD,
-                    vec![field_constant_index]
-                );
-
-                Ok(())
-            }
-            
-            id if id == TypeId::of::<UseStatement>() => {
-                let use_statement = convert_type_to_owned!(UseStatement, node);
-
+            Statement::UseStatement(use_statement) => {
                 let m = ModuleImporter::import(vec![
                     &use_statement.name.value
                 ]);
@@ -500,29 +550,11 @@ impl Compiler {
 
                 Ok(())
             }
-            
-            id if id == TypeId::of::<TestPrintExpression>() => {
-                let test_print_expr = convert_type_to_owned!(TestPrintExpression, node);
 
-                if let Err(msg) = self.compile(test_print_expr.value) {
-                    return Err(format!("error compile return value: {msg}"));
-                }
-
-                self.emit(OP_TEST_PRINT, vec![]);
-
-                Ok(())
-            }
-
-            _ => {
-                if let Some(handler) = self.compile_map.get(&node_id) {
-                    handler(self, node)
-                } else {
-                    Err(format!(
-                        "no compile handler for node type: {}",
-                        node.type_name()
-                    ))
-                }
-            }
+            Statement::ClassStatement(stmt) => 
+                compile_class(self, Node::Statement(Statement::ClassStatement(stmt))),
+            Statement::WhileStatement(stmt) => 
+                compile_while_statement(self, Node::Statement(Statement::WhileStatement(stmt)))
         }
     }
 
@@ -534,7 +566,6 @@ impl Compiler {
             SymbolScope::Free => self.emit(OP_GET_FREE, vec![symbol.index as u16]),
             SymbolScope::Function => self.emit(OP_CURRENT_CLOSURE, vec![]),
             SymbolScope::Builtin => self.emit(OP_GET_BUILTIN, vec![symbol.index as u16]),
-            _ => panic!("unknown symbol scope: {:?}", symbol.scope)
         };
     }
 
@@ -652,7 +683,7 @@ impl Compiler {
 
     pub fn start_compile(&mut self, program: Program) -> Result<(), String> {
         for stmt in program.statements {
-            self.compile(stmt)?;
+            self.compile_stmt(stmt)?;
         }
 
         Ok(())
