@@ -2,7 +2,7 @@ use std::{cell::RefCell, process::exit, rc::Rc, time::{SystemTime, UNIX_EPOCH}};
 
 use bigdecimal::BigDecimal;
 
-use crate::{obj_enum::object::Object, object::{ant_int::AntInt, ant_string::AntString, object::IAntObject}, utils::run_command};
+use crate::{obj_enum::object::Object, object::{ant_int::AntInt, ant_method::{Method, MethodType}, ant_string::AntString, object::IAntObject}, utils::run_command};
 
 pub fn builtin_print(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0]
@@ -106,4 +106,21 @@ pub fn builtin_now(_args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, St
                 .as_secs()
         )
     ))))
+}
+
+pub fn builtin_create_method(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let to_be_method = args[0].clone();
+    let borrowed = to_be_method.borrow();
+
+    match &*borrowed {
+        Object::Closure(cl) => Ok(Some(Object::Method(Method {
+            me: None,
+            func: MethodType::Closure(cl.clone())
+        }))),
+        Object::AntNativeFunction(f) => Ok(Some(Object::Method(Method {
+            me: None,
+            func: MethodType::NativeFunction(f.clone())
+        }))),
+        _ => Err(format!("cannot convert {} to method", borrowed.inspect()))
+    }
 }

@@ -4,8 +4,7 @@ use lazy_static::lazy_static;
 
 use crate::{
     builtin::builtin_func::{
-        builtin_clear, builtin_copy, builtin_force_exit, builtin_id, builtin_len, builtin_now,
-        builtin_obj_info, builtin_print, builtin_shell,
+        builtin_clear, builtin_copy, builtin_create_method, builtin_force_exit, builtin_id, builtin_len, builtin_now, builtin_obj_info, builtin_print, builtin_shell
     },
     byte_code_vm::constants::NONE_OBJ,
     obj_enum::object::Object,
@@ -64,6 +63,11 @@ lazy_static! {
         );
 
         m.insert(
+            "method".into(), 
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_create_method))
+        );
+
+        m.insert(
             "Result".into(),
             Object::AntClass(AntClass::from({
                 let native_func = |args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>| {
@@ -118,6 +122,7 @@ lazy_static! {
             "clear".into(),
             "force_exit".into(),
             "Result".into(),
+            "method".into(),
         ]
     };
 }
