@@ -20,8 +20,14 @@ impl ModuleImporter {
             }
         }
 
+        let mut loaded = vec![];
+
         for module_path in module_paths  {
             for import in &imports {
+                if loaded.contains(import) {
+                    continue;
+                }
+
                 let path_buf = PathBuf::from_str(&module_path)
                     .expect(&format!("invaild path: {module_path}"));
 
@@ -41,16 +47,19 @@ impl ModuleImporter {
 
                 if try_ant_mod.exists() {
                     results.push(Self::import_ant_module(&try_ant_mod));
+                    loaded.push(&import);
                     continue;
                 }
 
                 if try_native_mod.exists() {
                     results.push(Self::import_native_module(&try_native_mod));
+                    loaded.push(&import);
                     continue;
                 }
 
                 if try_folder.exists() {
                     results.push(Self::import_folder(&try_folder));
+                    loaded.push(&import);
                     continue;
                 }
             }
