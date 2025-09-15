@@ -41,5 +41,14 @@ pub static MODULE_PATHS: Lazy<Arc<Mutex<AntArray>>> = Lazy::new(
                 .unwrap()
                 .to_string()
         )),
+        Object::AntString(AntString::new(
+            std::env::current_exe()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string()
+        )),
     ])))
 );
