@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use hashbrown::HashMap;
 
 use crate::ast::ast::{ExpressionStatement, Program};
@@ -40,9 +42,24 @@ type PrefixParseFn = fn(&mut Parser) -> Option<Expression>;
 type InfixParseFn = fn(&mut Parser, Expression) -> Option<Expression>;
 type StmtParseFn = fn(&mut Parser) -> Option<Statement>;
 
+#[derive(Debug)]
+pub struct ParseError {
+    pub message: String,
+    pub token: Token,
+}
+
+impl Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f, "{} at line: {} at column: {}, at file: {}",
+            self.message, self.token.line, self.token.column, self.token.file
+        )
+    }
+}
+
 pub struct Parser {
     tokens: Vec<Token>,
-    errors: Vec<String>,
+    errors: Vec<ParseError>,
 
     pos: usize,
     next_pos: usize,
@@ -252,13 +269,10 @@ impl Parser {
                 self.cur_token.token_type.to_string()
             };
 
-            self.errors.push(format!(
-                "no prefix parse function for {} found. at file <{}> line {}, column {}",
-                token_str,
-                self.cur_token.file,
-                self.cur_token.line,
-                self.cur_token.column
-            ));
+            self.errors.push(ParseError { 
+                message: format!("no prefix parse function for {token_str} found."),
+                token: self.cur_token.clone()
+            });
 
             return None;
         }
@@ -269,13 +283,16 @@ impl Parser {
             let infix_parse_fn = self.infix_parse_fn_map.get(&self.peek_token.token_type);
             match infix_parse_fn.cloned() {
                 None => {
-                    self.errors.push(format!(
-                        "no infix parse function for {} found. at file <{}> line {}, column {}",
-                        self.cur_token.token_type.to_string(),
-                        self.cur_token.file,
-                        self.cur_token.line,
-                        self.cur_token.column
-                    ));
+                    let token_str = if self.cur_token.token_type == TokenType::Illegal {
+                        &self.cur_token.value
+                    } else {
+                        self.cur_token.token_type.to_string()
+                    };
+
+                    self.errors.push(ParseError { 
+                        message: format!("no infix parse function for {token_str} found."),
+                        token: self.cur_token.clone()
+                    });
 
                     return None;
                 }
@@ -388,13 +405,11 @@ impl Parser {
 
     pub fn expect_peek(&mut self, token_type: TokenType) -> bool {
         if self.peek_token.token_type != token_type {
-            self.errors.push(format!(
-                "missing {}. at file <{}>, line {}, column {}",
-                token_type.to_string(),
-                self.cur_token.file,
-                self.cur_token.line,
-                self.cur_token.column
-            ));
+            self.errors.push(ParseError { 
+                message: format!("missing {}.", self.peek_token.token_type.to_string()),
+                token: self.peek_token.clone()
+            });
+
             return false;
         }
 
@@ -403,13 +418,10 @@ impl Parser {
 
     pub fn expect_cur(&mut self, token_type: TokenType) -> bool {
         if self.cur_token.token_type != token_type {
-            self.errors.push(format!(
-                "missing {}. at file <{}>, line {}, column {}",
-                token_type.to_string(),
-                self.cur_token.file,
-                self.cur_token.line,
-                self.cur_token.column
-            ));
+            self.errors.push(ParseError { 
+                message: format!("missing {}.", self.peek_token.token_type.to_string()),
+                token: self.cur_token.clone()
+            });
 
             return false;
         }
@@ -423,10 +435,7 @@ impl Parser {
 
     pub fn push_err(&mut self, msg: String) {
         self.errors
-            .push(format!(
-                "{} at file <{}>, line {}, column {}", 
-                msg, self.cur_token.file, self.cur_token.line, self.cur_token.column
-            ));
+            .push(ParseError { message: msg, token: self.cur_token.clone() });
     }
 
     pub fn print_errors(&self) {
