@@ -1,7 +1,7 @@
 # RustAnt
 
 [![Rust](https://img.shields.io/badge/Rust-1.88+-blue.svg)](https://www.rust-lang.org/)
-[![License](https://img.shields.io/badge/License-GPL3-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **RustAnt** 是一个用 Rust 编写的编程语言解释器，实现了完整的编程语言功能栈，包括词法分析、语法分析、字节码编译和虚拟机执行。
 
@@ -135,7 +135,7 @@ while x > 0 {
 
 ### 面向对象编程
 
-> ⚠️ **开发中**: 面向对象功能正在开发中，当前版本不支持 可暂时使用字典模拟
+> ⚠️ **开发中**: 面向对象功能正在开发中，当前版本功能较少。暂且只有类和对象，暂未实现继承  
 
 ### 内置函数
 
@@ -148,6 +148,8 @@ while x > 0 {
 `copy`: copy函数! **拷贝一个对象并返回该对象**  
 `id`: id函数! **获取一个对象的id并返回**    
 `now`: now函数! **返回从 UNIX 纪元到现在的秒数**   
+
+...
 
 ## 🧪 测试
 
@@ -223,14 +225,9 @@ cargo run --features debug
 - 提交信息请使用清晰的描述
 - 如有疑问，欢迎在 [Issues](https://github.com/LKBaka/RustAnt/issues) 中讨论
 
-## 📄 许可证
+## 📄 许可证 （开源协议）
 
-本项目采用 GPL-3.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-> **开源协议**: 本项目使用 GPL-3.0 许可证，这意味着：
-> - 您可以自由使用、修改和分发代码
-> - 如果您分发修改后的版本，必须同样使用 GPL-3.0 许可证
-> - 必须公开源代码
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。  
 
 ## 🙏 致谢
 
