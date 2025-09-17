@@ -4,17 +4,17 @@ use std::rc::Rc;
 use crate::object::id_counter::next_id;
 use crate::{
     ast::{
-        ast::{Node, TypeNameGetter}, expr::Expression, expressions::identifier::Identifier, stmt::Statement
+        ast::{INode, Node, TypeNameGetter}, expr::Expression, stmt::Statement
     }, byte_code_vm::{
         code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
-        compiler::compiler::Compiler,
+        compiler::compiler::{CompileError, Compiler},
     }, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction
 };
 
 pub fn compile_function_expression(
     compiler: &mut Compiler,
     node: Node,
-) -> Result<(), String> {
+) -> Result<(), CompileError> {
     let is_closure = compiler.symbol_table.borrow().outer.is_some();
 
     let func_expr = match match node {
@@ -41,19 +41,17 @@ pub fn compile_function_expression(
             .index as u16;
     }
 
-    let param_vec: Vec<&Identifier> = func_expr
-        .params
-        .iter()
-        .map(|expr| {
-            match &**expr {
-                Expression::Identifier(it) => it,
-                _ => panic!("{}",&format!(
-                    "expected an identifier, got: {}",
-                    expr.type_name()
-                ))
-            }
-        })
-        .collect();
+    let mut param_vec = vec![];
+
+    for param in &func_expr.params {
+        match &**param {
+            Expression::Identifier(it) => param_vec.push(it),
+            _ => return Err(CompileError::from(format!(
+                "expected an identifier, got: {}",
+                param.type_name()
+            ), Some(param.token())))
+        }
+    }
 
     for param in param_vec {
         compiler.symbol_table.borrow_mut().define(&param.value);
@@ -64,7 +62,9 @@ pub fn compile_function_expression(
     ));
     
     if let Err(msg) = compile_body_result {
-        return Err(format!("error compile function body: {msg}"));
+        return Err(CompileError::from_none_token(
+            format!("error compile function body: {msg}")
+        ));
     }
 
     if compiler.last_instruction_is(OP_POP) {

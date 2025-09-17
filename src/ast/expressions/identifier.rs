@@ -12,6 +12,10 @@ impl INode for Identifier {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         self.value.to_string()
     }

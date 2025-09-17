@@ -17,6 +17,10 @@ impl INode for BlockStatement {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         let mut s = String::new();
 

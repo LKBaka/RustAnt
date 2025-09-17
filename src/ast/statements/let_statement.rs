@@ -16,6 +16,10 @@ impl INode for LetStatement {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!("let {} = {}", self.name.to_string(), self.value.to_string())
     }

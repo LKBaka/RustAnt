@@ -15,6 +15,10 @@ impl INode for AssignmentExpression {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!("{} = {}", self.left.to_string(), self.value.to_string())
     }

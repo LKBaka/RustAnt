@@ -15,6 +15,10 @@ impl INode for Decorator {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!("#[{}]\n{}", self.decorator.to_string(), self.to_decorate.to_string())
     }

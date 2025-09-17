@@ -2,11 +2,11 @@ use std::rc::Rc;
 
 use crate::{
     ast::{ast::Node, stmt::Statement},
-    byte_code_vm::{code::code::{OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL}, compiler::{compiler::Compiler, symbol_table::symbol_table::SymbolScope}},
+    byte_code_vm::{code::code::{OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL}, compiler::{compiler::{CompileError, Compiler}, symbol_table::symbol_table::SymbolScope}},
     obj_enum::object::Object, object::{ant_compiled_function::CompiledFunction, ant_string::AntString},
 };
 
-pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), String> {
+pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let clazz = match match node {
         Node::Statement(stmt) => stmt,
         _ => panic!()
@@ -20,7 +20,9 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), String> 
     compiler.enter_scope();
 
     if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(clazz.block)) {
-        return Err(format!("error compile class: {msg}"));
+        return Err(CompileError::from_none_token(
+            format!("error compile class: {msg}")
+        ));
     }
 
     let symbols = compiler.symbol_table.borrow().store.clone();

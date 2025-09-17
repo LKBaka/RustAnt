@@ -89,7 +89,7 @@ impl REPLRunner {
                     let print_msg = |msg: String| eprintln!("{}", msg.red());
 
                     match err {
-                        RunError::CompileError(msg) => print_msg(msg),
+                        RunError::CompileError(msg) => print_msg(msg.to_string()),
                         RunError::RuntimeError(msg) => {
                             eprintln!("{}", msg.inspect().red());
                         }

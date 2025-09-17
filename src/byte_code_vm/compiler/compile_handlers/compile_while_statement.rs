@@ -2,12 +2,12 @@ use crate::{
     ast::{ast::Node, stmt::Statement},
     byte_code_vm::{
         code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NOP},
-        compiler::compiler::Compiler,
+        compiler::compiler::{CompileError, Compiler},
         constants::FAKE_OFFSET_JUMP,
     },
 };
 
-pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<(), String> {
+pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let start_ip = compiler.current_instructions().borrow().len();
 
     let while_stmt = match match node {
@@ -19,13 +19,17 @@ pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<()
     };
 
     if let Err(msg) = compiler.compile_expr(*while_stmt.condition) {
-        return Err(format!("error compile while loop condition: {msg}"));
+        return Err(CompileError::from_none_token(
+            format!("error compile while loop condition: {msg}")
+        ));
     }
 
     let jump_not_truthy_command_pos = compiler.emit(OP_JUMP_NOT_TRUTHY, vec![FAKE_OFFSET_JUMP]);
 
     if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(while_stmt.block)) {
-        return Err(format!("error compile while loop body: {msg}"));
+        return Err(CompileError::from_none_token(
+            format!("error compile while loop body: {msg}")
+        ));
     }
 
     compiler.emit(OP_JUMP, vec![start_ip as u16]);

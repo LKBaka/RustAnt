@@ -1,6 +1,6 @@
 use enum_dispatch::enum_dispatch;
 
-use crate::ast::{
+use crate::{ast::{
     ast::{IExpression, INode},
     expressions::{
         array_literal::ArrayLiteral, assignment_expression::AssignmentExpression,
@@ -14,7 +14,7 @@ use crate::ast::{
         return_expression::ReturnExpression, string_literal::StringLiteral,
         test_print_expression::TestPrintExpression, tuple_expression::TupleExpression,
     },
-};
+}, token::token::Token};
 
 #[enum_dispatch(IExpression)]
 #[derive(Clone, Debug)]
@@ -43,59 +43,46 @@ pub enum Expression {
     ElseIfExpression,
 }
 
+macro_rules! auto_expr {
+    ($self:ident, $method:ident) => {
+        match $self {
+            Expression::ArrayLiteral(expr) => expr.$method(),
+            Expression::AssignmentExpression(expr) => expr.$method(),
+            Expression::BooleanLiteral(expr) => expr.$method(),
+            Expression::CallExpression(expr) => expr.$method(),
+            Expression::ClassMemberExpression(expr) => expr.$method(),
+            Expression::Decorator(expr) => expr.$method(),
+            Expression::DoubleLiteral(expr) => expr.$method(),
+            Expression::FunctionExpression(expr) => expr.$method(),
+            Expression::HashLiteral(expr) => expr.$method(),
+            Expression::Identifier(expr) => expr.$method(),
+            Expression::IfExpression(expr) => expr.$method(),
+            Expression::IndexExpression(expr) => expr.$method(),
+            Expression::InfixExpression(expr) => expr.$method(),
+            Expression::IntegerLiteral(expr) => expr.$method(),
+            Expression::NoneLiteral(expr) => expr.$method(),
+            Expression::ObjectMemberExpression(expr) => expr.$method(),
+            Expression::PrefixExpression(expr) => expr.$method(),
+            Expression::ReturnExpression(expr) => expr.$method(),
+            Expression::StringLiteral(expr) => expr.$method(),
+            Expression::TestPrintExpression(expr) => expr.$method(),
+            Expression::TupleExpression(expr) => expr.$method(),
+            Expression::ElseIfExpression(expr) => expr.$method(),
+        }
+    };
+}
+
 impl INode for Expression {
     fn token_literal(&self) -> String {
-        match self {
-            Expression::ArrayLiteral(expr) => expr.token_literal(),
-            Expression::AssignmentExpression(expr) => expr.token_literal(),
-            Expression::BooleanLiteral(expr) => expr.token_literal(),
-            Expression::CallExpression(expr) => expr.token_literal(),
-            Expression::ClassMemberExpression(expr) => expr.token_literal(),
-            Expression::Decorator(expr) => expr.token_literal(),
-            Expression::DoubleLiteral(expr) => expr.token_literal(),
-            Expression::FunctionExpression(expr) => expr.token_literal(),
-            Expression::HashLiteral(expr) => expr.token_literal(),
-            Expression::Identifier(expr) => expr.token_literal(),
-            Expression::IfExpression(expr) => expr.token_literal(),
-            Expression::IndexExpression(expr) => expr.token_literal(),
-            Expression::InfixExpression(expr) => expr.token_literal(),
-            Expression::IntegerLiteral(expr) => expr.token_literal(),
-            Expression::NoneLiteral(expr) => expr.token_literal(),
-            Expression::ObjectMemberExpression(expr) => expr.token_literal(),
-            Expression::PrefixExpression(expr) => expr.token_literal(),
-            Expression::ReturnExpression(expr) => expr.token_literal(),
-            Expression::StringLiteral(expr) => expr.token_literal(),
-            Expression::TestPrintExpression(expr) => expr.token_literal(),
-            Expression::TupleExpression(expr) => expr.token_literal(),
-            Expression::ElseIfExpression(expr) => expr.token_literal(),
-        }
+        auto_expr!(self, token_literal)
+    }
+
+    fn token(&self) -> Token {
+        auto_expr!(self, token)
     }
 
     fn to_string(&self) -> String {
-        match self {
-            Expression::ArrayLiteral(expr) => expr.to_string(),
-            Expression::AssignmentExpression(expr) => expr.to_string(),
-            Expression::BooleanLiteral(expr) => expr.to_string(),
-            Expression::CallExpression(expr) => expr.to_string(),
-            Expression::ClassMemberExpression(expr) => expr.to_string(),
-            Expression::Decorator(expr) => expr.to_string(),
-            Expression::DoubleLiteral(expr) => expr.to_string(),
-            Expression::FunctionExpression(expr) => expr.to_string(),
-            Expression::HashLiteral(expr) => expr.to_string(),
-            Expression::Identifier(expr) => expr.to_string(),
-            Expression::IfExpression(expr) => expr.to_string(),
-            Expression::IndexExpression(expr) => expr.to_string(),
-            Expression::InfixExpression(expr) => expr.to_string(),
-            Expression::IntegerLiteral(expr) => expr.to_string(),
-            Expression::NoneLiteral(expr) => expr.to_string(),
-            Expression::ObjectMemberExpression(expr) => expr.to_string(),
-            Expression::PrefixExpression(expr) => expr.to_string(),
-            Expression::ReturnExpression(expr) => expr.to_string(),
-            Expression::StringLiteral(expr) => expr.to_string(),
-            Expression::TestPrintExpression(expr) => expr.to_string(),
-            Expression::TupleExpression(expr) => expr.to_string(),
-            Expression::ElseIfExpression(expr) => expr.to_string(),
-        }
+        auto_expr!(self, to_string)
     }
 }
 

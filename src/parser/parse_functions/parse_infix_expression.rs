@@ -9,12 +9,12 @@ pub fn parse_infix_expression(
 ) -> Option<Expression> {
     let token = parser.cur_token.clone();
     let left_expression = left;
-    let operator = parser.cur_token.value.clone();
+    let operator = parser.cur_token.clone();
 
     let precedence = get_token_precedence(parser.cur_token.token_type);
     parser.next_token(); // 离开运算符
 
-    let right_expression = parser.parse_expression(if operator == "+" {
+    let right_expression = parser.parse_expression(if operator.value == "+" {
         precedence - 1
     } else {
         precedence

@@ -1,6 +1,6 @@
 use enum_dispatch::enum_dispatch;
 
-use crate::ast::{ast::{ExpressionStatement, INode, IStatement}, statements::{block_statement::BlockStatement, class_statement::ClassStatement, let_statement::LetStatement, use_statement::UseStatement, while_statement::WhileStatement}};
+use crate::{ast::{ast::{ExpressionStatement, INode, IStatement}, statements::{block_statement::BlockStatement, class_statement::ClassStatement, let_statement::LetStatement, use_statement::UseStatement, while_statement::WhileStatement}}, token::token::Token};
 
 #[enum_dispatch(IStatement)]
 #[derive(Debug, Clone)]
@@ -13,28 +13,30 @@ pub enum Statement {
     ExpressionStatement,
 }
 
+macro_rules! auto_stmt {
+    ($self:ident, $method:ident) => {
+        match $self {
+            Statement::BlockStatement(stmt) => stmt.$method(),
+            Statement::ClassStatement(stmt) => stmt.$method(),
+            Statement::LetStatement(stmt) => stmt.$method(),
+            Statement::UseStatement(stmt) => stmt.$method(),
+            Statement::WhileStatement(stmt) => stmt.$method(),
+            Statement::ExpressionStatement(stmt) => stmt.$method(),
+        }
+    };
+}
 
 impl INode for Statement {
     fn token_literal(&self) -> String {
-        match self {
-            Statement::BlockStatement(stmt) => stmt.token_literal(),
-            Statement::ClassStatement(stmt) => stmt.token_literal(),
-            Statement::LetStatement(stmt) => stmt.token_literal(),
-            Statement::UseStatement(stmt) => stmt.token_literal(),
-            Statement::WhileStatement(stmt) => stmt.token_literal(),
-            Statement::ExpressionStatement(stmt) => stmt.token_literal(),
-        }
+        auto_stmt!(self, token_literal)
+    }
+
+    fn token(&self) -> Token {
+        auto_stmt!(self, token)
     }
 
     fn to_string(&self) -> String {
-        match self {
-            Statement::BlockStatement(stmt) => stmt.to_string(),
-            Statement::ClassStatement(stmt) => stmt.to_string(),
-            Statement::LetStatement(stmt) => stmt.to_string(),
-            Statement::UseStatement(stmt) => stmt.to_string(),
-            Statement::WhileStatement(stmt) => stmt.to_string(),
-            Statement::ExpressionStatement(stmt) => stmt.to_string(),
-        }
+        auto_stmt!(self, token_literal)
     }
 }
 

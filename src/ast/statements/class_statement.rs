@@ -18,6 +18,10 @@ impl INode for ClassStatement {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         if let Some(base) = &self.base {
             format!(

@@ -15,6 +15,10 @@ impl INode for CallExpression {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         let mut args_strings = vec![];
 

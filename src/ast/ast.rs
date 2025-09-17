@@ -30,8 +30,9 @@ pub enum Node {
 #[enum_dispatch]
 pub trait INode: DynClone + Sync + Send + Any + Debug + TypeNameGetter {
     fn token_literal(&self) -> String;
+    fn token(&self) -> Token;
     fn to_string(&self) -> String;
-
+    
     fn as_any(&self) -> &(dyn Any + '_)
     where
         Self: Sized,
@@ -72,6 +73,14 @@ impl INode for Program {
         }
     }
 
+    fn token(&self) -> Token {
+        if !self.statements.is_empty() {
+            self.statements[0].token()
+        } else {
+            Token::eof(String::from("unknown"), 0, 0)
+        }
+    }
+
     fn to_string(&self) -> String {
         let mut s = String::new();
 
@@ -106,6 +115,14 @@ impl INode for ExpressionStatement {
             "".to_string()
         } else {
             self.expression.clone().unwrap().token_literal()
+        }
+    }
+
+    fn token(&self) -> Token {
+        if self.expression.is_none() {
+            Token::eof(String::from("unknown"), 0, 0)
+        } else {
+            self.expression.clone().unwrap().token()
         }
     }
 

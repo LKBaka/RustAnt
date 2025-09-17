@@ -1,12 +1,10 @@
 use std::{
-    cell::RefCell,
-    mem,
-    rc::Rc,
+    cell::RefCell, fmt::Display, mem, rc::Rc
 };
 
 use crate::{
     ast::{
-        ast::{Node, Program, TypeNameGetter}, expr::Expression, stmt::Statement
+        ast::{INode, Node, Program, TypeNameGetter}, expr::Expression, stmt::Statement
     }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
             make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
@@ -18,7 +16,7 @@ use crate::{
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-    }, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell
+    }, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, token::token::Token
 };
 
 #[derive(Debug, Clone)]
@@ -79,6 +77,43 @@ impl ByteCode {
     }
 }
 
+#[derive(Debug)]
+pub struct CompileError {
+    pub message: String,
+    pub token: Option<Token>,
+}
+
+impl CompileError {
+    pub fn from(message: String, token: Option<Token>) -> Self {
+        Self {
+            message,
+            token
+        }
+    }
+
+    pub fn from_none_token(message: String) -> Self {
+        Self {
+            message,
+            token: None
+        }
+    }
+}
+
+impl Display for CompileError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.token {
+            Some(token) => write!(
+                f, "{} at line: {}, at column: {}, at file: {}",
+                self.message, token.line, token.column, token.file
+            ),
+
+            None => write!(
+                f, "{}", self.message
+            )
+        }
+    }
+}
+
 pub struct Compiler {
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 
@@ -134,7 +169,7 @@ impl Compiler {
         }
     }
 
-    pub fn compile_expr(&mut self, node: Expression) -> Result<(), String> {
+    pub fn compile_expr(&mut self, node: Expression) -> Result<(), CompileError> {
         match node {
             Expression::TupleExpression(mut tuple_expr) => {
                 if tuple_expr.expressions.len() == 1 {
@@ -207,7 +242,9 @@ impl Compiler {
                 let result = self.compile_expr(*assign_expr.value);
 
                 if let Err(msg) = result {
-                    return Err(format!("error compile assignment expression: {msg}"));
+                    return Err(CompileError::from_none_token(
+                        format!("error compile assignment value: {msg}"),
+                    ));
                 }
 
                 match *assign_expr.left {
@@ -216,10 +253,10 @@ impl Compiler {
                         if let Some(it) = self.symbol_table.borrow_mut().resolve(&ident.value) {
                             it
                         } else {
-                            return Err(format!(
-                                "undefined identifier: {}. at line: {}, at file: {}",
-                                ident.value, ident.token.line, ident.token.file
-                            ));
+                            return Err(CompileError::from(format!(
+                                "undefined identifier: {}.",
+                                ident.value
+                            ), Some(ident.token)));
                         };
 
                         self.emit(
@@ -234,11 +271,15 @@ impl Compiler {
 
                     Expression::IndexExpression(index_expr) => {
                         if let Err(msg) = self.compile_expr(*index_expr.index) {
-                            return Err(format!("error compile index: {msg}"));
+                            return Err(CompileError::from_none_token(
+                                format!("error compile index: {msg}"),
+                            ));
                         }
 
                         if let Err(msg) = self.compile_expr(*index_expr.expr) {
-                            return Err(format!("error compile target: {msg}"));
+                            return Err(CompileError::from_none_token(
+                                format!("error compile target: {msg}"),
+                            ));
                         }
 
                         self.emit(OP_SET_INDEX, vec![]);
@@ -252,7 +293,9 @@ impl Compiler {
                             self.emit(OP_CONSTANTS, vec![field_index]);
 
                             if let Err(msg) = self.compile_expr(*obj_member.left) {
-                                return Err(format!("error compile object: {msg}"));
+                                return Err(CompileError::from_none_token(
+                                    format!("error compile object: {msg}"),
+                                ));
                             }
 
                             self.emit(OP_SET_FIELD, vec![]);
@@ -261,7 +304,10 @@ impl Compiler {
 
                     _ => 
                     return 
-                        Err(String::from("cannot assign to literal here. Maybe you meant '==' instead of '='?"))
+                        Err(CompileError::from(
+                            String::from("cannot assign to literal here. Maybe you meant '==' instead of '='?"),
+                            Some(assign_expr.left.token())
+                        ))
                 }
 
                 Ok(())
@@ -275,10 +321,10 @@ impl Compiler {
 
                     Ok(())
                 } else {
-                    Err(format!(
-                        "undefined identifier: {}. at line: {}, at file: {}",
-                        ident.value, ident.token.line, ident.token.file,
-                    ))
+                    Err(CompileError::from(format!(
+                        "undefined identifier: {}.",
+                        ident.value,
+                    ), Some(ident.token)))
                 }
             }
 
@@ -288,7 +334,9 @@ impl Compiler {
                 for expr in arr.items {
                     let compile_result = self.compile_expr(*expr);
                     if let Err(msg) = compile_result {
-                        return Err(format!("error compile array item: {msg}"));
+                        return Err(CompileError::from_none_token(
+                            format!("error compile array item: {msg}")
+                        ));
                     }
                 }
 
@@ -299,11 +347,15 @@ impl Compiler {
 
             Expression::IndexExpression(index_expr) => {
                 if let Err(msg) = self.compile_expr(*index_expr.expr) {
-                    return Err(format!("error compile left expression: {msg}"));
+                    return Err(CompileError::from_none_token(
+                        format!("error compile left expression: {msg}")
+                    ));
                 }
 
                 if let Err(msg) = self.compile_expr(*index_expr.index) {
-                    return Err(format!("error compile index: {msg}"));
+                    return Err(CompileError::from_none_token(
+                        format!("error compile index: {msg}")
+                    ));
                 }
 
                 self.emit(OP_INDEX, vec![]);
@@ -318,11 +370,16 @@ impl Compiler {
                     .outer
                     .is_none() 
                 {
-                    return Err(format!("cannot return outside function"))
+                    return Err(CompileError::from(
+                        format!("cannot return outside function"),
+                        Some(return_expr.token())
+                    ))
                 }
 
                 if let Err(msg) = self.compile_expr(*return_expr.value) {
-                    return Err(format!("error compile return value: {msg}"));
+                    return Err(CompileError::from_none_token(
+                        format!("error compile return value: {msg}")
+                    ));
                 }
 
                 self.emit(OP_RETURN_VALUE, vec![]);
@@ -332,13 +389,18 @@ impl Compiler {
 
             Expression::ObjectMemberExpression(obj_member_expr) => {
                 if let Err(msg) = self.compile_expr(*obj_member_expr.left) {
-                    return Err(format!("error compile object: {msg}"))    
+                    return Err(CompileError::from_none_token(
+                        format!("error compile object: {msg}")
+                    ))    
                 }
                 
                 let field = if let Expression::Identifier(it) = *obj_member_expr.right {
                     it
                 } else {
-                    return Err(format!("expected an identifier of object member"))
+                    return Err(CompileError::from(
+                        format!("expected an identifier of object member"),
+                        Some(obj_member_expr.right.token())
+                    ))
                 };
                 
                 let field_obj = Object::AntString(AntString::new(field.value));
@@ -355,7 +417,9 @@ impl Compiler {
 
             Expression::TestPrintExpression(test_print_expr) => {
                 if let Err(msg) = self.compile_expr(*test_print_expr.value) {
-                    return Err(format!("error compile return value: {msg}"));
+                    return Err(CompileError::from_none_token(
+                        format!("error compile return value: {msg}")
+                    ));
                 }
 
                 self.emit(OP_TEST_PRINT, vec![]);
@@ -368,14 +432,18 @@ impl Compiler {
                     _
                 ) = &*decorator.decorator {
                     if let Err(msg) = self.compile_expr(*decorator.decorator) {
-                        return Err(format!("error compile decorator: {msg}"))
+                        return Err(CompileError::from_none_token(
+                            format!("error compile decorator: {msg}")
+                        ))
                     }
 
                     if let Statement::LetStatement(let_stmt) = decorator.to_decorate {
                         let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
 
                         if let Err(msg) = self.compile_expr(*let_stmt.value) {
-                            return Err(format!("error compile decorate expression: {msg}"))
+                            return Err(CompileError::from_none_token(
+                                format!("error compile decorate expression: {msg}")
+                            ))
                         }
 
                         self.emit(OP_CALL, vec![1u16]);
@@ -393,7 +461,9 @@ impl Compiler {
                     }
 
                     if let Err(msg) = self.compile_stmt(decorator.to_decorate) {
-                        return Err(format!("error compile decorate expression: {msg}"))
+                        return Err(CompileError::from_none_token(
+                            format!("error compile decorate expression: {msg}")
+                        ))
                     }
 
                     self.emit(OP_CALL, vec![1u16]);
@@ -408,7 +478,9 @@ impl Compiler {
                         );
 
                         if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
-                            return Err(format!("error compile decorator: {msg}"))
+                            return Err(CompileError::from_none_token(
+                                format!("error compile decorator: {msg}")
+                            ))
                         }
 
                         let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
@@ -434,7 +506,9 @@ impl Compiler {
                     );
 
                     if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
-                        return Err(format!("error compile decorator: {msg}"))
+                        return Err(CompileError::from_none_token(
+                            format!("error compile decorator: {msg}")
+                        ))
                     }
                 }
 
@@ -455,15 +529,16 @@ impl Compiler {
                 compile_prefix_expression(self, Node::Expression(Expression::PrefixExpression(expr))),
 
             _ => {
-                Err(format!(
+                Err(CompileError::from(
+                    format!(
                     "no compile handler for node: {}",
                     node.type_name()
-                ))
+                ), Some(node.token())))
             }
         }
     }
 
-    pub fn compile_stmt(&mut self, node: Statement) -> Result<(), String> {
+    pub fn compile_stmt(&mut self, node: Statement) -> Result<(), CompileError> {
         match node {
             Statement::BlockStatement(block) => {
                 for stmt in block.statements {
@@ -497,7 +572,9 @@ impl Compiler {
                 let result = self.compile_expr(*let_stmt.value);
 
                 if let Err(msg) = result {
-                    return Err(format!("error compile let statement: {msg}"));
+                    return Err(CompileError::from_none_token(
+                        format!("error compile let statement: {msg}")
+                    ));
                 }
 
                 self.emit(
@@ -518,12 +595,18 @@ impl Compiler {
                 ]);
 
                 if m.is_empty() {
-                    return Err(format!("cannot found module '{}'", use_statement.name.value))
+                    return Err(CompileError::from(
+                        format!("cannot found module '{}'", use_statement.name.value),
+                        Some(use_statement.name.token)
+                    ))
                 }
 
                 let module = match &m[0] {
                     Ok(it) => it.clone(),
-                    Err(msg) => return Err(format!("error importing module: {msg}"))
+                    Err(msg) => return Err(CompileError::from(
+                        format!("error importing module: {msg}"),
+                        Some(use_statement.token)
+                    ))
                 };
 
                 let mod_index = self.add_constant(Object::AntClass(module));
@@ -681,7 +764,7 @@ impl Compiler {
         pos_new_instruction // return the position of the new instruction in the instructions vector
     }
 
-    pub fn start_compile(&mut self, program: Program) -> Result<(), String> {
+    pub fn start_compile(&mut self, program: Program) -> Result<(), CompileError> {
         for stmt in program.statements {
             self.compile_stmt(stmt)?;
         }

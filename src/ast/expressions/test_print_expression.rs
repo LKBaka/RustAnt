@@ -13,6 +13,10 @@ impl INode for TestPrintExpression {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!("TestPrint {}", self.value.to_string())
     }

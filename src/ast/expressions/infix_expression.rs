@@ -7,7 +7,7 @@ use crate::token::token::Token;
 pub struct InfixExpression {
     pub left: Box<Expression>,
     pub right: Box<Expression>,
-    pub operator: String,
+    pub operator: Token,
     pub token: Token,
 }
 
@@ -16,11 +16,15 @@ impl INode for InfixExpression {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!(
             "({} {} {})",
             self.left.to_string(),
-            self.operator,
+            self.operator.value,
             self.right.to_string()
         )
     }
@@ -32,7 +36,7 @@ pub fn create_infix_expression(
     token: Token,
     left: Box<Expression>,
     right: Box<Expression>,
-    operator: String,
+    operator: Token,
 ) -> InfixExpression {
     InfixExpression {
         token,

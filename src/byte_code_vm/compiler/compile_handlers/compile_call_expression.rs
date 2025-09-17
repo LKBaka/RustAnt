@@ -1,9 +1,9 @@
 use crate::{
     ast::{ast::Node, expr::Expression},
-    byte_code_vm::{code::code::OP_CALL, compiler::compiler::Compiler},
+    byte_code_vm::{code::code::OP_CALL, compiler::compiler::{CompileError, Compiler}},
 };
 
-pub fn compile_call_expression(compiler: &mut Compiler, node: Node) -> Result<(), String> {
+pub fn compile_call_expression(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let call_expr = match match node {
         Node::Expression(expr) => expr,
         _ => panic!()
@@ -13,14 +13,18 @@ pub fn compile_call_expression(compiler: &mut Compiler, node: Node) -> Result<()
     };
 
     if let Err(msg) = compiler.compile_expr(*call_expr.func) {
-        return Err(format!("error compile call expresion: {msg}"));
+        return Err(CompileError::from_none_token(
+            format!("error compile call expresion: {msg}")
+        ));
     }
 
     let args_len = call_expr.args.len();
 
     for arg in call_expr.args {
         if let Err(msg) = compiler.compile_expr(*arg) {
-            return Err(format!("error compile args: {msg}"));
+            return Err(CompileError::from_none_token(
+                format!("error compile args: {msg}")
+            ));
         }
     }
 

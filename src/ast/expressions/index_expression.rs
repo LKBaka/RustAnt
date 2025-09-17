@@ -15,6 +15,10 @@ impl INode for IndexExpression {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!("{}[{}]", self.expr.to_string(), self.index.to_string())
     }

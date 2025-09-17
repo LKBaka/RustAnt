@@ -18,6 +18,10 @@ impl INode for IfExpression {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         let alternative_string = if let Some(alternative) = &self.alternative {
             alternative.to_string()
@@ -93,6 +97,10 @@ pub struct ElseIfExpression {
 impl INode for ElseIfExpression {
     fn token_literal(&self) -> String {
         self.token.value.clone()
+    }
+
+    fn token(&self) -> Token {
+        self.token.clone()
     }
 
     fn to_string(&self) -> String {

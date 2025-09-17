@@ -17,6 +17,10 @@ impl INode for WhileStatement {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!(
             "while {} {{{}}}",

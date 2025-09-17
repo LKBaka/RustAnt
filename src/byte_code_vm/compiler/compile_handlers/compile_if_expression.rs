@@ -6,12 +6,12 @@ use crate::{
     },
     byte_code_vm::{
         code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_POP},
-        compiler::compiler::Compiler,
+        compiler::compiler::{CompileError, Compiler},
         constants::FAKE_OFFSET_JUMP,
     },
 };
 
-pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), String> {
+pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let if_expr = match match node {
         Node::Expression(expr) => expr,
         _ => panic!()
@@ -22,7 +22,9 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
 
     let condition_result = compiler.compile_expr(*if_expr.condition);
     if let Err(msg) = condition_result {
-        return Err(format!("error compile condition: {}", msg));
+        return Err(CompileError::from_none_token(
+            format!("error compile condition: {}", msg)
+        ));
     }
 
     // 先插入一个 OpJumpNotTruthy, 后面再修改他的操作数
@@ -30,7 +32,9 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
 
     let consequence_result = compiler.compile_stmt(if_expr.consequence);
     if let Err(msg) = consequence_result {
-        return Err(format!("error compile consequence: {}", msg));
+        return Err(CompileError::from_none_token(
+            format!("error compile consequence: {}", msg)
+        ));
     }
 
     if compiler.last_instruction_is(OP_POP) {
@@ -67,13 +71,18 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
         for else_if in expressions {
             let else_if = match *else_if {
                 Expression::ElseIfExpression(it) => it,
-                _ => panic!("cannot convert '{}' to else if expression", else_if.to_string())
+                _ => return Err(CompileError::from(
+                    format!("cannot convert '{}' to else if expression", else_if.to_string()),
+                    Some(else_if.token())
+                ))
             };
 
             // 编译else if条件
             let cond_result = compiler.compile_expr(*else_if.condition);
             if let Err(msg) = cond_result {
-                return Err(format!("error compile else-if condition: {}", msg));
+                return Err(CompileError::from_none_token(
+                    format!("error compile else-if condition: {}", msg)
+                ));
             }
 
             // 发出条件跳转指令（稍后回填）
@@ -82,7 +91,9 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
             // 编译else if主体块
             let block_result = compiler.compile_stmt(else_if.consequence);
             if let Err(msg) = block_result {
-                return Err(format!("error compile else-if block: {}", msg));
+                return Err(CompileError::from_none_token(
+                    format!("error compile else-if block: {}", msg)
+                ));
             }
 
             // 移除最后的pop指令（如果有）
@@ -111,7 +122,9 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
 
         let alternative_result = compiler.compile_stmt(alternative);
         if let Err(msg) = alternative_result {
-            return Err(format!("error compile alternative: {}", msg));
+            return Err(CompileError::from_none_token(
+                format!("error compile alternative: {}", msg)
+            ));
         }
 
         if compiler.last_instruction_is(OP_POP) {

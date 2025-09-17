@@ -53,7 +53,7 @@ impl FileRunner {
                     if let RunError::CompileError(msg) = err_enum {
                         use colored::Colorize;
 
-                        eprintln!("{}", msg.red());
+                        eprintln!("{}", msg.to_string().red());
                     } else if let RunError::RuntimeError(err) = err_enum {
                         use colored::Colorize;
 

@@ -15,6 +15,10 @@ impl INode for UseStatement {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         match &self.alias {
             Some(alias) => format!("use {} as {}", self.name.to_string(), alias.to_string()),

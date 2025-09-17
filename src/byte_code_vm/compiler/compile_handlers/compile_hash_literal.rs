@@ -1,9 +1,9 @@
 use crate::{
     ast::{ast::Node, expr::Expression},
-    byte_code_vm::{code::code::OP_HASH, compiler::compiler::Compiler},
+    byte_code_vm::{code::code::OP_HASH, compiler::compiler::{CompileError, Compiler}},
 };
 
-pub fn compile_hash_literal(compiler: &mut Compiler, node: Node) -> Result<(), String> {
+pub fn compile_hash_literal(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let hash_literal = match match node {
         Node::Expression(expr) => expr,
         _ => panic!()
@@ -16,11 +16,15 @@ pub fn compile_hash_literal(compiler: &mut Compiler, node: Node) -> Result<(), S
 
     for (k, v) in hash_literal.pairs {
         if let Err(msg) = compiler.compile_expr(*k) {
-            return Err(format!("error compile key: {msg}"))
+            return Err(CompileError::from_none_token(
+                format!("error compile key: {msg}")
+            ))
         }
 
         if let Err(msg) = compiler.compile_expr(*v) {
-            return Err(format!("error compile value: {msg}"))
+            return Err(CompileError::from_none_token(
+                format!("error compile value: {msg}")
+            ))
         }
     }
 

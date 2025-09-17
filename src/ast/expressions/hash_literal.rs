@@ -13,6 +13,10 @@ impl INode for HashLiteral {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         let pair_string = self.pairs
             .iter()

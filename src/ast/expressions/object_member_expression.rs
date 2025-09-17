@@ -15,6 +15,10 @@ impl INode for ObjectMemberExpression {
         self.token.value.clone()
     }
 
+    fn token(&self) -> Token {
+        self.token.clone()
+    }
+
     fn to_string(&self) -> String {
         format!("({}.{})", self.left.to_string(), self.right.to_string())
     }
