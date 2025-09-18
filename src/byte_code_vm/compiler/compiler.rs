@@ -665,7 +665,8 @@ impl Compiler {
     pub fn leave_scope(&mut self) -> Rc<RefCell<Instructions>> {
         let instructions = self.current_instructions();
 
-        self.scopes = self.scopes[0..self.scopes.len() - 1].to_vec();
+        // self.scopes = self.scopes[0..self.scopes.len() - 1].to_vec();
+        self.scopes.pop();
 
         self.scope_index -= 1;
 
