@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     byte_code_vm::{
-        constants::{NONE_OBJ, UNINIT_OBJ},
+        constants::{NONE_OBJ, UNINIT_OBJECT},
         vm::{frame::Frame, vm::Vm},
     }, obj_enum::object::Object, object::{ant_closure::Closure, ant_method::MethodType, object::{IAntObject, CLOSURE, METHOD, NATIVE_FUNCTION}}, rc_ref_cell
 };
@@ -125,8 +125,7 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
 
     let free_count_usize = free_count as usize;
 
-    let uninit_obj: Object = Object::AntUninit(UNINIT_OBJ.clone());
-    let mut free = vec![uninit_obj; free_count_usize];
+    let mut free = vec![UNINIT_OBJECT.clone(); free_count_usize];
 
     for i in 0..free_count_usize {
         free[i] = vm.stack[vm.sp - free_count_usize + i].borrow().clone();

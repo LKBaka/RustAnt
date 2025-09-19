@@ -6,7 +6,7 @@ use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
             read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
-        }, compiler::compiler::ByteCode, constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJ}, utils::native_boolean_to_object, vm::{
+        }, compiler::compiler::ByteCode, constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJECT}, utils::native_boolean_to_object, vm::{
             eval_functions::{
                 eval_array_literal_utils::build_array, eval_class_utils::build_class, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
             },
@@ -35,7 +35,7 @@ pub struct Vm {
 
 impl Vm {
     pub fn new(bytecode: ByteCode) -> Self {
-        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()));
+        let uninit: Rc<RefCell<Object>> = rc_ref_cell!(UNINIT_OBJECT.clone());
 
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
@@ -81,7 +81,7 @@ impl Vm {
 
         let main_frame = Frame::new(main_closure, 0);
 
-        let uninit = rc_ref_cell!(Object::AntUninit(UNINIT_OBJ.clone()));
+        let uninit = rc_ref_cell!(UNINIT_OBJECT.clone());
 
         Vm {
             constants: bytecode.constants,
