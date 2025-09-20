@@ -1,3 +1,6 @@
+#[cfg(target_arch = "wasm32")]
+use crate::println;
+
 use std::{cell::RefCell, fs, rc::Rc};
 
 use colored::Colorize;

@@ -1,7 +1,10 @@
-
 use std::{collections::HashMap, sync::Mutex};
 
-use libloading::{Error, Library, Symbol};
+use libloading::Error;
+
+#[cfg(not(target_family = "wasm"))]
+use libloading::{Library, Symbol};
+
 use once_cell::sync::Lazy;
 
 use crate::object::ant_class::AntClass;
@@ -10,6 +13,7 @@ pub struct NativeModuleImporter {
     pub file: String
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl NativeModuleImporter {
     pub fn import(&self) -> Result<AntClass, String> {
         unsafe {
@@ -28,9 +32,11 @@ impl NativeModuleImporter {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 static LOADED: Lazy<Mutex<HashMap<String, &'static Library>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
+#[cfg(not(target_family = "wasm"))]
 pub fn ensure_library_loaded(path: &str) -> Result<&'static Library, Error> {
     let mut map = LOADED.lock().unwrap();
 

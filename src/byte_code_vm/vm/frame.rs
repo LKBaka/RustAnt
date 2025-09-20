@@ -21,6 +21,7 @@ impl Frame {
         }
     }
 
+    #[inline(always)]
     pub fn instructions(&self) -> Rc<Instructions> {
         self.closure.func.instructions.clone()
     }

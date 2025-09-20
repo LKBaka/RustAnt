@@ -6,7 +6,7 @@ use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
             read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
-        }, compiler::compiler::ByteCode, constants::{FALSE, NONE_OBJ, TRUE, UNINIT_OBJECT}, utils::native_boolean_to_object, vm::{
+        }, compiler::compiler::ByteCode, constants::{FALSE_OBJ, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT}, utils::native_boolean_to_object, vm::{
             eval_functions::{
                 eval_array_literal_utils::build_array, eval_class_utils::build_class, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
             },
@@ -149,24 +149,26 @@ impl Vm {
                 }
 
                 OP_ADD..=OP_NOTEQ => {
-                    let right = self.pop();
-                    let left = self.pop();
-
-                    if left.is_none() || right.is_none() {
-                        return Err(format!(
-                            "expected two objects of opcode {}. got {} objects",
+                    let right = match self.pop() {
+                        Some(it) => it,
+                        None => return Err(format!(
+                            "expected two objects of opcode {}. got 0 objects",
                             op,
-                            left.is_some() as u8 + right.is_some() as u8
-                        ));
-                    }
+                        ))
+                    };
 
-                    let left_obj = left.unwrap();
-                    let right_obj = right.unwrap();
+                    let left = match self.pop() {
+                        Some(it) => it,
+                        None => return Err(format!(
+                            "expected two objects of opcode {}. got 1 object",
+                            op,
+                        ))
+                    };
 
                     let eval_operator_result = eval_infix_operator(
                         op,
-                        left_obj,
-                        right_obj,
+                        left,
+                        right,
                     );
 
                     if let Err(err) = eval_operator_result {
@@ -234,12 +236,12 @@ impl Vm {
 
                 OP_TRUE..=OP_FALSE => {
                     let obj = if op == OP_TRUE {
-                        TRUE.clone()
+                        TRUE_OBJ.clone()
                     } else {
-                        FALSE.clone()
+                        FALSE_OBJ.clone()
                     };
 
-                    self.push(rc_ref_cell!(Object::AntBoolean(obj)))?
+                    self.push(rc_ref_cell!(obj))?
                 }
 
                 OP_MINUS..=OP_BANG => {
@@ -635,6 +637,9 @@ impl Vm {
                     } else {
                         return Err(String::from("expected an object to print"));
                     };
+
+                    #[cfg(target_arch = "wasm32")]
+                    use crate::println;
 
                     println!("{}", obj.borrow().inspect());
                 }

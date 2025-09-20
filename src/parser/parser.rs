@@ -439,6 +439,9 @@ impl Parser {
     }
 
     pub fn print_errors(&self) {
+        #[cfg(target_arch = "wasm32")]
+        use crate::println;
+
         println!(
             "parser {}:",
             if self.errors.len() > 1 {

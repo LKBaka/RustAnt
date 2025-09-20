@@ -1,3 +1,9 @@
+#[cfg(target_arch = "wasm32")]
+use crate::println;
+
+#[cfg(target_arch = "wasm32")]
+use crate::print;
+
 use std::cell::RefCell;
 use std::io;
 use std::io::Write;
@@ -82,7 +88,7 @@ impl REPLRunner {
             match result {
                 Ok(it) => {
                     if let Some(it) = it {
-                        println!("{}", it.inspect())
+                        println!("{}", it.inspect());
                     }
                 }
                 Err(err) => {

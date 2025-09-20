@@ -1,3 +1,6 @@
+#[cfg(target_arch = "wasm32")]
+use crate::println;
+
 use std::{cell::RefCell, rc::Rc};
 
 
@@ -35,6 +38,7 @@ pub fn run(
         }
     };
 
+    
     #[cfg(feature = "debug")]
     println!(
         "{}, ByteCode: {:#?}, Instructions: {}",

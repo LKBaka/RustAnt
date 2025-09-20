@@ -1,6 +1,18 @@
-use std::{collections::HashMap, fs, path::{Path, PathBuf}, str::FromStr};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
-use crate::{constants::MODULE_PATHS, module_importer::{ant_module_importer::AntModuleImporter, native_module_importer::NativeModuleImporter}, obj_enum::object::Object, object::ant_class::AntClass};
+use crate::{
+    constants::MODULE_PATHS,
+    module_importer::{
+        ant_module_importer::AntModuleImporter, native_module_importer::NativeModuleImporter,
+    },
+    obj_enum::object::Object,
+    object::ant_class::AntClass,
+};
 
 pub struct ModuleImporter;
 
@@ -10,11 +22,7 @@ impl ModuleImporter {
 
         let mut module_paths: Vec<String> = vec![];
 
-        for module_path in &MODULE_PATHS
-            .lock()
-            .unwrap()
-            .items 
-        {
+        for module_path in &MODULE_PATHS.lock().unwrap().items {
             if let Object::AntString(s) = module_path {
                 module_paths.push(s.value.clone());
             }
@@ -22,14 +30,14 @@ impl ModuleImporter {
 
         let mut loaded = vec![];
 
-        for module_path in module_paths  {
+        for module_path in module_paths {
             for import in &imports {
                 if loaded.contains(import) {
                     continue;
                 }
 
-                let path_buf = PathBuf::from_str(&module_path)
-                    .expect(&format!("invaild path: {module_path}"));
+                let path_buf =
+                    PathBuf::from_str(&module_path).expect(&format!("invaild path: {module_path}"));
 
                 let mut try_folder = path_buf.clone();
                 try_folder.push(import);
@@ -51,6 +59,7 @@ impl ModuleImporter {
                     continue;
                 }
 
+                #[cfg(not(target_family = "wasm"))]
                 if try_native_mod.exists() {
                     results.push(Self::import_native_module(&try_native_mod));
                     loaded.push(&import);
@@ -70,21 +79,16 @@ impl ModuleImporter {
 
     fn import_ant_module(file: &Path) -> Result<AntClass, String> {
         let ant_mod_importer = AntModuleImporter {
-            file: file
-                .to_str()
-                .unwrap()
-                .to_string()
+            file: file.to_str().unwrap().to_string(),
         };
 
         ant_mod_importer.import()
     }
 
+    #[cfg(not(target_family = "wasm"))]
     fn import_native_module(file: &Path) -> Result<AntClass, String> {
         let native_mod_importer = NativeModuleImporter {
-            file: file
-                .to_str()
-                .unwrap()
-                .to_string()
+            file: file.to_str().unwrap().to_string(),
         };
 
         native_mod_importer.import()
@@ -113,42 +117,34 @@ impl ModuleImporter {
                     walk(&path, &mut dir_map)?;
 
                     let dir_obj = AntClass::from(dir_map);
-                    
-                    map.insert(
-                        file_name,
-                        Object::AntClass(dir_obj)
-                    );
+
+                    map.insert(file_name, Object::AntClass(dir_obj));
                 } else if path
                     .extension()
-                    .and_then(
-                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
-                    ) == Some(String::from("ant"))
+                    .and_then(|s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string()))
+                    == Some(String::from("ant"))
                 {
                     map.insert(
                         file_name,
-                        Object::AntClass(ModuleImporter::import_ant_module(&path)?)
+                        Object::AntClass(ModuleImporter::import_ant_module(&path)?),
                     );
                 } else if path
                     .extension()
-                    .and_then(
-                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
-                    ) == Some(String::from("dll")) 
-                    ||
-                    path
-                    .extension()
-                    .and_then(
-                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
-                    ) == Some(String::from("so"))
-                    ||
-                    path
-                    .extension()
-                    .and_then(
-                        |s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string())
-                    ) == Some(String::from("dylib"))
+                    .and_then(|s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string()))
+                    == Some(String::from("dll"))
+                    || path
+                        .extension()
+                        .and_then(|s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string()))
+                        == Some(String::from("so"))
+                    || path
+                        .extension()
+                        .and_then(|s| Some(s.to_ascii_lowercase().to_str().unwrap().to_string()))
+                        == Some(String::from("dylib"))
                 {
+                    #[cfg(not(target_family = "wasm"))]
                     map.insert(
                         file_name,
-                        Object::AntClass(ModuleImporter::import_native_module(&path)?)
+                        Object::AntClass(ModuleImporter::import_native_module(&path)?),
                     );
                 }
             }
