@@ -1,16 +1,13 @@
-use std::collections::HashMap;
-
 use lazy_static::lazy_static;
 
 use crate::{
-    builtin::builtin_func::{
-        builtin_clear, builtin_copy, builtin_create_method, builtin_force_exit, builtin_id, builtin_len, builtin_now, builtin_obj_info, builtin_print, builtin_shell
-    },
-    byte_code_vm::constants::NONE_OBJ,
+    builtin::{builtin_classes::result_class::RESULT, builtin_func::{
+        builtin_clear, builtin_copy, builtin_create_method, builtin_err, builtin_force_exit, builtin_id, builtin_len, builtin_now, builtin_obj_info, builtin_ok, builtin_print, builtin_range, builtin_shell
+    }},
     obj_enum::object::Object,
-    object::{
-        ant_class::AntClass, ant_native_function::create_ant_native_function, object::IAntObject,
-    },
+    object::
+        ant_native_function::create_ant_native_function
+    ,
 };
 
 lazy_static! {
@@ -63,50 +60,26 @@ lazy_static! {
         );
 
         m.insert(
-            "method".into(), 
-            Object::AntNativeFunction(create_ant_native_function(None, builtin_create_method))
+            "method".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_create_method)),
         );
 
         m.insert(
-            "Result".into(),
-            Object::AntClass(AntClass::from({
-                let native_func = |args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>| {
-                    let o = args[0].borrow();
-
-                    let me = match &*o {
-                        Object::AntClass(clazz) => clazz,
-                        _ => return Err(format!("expected an class (self) got {}", o.inspect())),
-                    };
-
-                    let err = match me.map.get("err") {
-                        Some(it) => it,
-                        None => return Err(format!("object '{}' has no field 'err'", me.inspect()))
-                    };
-
-                    if &*err == &*NONE_OBJ {
-                        let value = me.map.get("value").ok_or_else(|| {
-                            format!("object '{}' has no field 'value'", me.inspect(),)
-                        })?;
-
-                        return Ok(Some(value.clone()));
-                    }
-
-                    Err(format!("unwrap failed: {}", err.inspect()))
-                };
-
-                let mut m = HashMap::new();
-
-                m.insert("value".into(), NONE_OBJ.clone());
-                m.insert("err".into(), NONE_OBJ.clone());
-
-                m.insert(
-                    "unwrap".into(),
-                    Object::AntNativeFunction(create_ant_native_function(None, native_func)),
-                );
-
-                m
-            })),
+            "range".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_range)),
         );
+
+        m.insert("Ok".into(), Object::AntNativeFunction(create_ant_native_function(
+            None,
+            builtin_ok
+        )));
+
+        m.insert("Err".into(), Object::AntNativeFunction(create_ant_native_function(
+            None,
+            builtin_err
+        )));
+
+        m.insert("Result".into(), Object::AntClass(RESULT.clone()));
 
         m
     };
@@ -121,8 +94,11 @@ lazy_static! {
             "shell".into(),
             "clear".into(),
             "force_exit".into(),
-            "Result".into(),
             "method".into(),
+            "range".into(),
+            "Result".into(),
+            "Ok".into(),
+            "Err".into(),
         ]
     };
 }
