@@ -4,11 +4,10 @@ use bigdecimal::BigDecimal;
 
 use crate::{
     byte_code_vm::{
-        code::code::{OpCode, OP_ADD, OP_DIVIDE, OP_EQ, OP_GT, OP_MULTIPLY, OP_NOTEQ, OP_SUBTRACT},
-        utils::native_boolean_to_object,
+        code::code::{OpCode, OP_ADD, OP_DIVIDE, OP_EQ, OP_GT, OP_MULTIPLY, OP_NOTEQ, OP_SUBTRACT}, constants::{FALSE_OBJ, TRUE_OBJ}, utils::native_boolean_to_object
     },
     obj_enum::object::Object,
-    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::IAntObject},
+    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::{IAntObject, NULL}},
 };
 
 // 保留原本注释与语义：对多种数值/字符串类型做互操作
@@ -125,6 +124,16 @@ fn gt_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
 fn eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
     let left = &*left.borrow();
     let right = &*right.borrow();
+
+    if left.get_type() == NULL && right.get_type() != NULL {
+        return Ok(FALSE_OBJ.clone());
+    } else if right.get_type() == NULL && left.get_type() != NULL {
+        return Ok(FALSE_OBJ.clone());
+    }
+
+    if left.get_type() == NULL && right.get_type() == NULL {
+        return Ok(TRUE_OBJ.clone());
+    }
 
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value == &r.value)),
