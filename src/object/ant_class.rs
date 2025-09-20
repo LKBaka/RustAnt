@@ -34,7 +34,10 @@ impl IAntObject for AntClass {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id
+        match (other as &dyn Any).downcast_ref::<AntClass>() {
+            Some(it) => it.map == self.map,
+            None => false
+        }
     }
 
     fn as_any(&self) -> &dyn Any {

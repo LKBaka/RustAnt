@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use std::any::Any;
 use std::hash::Hash;
 use std::hash::Hasher;

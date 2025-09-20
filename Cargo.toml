@@ -3,6 +3,9 @@ name = "rust_ant"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 clap = { version = "4.5.47", features = ["derive"] }
 phf = { version = "0.11.3", features = ["macros"] }
@@ -21,12 +24,10 @@ num-traits = "0.2.19"
 enum_dispatch = "0.3.13"
 libloading = "0.8.8"
 global_env = { git = "https://github.com/LKBaka/global_env.git" }
+wasm-bindgen = "0.2.103"
 
-[dependencies.uuid]
-version = "1.17.0"
-features = [
-    "v4",
-]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["console"] }
 
 [profile.dev]
 opt-level = 0

@@ -1,0 +1,16 @@
+func for_each(r, f) {
+    let i = r.next();
+
+    while i != none {
+        f(i)
+
+        i = r.next();        
+    }
+
+    none
+}
+
+for_each(
+    range(10000000),
+    print
+)
