@@ -12,7 +12,7 @@ use crate::{
         ant_int::AntInt,
         ant_method::{Method, MethodType},
         ant_string::AntString,
-        object::{IAntObject, INT},
+        object::{IAntObject, INT, STRING},
     }, utils::run_command
 };
 
@@ -133,24 +133,6 @@ pub fn builtin_create_method(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Ob
     }
 }
 
-pub fn builtin_ok(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
-    let value = args[0].borrow().clone();
-
-    let mut new_result = RESULT.clone();
-    new_result.map.insert("value".into(), value);
-
-    Ok(Some(Object::AntClass(new_result)))
-}
-
-pub fn builtin_err(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
-    let err = args[0].borrow().clone();
-
-    let mut new_result = RESULT.clone();
-    new_result.map.insert("err".into(), err);
-
-    Ok(Some(Object::AntClass(new_result)))
-}
-
 pub fn builtin_range(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let max_num = args[0].borrow().clone();
     if max_num.get_type() != INT {
@@ -175,3 +157,38 @@ pub fn builtin_range(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, S
     Ok(Some(Object::AntClass(new_range)))
 }
 
+pub fn builtin_panic(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let err = args[0].borrow().clone();
+    if err.get_type() != STRING {
+        return Err(format!(
+            "expected an string, got: {}",
+            err.inspect()
+        ))
+    }
+
+    Err(format!("panic: \"{}\"", err.inspect()))
+}
+
+pub fn builtin_str(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let s = args[0].borrow().clone();
+
+    Ok(Some(Object::AntString(AntString::new(s.inspect()))))
+}
+
+pub fn builtin_ok(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let value = args[0].borrow().clone();
+
+    let mut new_result = RESULT.clone();
+    new_result.map.insert("value".into(), value);
+
+    Ok(Some(Object::AntClass(new_result)))
+}
+
+pub fn builtin_err(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let err = args[0].borrow().clone();
+
+    let mut new_result = RESULT.clone();
+    new_result.map.insert("err".into(), err);
+
+    Ok(Some(Object::AntClass(new_result)))
+}

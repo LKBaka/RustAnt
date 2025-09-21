@@ -1,9 +1,9 @@
 use lazy_static::lazy_static;
 
 use crate::{
-    builtin::{builtin_classes::result_class::RESULT, builtin_func::{
-        builtin_clear, builtin_copy, builtin_create_method, builtin_err, builtin_force_exit, builtin_id, builtin_len, builtin_now, builtin_obj_info, builtin_ok, builtin_print, builtin_range, builtin_shell
-    }},
+    builtin::builtin_func::{
+        builtin_clear, builtin_copy, builtin_create_method, builtin_err, builtin_force_exit, builtin_id, builtin_len, builtin_now, builtin_obj_info, builtin_ok, builtin_panic, builtin_print, builtin_range, builtin_shell, builtin_str
+    },
     obj_enum::object::Object,
     object::
         ant_native_function::create_ant_native_function
@@ -69,17 +69,25 @@ lazy_static! {
             Object::AntNativeFunction(create_ant_native_function(None, builtin_range)),
         );
 
-        m.insert("Ok".into(), Object::AntNativeFunction(create_ant_native_function(
-            None,
-            builtin_ok
-        )));
+        m.insert(
+            "panic".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_panic)),
+        );
 
-        m.insert("Err".into(), Object::AntNativeFunction(create_ant_native_function(
-            None,
-            builtin_err
-        )));
+        m.insert(
+            "str".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_str)),
+        );
 
-        m.insert("Result".into(), Object::AntClass(RESULT.clone()));
+        m.insert(
+            "Ok".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_ok)),
+        );
+
+        m.insert(
+            "Err".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_err)),
+        );
 
         m
     };
@@ -96,7 +104,8 @@ lazy_static! {
             "force_exit".into(),
             "method".into(),
             "range".into(),
-            "Result".into(),
+            "panic".into(),
+            "str".into(),
             "Ok".into(),
             "Err".into(),
         ]
