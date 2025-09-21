@@ -15,7 +15,7 @@ use crate::{
             },
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
-        },
+        }, constants::FIELD_POOL,
     }, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, token::token::Token
 };
 
@@ -287,10 +287,7 @@ impl Compiler {
                 
                     Expression::ObjectMemberExpression(obj_member) => {
                         if let Expression::Identifier(field) = *obj_member.right {
-                            let field_obj = Object::AntString(AntString::new(field.value.clone()));
-                            let field_index = self.add_constant(field_obj) as u16;
-
-                            self.emit(OP_CONSTANTS, vec![field_index]);
+                            let field_index = self.add_field(&field.value) as u16;
 
                             if let Err(msg) = self.compile_expr(*obj_member.left) {
                                 return Err(CompileError::from_none_token(
@@ -298,7 +295,7 @@ impl Compiler {
                                 ));
                             }
 
-                            self.emit(OP_SET_FIELD, vec![]);
+                            self.emit(OP_SET_FIELD, vec![field_index]);
                         }
                     }
 
@@ -403,13 +400,11 @@ impl Compiler {
                     ))
                 };
                 
-                let field_obj = Object::AntString(AntString::new(field.value));
-
-                let field_constant_index = self.add_constant(field_obj) as u16;
+                let field_index = self.add_field(&field.value) as u16;
 
                 self.emit(
                     OP_GET_FIELD,
-                    vec![field_constant_index]
+                    vec![field_index]
                 );
 
                 Ok(())
@@ -680,6 +675,17 @@ impl Compiler {
         self.symbol_table = outer;
 
         instructions
+    }
+
+    pub fn add_field(&self, field: &str) -> usize {
+        if let Ok(i) = FIELD_POOL.lock().unwrap().binary_search(&field.to_owned()) {
+            return i
+        }
+
+        FIELD_POOL.lock().unwrap()
+            .push(field.into());
+
+        FIELD_POOL.lock().unwrap().len() - 1
     }
 
     pub fn current_instructions(&self) -> Rc<RefCell<Instructions>> {

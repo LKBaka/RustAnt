@@ -6,7 +6,7 @@ use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
             read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
-        }, compiler::compiler::ByteCode, constants::{FALSE_OBJ, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT}, utils::native_boolean_to_object, vm::{
+        }, compiler::compiler::ByteCode, constants::{FALSE_OBJ, FIELD_POOL, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT}, utils::native_boolean_to_object, vm::{
             eval_functions::{
                 eval_array_literal_utils::build_array, eval_class_utils::build_class, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
             },
@@ -16,7 +16,7 @@ use crate::{
     }, obj_enum::object::Object, object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
-        object::{IAntObject, STRING, UNINIT},
+        object::{IAntObject, UNINIT},
         utils::rrc_is_truthy,
     }, rc_ref_cell
 };
@@ -24,6 +24,7 @@ use crate::{
 pub const STACK_SIZE: u16 = 2048;
 pub const GLOBALS_SIZE: u16 = 65535;
 
+#[derive(Clone)]
 pub struct Vm {
     pub constants: Vec<Rc<RefCell<Object>>>,
     pub stack: Vec<Rc<RefCell<Object>>>,
@@ -534,7 +535,7 @@ impl Vm {
                     let field_obj_index = read_uint16(&instructions[ip + 1..]);
                     self.current_frame().ip += 2;
 
-                    let field_obj = self.constants[field_obj_index as usize].clone();
+                    let field = &FIELD_POOL.lock().unwrap()[field_obj_index as usize];
 
                     let obj = self.pop();
 
@@ -543,20 +544,13 @@ impl Vm {
                         let o_borrow = o.borrow();
 
                         if let Object::AntClass(clazz) = &*o_borrow {
-                            let field_obj = match field_obj.borrow().clone() {
-                                Object::AntString(s) => s.value,
-                                _ => return Err(format!(
-                                    "expected an string field, got: {:?}", field_obj.borrow().clone()
-                                ))
-                            };
-
                             let value = match if let Some(it) = clazz.map
-                                .get(&field_obj) 
+                                .get(field) 
                             {
                                 it    
                             } else {
                                 return Err(format!(
-                                    "object '{}' has no field '{}'", clazz.inspect(), field_obj
+                                    "object '{}' has no field '{}'", clazz.inspect(), field
                                 ))
                             } {
                                 Object::Method(method) => {
@@ -581,23 +575,23 @@ impl Vm {
                         return Err(format!(
                             "expected an class to get field"
                         ))
-                    } else {
-                        return Err(format!(
-                            "expected an object to get field"
-                        ))   
                     }
+
+                    return Err(format!(
+                        "expected an object to get field"
+                    ))
                 }
 
                 OP_SET_FIELD => {
+                    let field_index = read_uint16(&instructions[ip + 1..]);
+                    self.current_frame().ip += 2;
+
                     let target = match self.pop() {
                         Some(it) => it,
                         None => return Err(format!("expected an object to set field value")),
                     };
 
-                    let ident = match self.pop() {
-                        Some(it) => it,
-                        None => return Err(format!("expected an field to set value")),
-                    };
+                    let ident = &FIELD_POOL.lock().unwrap()[field_index as usize];
 
                     let value = match self.pop() {
                         Some(it) => it,
@@ -607,15 +601,10 @@ impl Vm {
                     .clone();
 
                     let mut target_borrow = target.borrow_mut();
-                    let ident_borrow = ident.borrow();
                     
                     match &mut *target_borrow {
                         Object::AntClass(clazz) => {
-                            if ident_borrow.get_type() != STRING {
-                                return Err(format!("field must be a stirng, not {}", ident_borrow.get_type()))
-                            }
-
-                            clazz.map.insert(ident_borrow.inspect(), value);
+                            clazz.map.insert(ident.clone(), value);
                         }
 
                         _ => return Err(format!(
