@@ -46,12 +46,7 @@ impl IAntObject for AntUninit {
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
-        other.get_id() == self.id
-            || if other.get_type() == UNINIT {
-                true
-            } else {
-                false
-            }
+        other.get_id() == self.id || other.get_type() == UNINIT
     }
 }
 
