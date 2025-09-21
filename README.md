@@ -2,6 +2,7 @@
 
 [![Rust](https://img.shields.io/badge/Rust-1.88+-blue.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LKBaka/RustAnt)
 
 **RustAnt** 是一个用 Rust 编写的编程语言解释器，实现了完整的编程语言功能栈，包括词法分析、语法分析、字节码编译和虚拟机执行。
 
