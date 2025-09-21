@@ -16,6 +16,21 @@ pub struct NativeModuleImporter {
 #[cfg(not(target_family = "wasm"))]
 impl NativeModuleImporter {
     pub fn import(&self) -> Result<AntClass, String> {
+        use std::path::PathBuf;
+
+        use crate::{constants::MODULE_PATHS, obj_enum::object::Object, object::ant_string::AntString};
+
+        let o = Object::AntString(AntString::new(
+            PathBuf::from(&self.file)
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string()
+        ));
+
+        MODULE_PATHS.lock().unwrap().items.push(o);
+
         unsafe {
             let lib = match ensure_library_loaded(&self.file) {
                 Ok(it) => it,

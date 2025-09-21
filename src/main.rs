@@ -48,6 +48,17 @@ fn main() {
         let repl = REPLRunner::new();
         repl.run();
     } else {
+        let o = Object::AntString(AntString::new(
+            PathBuf::from(&args.file.clone().unwrap())
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string()
+        ));
+
+        MODULE_PATHS.lock().unwrap().items.push(o);
+
         let file_runner = FileRunner::new(args.file.clone().unwrap());
         file_runner.run();
     }
