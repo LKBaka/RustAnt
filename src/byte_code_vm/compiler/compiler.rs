@@ -7,7 +7,7 @@ use crate::{
         ast::{INode, Node, Program, TypeNameGetter}, expr::Expression, stmt::Statement
     }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
@@ -15,8 +15,8 @@ use crate::{
             },
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
-        }, constants::FIELD_POOL,
-    }, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, token::token::Token
+        }, constants::FIELD_POOL, vm::runtime_info::RuntimeInfo,
+    }, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, token::token::Token
 };
 
 #[derive(Debug, Clone)]
@@ -66,13 +66,19 @@ impl EmittedInstruction {
 pub struct ByteCode {
     pub instructions: Instructions,
     pub constants: Vec<Rc<RefCell<Object>>>,
+    pub main_info: RuntimeInfo
 }
 
 impl ByteCode {
-    pub fn new(instructions: Instructions, constants: Vec<Rc<RefCell<Object>>>) -> Self {
+    pub fn new(
+        instructions: Instructions, 
+        constants: Vec<Rc<RefCell<Object>>>,
+        info: RuntimeInfo
+    ) -> Self {
         Self {
             instructions,
             constants,
+            main_info: info
         }
     }
 }
@@ -121,6 +127,8 @@ pub struct Compiler {
 
     pub scopes: Vec<CompilationScope>,
     pub scope_index: usize,
+
+    pub file_name: Rc<str>
 }
 
 impl Compiler {
@@ -132,7 +140,7 @@ impl Compiler {
         }
     }
 
-    pub fn new() -> Self {
+    pub fn new(file_name: Rc<str>) -> Self {
         let main_scope: CompilationScope = CompilationScope::new(
             rc_ref_cell!(vec![]),
             EmittedInstruction::default(),
@@ -148,12 +156,14 @@ impl Compiler {
             symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
+            file_name
         }
     }
 
     pub fn with_state(
         symbol_table: Rc<RefCell<SymbolTable>>,
         constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+        file_name: Rc<str>
     ) -> Self {
         let main_scope = CompilationScope::new(
             rc_ref_cell!(vec![]),
@@ -166,6 +176,7 @@ impl Compiler {
             symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
+            file_name,
         }
     }
 
@@ -585,27 +596,11 @@ impl Compiler {
             }
 
             Statement::UseStatement(use_statement) => {
-                let m = ModuleImporter::import(vec![
-                    &use_statement.name.value
-                ]);
+                let mod_name_index = self.add_constant(Object::AntString(
+                    AntString::new(use_statement.name.value.clone())
+                ));
 
-                if m.is_empty() {
-                    return Err(CompileError::from(
-                        format!("cannot found module '{}'", use_statement.name.value),
-                        Some(use_statement.name.token)
-                    ))
-                }
-
-                let module = match &m[0] {
-                    Ok(it) => it.clone(),
-                    Err(msg) => return Err(CompileError::from(
-                        format!("error importing module: {msg}"),
-                        Some(use_statement.token)
-                    ))
-                };
-
-                let mod_index = self.add_constant(Object::AntClass(module));
-                self.emit(OP_CONSTANTS, vec![mod_index as u16]);
+                self.emit(OP_LOAD_MODULE, vec![mod_name_index as u16]);
 
                 let name = if let Some(name) = &use_statement.alias {
                     &name.value
@@ -783,6 +778,10 @@ impl Compiler {
         ByteCode::new(
             self.current_instructions().borrow().clone(),
             self.constants.borrow().clone(),
+            RuntimeInfo {
+                file_name: self.file_name.clone(),
+                scope_name: Rc::from("__main__"),
+            }
         )
     }
 }

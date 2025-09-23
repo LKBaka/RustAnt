@@ -3,11 +3,10 @@ use crate::println;
 
 use std::{cell::RefCell, rc::Rc};
 
-
 use crate::{
     byte_code_vm::{
         compiler::{compiler::CompileError, symbol_table::symbol_table::SymbolTable, utils::compile_with_state}, constants::FIELD_POOL, vm::vm::Vm
-    }, obj_enum::object::Object, object::utils::create_error_with_name
+    }, obj_enum::object::Object, object::ant_string::AntString
 };
 
 #[derive(Debug)]
@@ -92,10 +91,9 @@ pub fn run(
                 );
             }
 
-            Err(RunError::RuntimeError(create_error_with_name(
-                "RuntimeError",
-                msg,
-            )))
+            Err(RunError::RuntimeError(Object::AntString(AntString::new(format!(
+                "{}\n{}", vm.traceback_string(), msg
+            )))))
         }
     }
 }
@@ -148,10 +146,9 @@ pub fn run_pop(
             #[cfg(feature = "debug")]
             println!("{}", fmt_frames(&vm.frames()));
 
-            Err(RunError::RuntimeError(create_error_with_name(
-                "RuntimeError",
-                msg,
-            )))
+            Err(RunError::RuntimeError(Object::AntString(AntString::new(format!(
+                "{}\n{}", vm.traceback_string(), msg
+            )))))
         }
     }
 }

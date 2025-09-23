@@ -5,7 +5,7 @@ use crate::object::id_counter::next_id;
 use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
         code::code::{
-            read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_LOAD_MODULE, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         }, compiler::compiler::ByteCode, constants::{FALSE_OBJ, FIELD_POOL, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT}, utils::native_boolean_to_object, vm::{
             eval_functions::{
                 eval_array_literal_utils::build_array, eval_class_utils::build_class, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
@@ -13,7 +13,7 @@ use crate::{
             frame::Frame,
             function_utils::{self, push_closure},
         }
-    }, obj_enum::object::Object, object::{
+    }, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
         object::{IAntObject, UNINIT},
@@ -44,6 +44,7 @@ impl Vm {
             instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
+            runtime_info: bytecode.main_info
         };
 
         let main_closure = Closure {
@@ -73,6 +74,7 @@ impl Vm {
             instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
+            runtime_info: bytecode.main_info
         };
 
         let main_closure = Closure {
@@ -572,8 +574,15 @@ impl Vm {
                             continue;
                         }
 
+                        println!(
+                            "{:#?}, sp: {}",
+                            &self.stack[0..self.sp + 3],
+                            self.sp
+                        );
+
                         return Err(format!(
-                            "expected an class to get field"
+                            "expected an class to get field, got: {}",
+                            o_borrow.inspect()
                         ))
                     }
 
@@ -601,7 +610,7 @@ impl Vm {
                     .clone();
 
                     let mut target_borrow = target.borrow_mut();
-                    
+
                     match &mut *target_borrow {
                         Object::AntClass(clazz) => {
                             clazz.map.insert(ident.clone(), value);
@@ -611,6 +620,47 @@ impl Vm {
                             "expected an class to set field value, got {}",
                             target_borrow.get_type()
                         ))
+                    }
+                }
+
+                OP_LOAD_MODULE => {
+                    let module_name_object_index = read_uint16(&instructions[ip + 1..]);
+                    self.current_frame().ip += 2;
+
+                    let mod_name = 
+                    match &*self.constants[module_name_object_index as usize]
+                        .clone().borrow() 
+                    {
+                        Object::AntString(s) => s.value.clone(),
+                        it => return Err(format!(
+                            "expected an string module name, got: {}",
+                            it.inspect()
+                        ))
+                    };
+
+                    let mut importer = ModuleImporter {
+                        vm: self
+                    };
+
+                    let m = importer.import(vec![
+                        &mod_name
+                    ]);
+
+                    if m.is_empty() {
+                        return Err(format!("cannot found module '{}'", mod_name))
+                    }
+
+                    let module = match &m[0] {
+                        Ok(it) => it.clone(),
+                        Err(msg) => return Err(
+                            format!("error importing module: {msg}"),
+                        )
+                    };
+
+                    if let Err(msg) = self.push(rc_ref_cell!(
+                        Object::AntClass(module)
+                    )) {
+                        return Err(format!("error push module: {msg}"))
                     }
                 }
 
@@ -678,7 +728,25 @@ impl Vm {
         Some(result.clone())
     }
 
-    pub fn frames(&self) -> Vec<Frame> {
-        self.frames.iter().map(|f| f.clone()).collect()
+    pub fn frames(&self) -> &Vec<Frame> {
+        &self.frames
+    }
+
+    pub fn traceback_string(&self) -> String {
+        let indent = "  ";
+
+        format!(
+            "traceback (most recent call last):\n{indent}{}",
+            self.frames
+                .iter()
+                .map(|f| format!(
+                    "file \"{}\", in {}. (at instruction position {})",
+                    f.closure.func.runtime_info.file_name,
+                    f.closure.func.runtime_info.scope_name,
+                    f.ip
+                ))
+                .collect::<Vec<String>>()
+                .join(&format!("\n{indent}"))
+        )
     }
 }

@@ -1,3 +1,4 @@
+pub mod runtime_info;
 pub mod eval_functions;
 pub mod frame;
 pub mod function_utils;

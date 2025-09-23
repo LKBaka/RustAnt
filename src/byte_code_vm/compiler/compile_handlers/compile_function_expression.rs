@@ -7,7 +7,7 @@ use crate::{
         ast::{INode, Node, TypeNameGetter}, expr::Expression, stmt::Statement
     }, byte_code_vm::{
         code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
-        compiler::compiler::{CompileError, Compiler},
+        compiler::compiler::{CompileError, Compiler}, vm::runtime_info::RuntimeInfo,
     }, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction
 };
 
@@ -24,6 +24,8 @@ pub fn compile_function_expression(
         Expression::FunctionExpression(it) => it,
         _ => panic!()
     };
+
+    let func_token = func_expr.token();
 
     let symbol_index = if let Some(name) = &func_expr.name {
         Some(compiler.symbol_table.borrow_mut().define(name).index as u16)
@@ -88,6 +90,17 @@ pub fn compile_function_expression(
         instructions: Rc::new(instructions),
         local_count,
         param_count,
+        runtime_info: RuntimeInfo {
+            file_name: func_expr.token.file.as_str().into(),
+            scope_name: if let Some(name) = &func_expr.name {
+                name.as_str().into()
+            } else {
+                format!(
+                    "<Function (Line {} Column {})>",
+                    func_token.line, func_token.column
+                ).into()
+            }
+        }
     };
 
     let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;

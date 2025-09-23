@@ -39,6 +39,12 @@ pub fn fmt_compiled_function(func: CompiledFunction, indent: &str) -> String {
             &indent.repeat(2)
         )
     ));
+    s.push_str(&format!("{indent}RuntimeInfo:\n"));
+    s.push_str(&format!(
+        "{}{:#?}\n",
+        &indent.repeat(2),
+        func.runtime_info
+    ));
 
     s
 }

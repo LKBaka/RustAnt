@@ -486,7 +486,7 @@ mod tests {
                 panic!("parser failed!")
             }
 
-            let mut compiler = Compiler::new();
+            let mut compiler = Compiler::new("__run_compiler_tests__".into());
             if let Err(msg) = compiler.start_compile(program.expect("parser failed!")) {
                 panic!("compiler error: {msg}")
             }
@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     fn test_compiler_scopes() {
-        let mut compiler = Compiler::new();
+        let mut compiler = Compiler::new("__run_compiler_tests__".into());
 
         let global_symbol_table = compiler.symbol_table.clone();
 

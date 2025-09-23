@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::{
     ast::{ast::Node, stmt::Statement},
-    byte_code_vm::{code::code::{OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL}, compiler::{compiler::{CompileError, Compiler}, symbol_table::symbol_table::SymbolScope}},
+    byte_code_vm::{code::code::{OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL}, compiler::{compiler::{CompileError, Compiler}, symbol_table::symbol_table::SymbolScope}, vm::runtime_info::RuntimeInfo},
     obj_enum::object::Object, object::{ant_compiled_function::CompiledFunction, ant_string::AntString},
 };
 
@@ -56,6 +56,15 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
         instructions: Rc::new(ins.borrow().clone()),
         local_count: symbols_len / 2,
         param_count: 0,
+        runtime_info: RuntimeInfo {
+            file_name: clazz.token.file.as_str().into(),
+            scope_name: format!(
+                "<Class (Name {} Line {} Column {})>", 
+                &clazz.name.value,
+                clazz.token.line, 
+                clazz.token.column
+            ).into()
+        }
     };
 
     let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;

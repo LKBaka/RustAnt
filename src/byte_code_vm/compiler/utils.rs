@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub fn compile_it(code: String, file: String) -> Result<ByteCode, CompileError> {
-    let program = parse(code, file);
+    let program = parse(code, file.clone());
 
     if let Ok(it) = program {
         #[cfg(feature = "debug")]
@@ -21,7 +21,7 @@ pub fn compile_it(code: String, file: String) -> Result<ByteCode, CompileError> 
             println!("AST: {}", it.to_string().yellow());
         }
 
-        let mut compiler = Compiler::new();
+        let mut compiler = Compiler::new(file.into());
 
         let result = compiler.start_compile(it);
 
@@ -40,7 +40,7 @@ pub fn compile_with_state(
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 ) -> Result<ByteCode, CompileError> {
-    let program = parse(code, file);
+    let program = parse(code, file.clone());
 
     if let Ok(it) = program {
         #[cfg(feature = "debug")]
@@ -52,7 +52,9 @@ pub fn compile_with_state(
             println!("AST: {}", it.to_string().yellow());
         }
         
-        let mut compiler = Compiler::with_state(symbol_table, constants);
+        let mut compiler = Compiler::with_state(
+            symbol_table, constants, file.into()
+        );
 
         let result = compiler.start_compile(it);
 
