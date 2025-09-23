@@ -6,18 +6,17 @@ use std::{
 };
 
 use crate::{
-    constants::MODULE_PATHS,
-    module_importer::{
+    byte_code_vm::vm::vm::Vm, constants::MODULE_PATHS, module_importer::{
         ant_module_importer::AntModuleImporter, native_module_importer::NativeModuleImporter,
-    },
-    obj_enum::object::Object,
-    object::ant_class::AntClass,
+    }, obj_enum::object::Object, object::ant_class::AntClass
 };
 
-pub struct ModuleImporter;
+pub struct ModuleImporter<'a> {
+    pub vm: &'a mut Vm
+}
 
-impl ModuleImporter {
-    pub fn import(imports: Vec<&str>) -> Vec<Result<AntClass, String>> {
+impl<'a> ModuleImporter<'a> {
+    pub fn import(&mut self, imports: Vec<&str>) -> Vec<Result<AntClass, String>> {
         let mut results = vec![];
 
         let mut module_paths: Vec<String> = vec![];
@@ -54,7 +53,7 @@ impl ModuleImporter {
                 try_native_mod.push(format!("{import}.so"));
 
                 if try_ant_mod.exists() {
-                    results.push(Self::import_ant_module(&try_ant_mod));
+                    results.push(self.import_ant_module(&try_ant_mod));
                     loaded.push(&import);
                     continue;
                 }
@@ -67,7 +66,7 @@ impl ModuleImporter {
                 }
 
                 if try_folder.exists() {
-                    results.push(Self::import_folder(&try_folder));
+                    results.push(self.import_folder(&try_folder));
                     loaded.push(&import);
                     continue;
                 }
@@ -77,9 +76,10 @@ impl ModuleImporter {
         results
     }
 
-    fn import_ant_module(file: &Path) -> Result<AntClass, String> {
-        let ant_mod_importer = AntModuleImporter {
+    fn import_ant_module(&mut self, file: &Path) -> Result<AntClass, String> {
+        let mut ant_mod_importer = AntModuleImporter {
             file: file.to_str().unwrap().to_string(),
+            vm: self.vm
         };
 
         ant_mod_importer.import()
@@ -98,10 +98,14 @@ impl ModuleImporter {
     原谅我 这坨函数写的跟屎一样的多层缩进
     God forgive me for writing this function with multiple layers of indentation like shit
     */
-    fn import_folder(path: &Path) -> Result<AntClass, String> {
+    fn import_folder(&mut self, path: &Path) -> Result<AntClass, String> {
         let mut m = HashMap::new();
 
-        fn walk(dir: &Path, map: &mut HashMap<String, Object>) -> Result<(), String> {
+        fn walk(
+            importer: &mut ModuleImporter, 
+            dir: &Path, 
+            map: &mut HashMap<String, Object>
+        ) -> Result<(), String> {
             let entries = fs::read_dir(dir).map_err(|e| format!("read_dir failed: {e}"))?;
 
             for entry in entries {
@@ -114,7 +118,7 @@ impl ModuleImporter {
                     let mut dir_map = HashMap::new();
 
                     // 递归子目录
-                    walk(&path, &mut dir_map)?;
+                    walk(importer, &path, &mut dir_map)?;
 
                     let dir_obj = AntClass::from(dir_map);
 
@@ -126,7 +130,7 @@ impl ModuleImporter {
                 {
                     map.insert(
                         file_name,
-                        Object::AntClass(ModuleImporter::import_ant_module(&path)?),
+                        Object::AntClass(importer.import_ant_module(&path)?),
                     );
                 } else if path
                     .extension()
@@ -152,7 +156,7 @@ impl ModuleImporter {
             Ok(())
         }
 
-        walk(path, &mut m)?;
+        walk(self, path, &mut m)?;
 
         Ok(AntClass::from(m))
     }

@@ -43,7 +43,8 @@ pub const OP_AND: u8 = 32;
 pub const OP_OR: u8 = 33;
 pub const OP_GET_FIELD: u8 = 34;
 pub const OP_SET_FIELD: u8 = 35;
-pub const OP_CLASS: u8 = 37;
+pub const OP_CLASS: u8 = 36;
+pub const OP_LOAD_MODULE: u8 = 37;
 pub const OP_TEST_PRINT: u8 = 38;
 pub const OP_NOP: u8 = 39;
 
@@ -137,6 +138,7 @@ lazy_static! {
         m.insert(OP_GET_FIELD, Definition::new("OpGetField".into(), vec![2]));
         m.insert(OP_SET_FIELD, Definition::new("OpSetField".into(), vec![2]));
         m.insert(OP_CLASS, Definition::new("OpClass".into(), vec![2]));
+        m.insert(OP_LOAD_MODULE, Definition::new("OpLoadModule".into(), vec![2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 

@@ -1,0 +1,37 @@
+class Result {
+    let value = none
+    let err = none
+
+    let is_ok = false
+
+    func create(val, is_ok) {
+        let o = copy(Result)
+
+        o.is_ok = is_ok
+
+        if is_ok {
+            o.value = val
+        } else {
+            o.err = val
+        }
+    }
+
+    #[method]
+    let unwrap = func (self) {
+        let err = self.err;
+
+        if self.is_ok {
+            return self.value
+        }
+
+        panic(err)
+    }
+}
+
+func Ok(val) {
+    Result.create(val, true)
+}
+
+func Err(val) {
+    Result.create(val, false)
+}
