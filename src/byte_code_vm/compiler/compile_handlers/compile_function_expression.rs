@@ -4,11 +4,17 @@ use std::rc::Rc;
 use crate::object::id_counter::next_id;
 use crate::{
     ast::{
-        ast::{INode, Node, TypeNameGetter}, expr::Expression, stmt::Statement
-    }, byte_code_vm::{
+        ast::{INode, Node, TypeNameGetter},
+        expr::Expression,
+        stmt::Statement,
+    },
+    byte_code_vm::{
         code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
-        compiler::compiler::{CompileError, Compiler}, vm::runtime_info::RuntimeInfo,
-    }, obj_enum::object::Object, object::ant_compiled_function::CompiledFunction
+        compiler::compiler::{CompileError, Compiler},
+        scope_info::ScopeInfo,
+    },
+    obj_enum::object::Object,
+    object::ant_compiled_function::CompiledFunction,
 };
 
 pub fn compile_function_expression(
@@ -19,10 +25,10 @@ pub fn compile_function_expression(
 
     let func_expr = match match node {
         Node::Expression(expr) => expr,
-        _ => panic!()
+        _ => panic!(),
     } {
         Expression::FunctionExpression(it) => it,
-        _ => panic!()
+        _ => panic!(),
     };
 
     let func_token = func_expr.token();
@@ -33,7 +39,18 @@ pub fn compile_function_expression(
         None
     };
 
-    compiler.enter_scope();
+    compiler.enter_scope(ScopeInfo {
+        file_name: func_token.file.as_str().into(),
+        scope_name: if let Some(name) = &func_expr.name {
+            name.as_str().into()
+        } else {
+            format!(
+                "<Function (Line {} Column {})>",
+                func_token.line, func_token.column
+            )
+            .into()
+        },
+    });
 
     if let Some(name) = &func_expr.name {
         compiler
@@ -48,10 +65,12 @@ pub fn compile_function_expression(
     for param in &func_expr.params {
         match &**param {
             Expression::Identifier(it) => param_vec.push(it),
-            _ => return Err(CompileError::from(format!(
-                "expected an identifier, got: {}",
-                param.type_name()
-            ), Some(param.token())))
+            _ => {
+                return Err(CompileError::from(
+                    format!("expected an identifier, got: {}", param.type_name()),
+                    Some(param.token()),
+                ));
+            }
         }
     }
 
@@ -59,20 +78,18 @@ pub fn compile_function_expression(
         compiler.symbol_table.borrow_mut().define(&param.value);
     }
 
-    let compile_body_result = compiler.compile_stmt(Statement::BlockStatement(
-        func_expr.block
-    ));
-    
+    let compile_body_result = compiler.compile_stmt(Statement::BlockStatement(func_expr.block));
+
     if let Err(msg) = compile_body_result {
-        return Err(CompileError::from_none_token(
-            format!("error compile function body: {msg}")
-        ));
+        return Err(CompileError::from_none_token(format!(
+            "error compile function body: {msg}"
+        )));
     }
 
     if compiler.last_instruction_is(OP_POP) {
         compiler.remove_last_pop_to(OP_RETURN_VALUE, &vec![]);
     }
-    
+
     let free_symbols = compiler.symbol_table.borrow().free_symbols.clone();
 
     let local_count = compiler.symbol_table.borrow().num_definitions;
@@ -90,7 +107,7 @@ pub fn compile_function_expression(
         instructions: Rc::new(instructions),
         local_count,
         param_count,
-        runtime_info: RuntimeInfo {
+        scope_info: ScopeInfo {
             file_name: func_expr.token.file.as_str().into(),
             scope_name: if let Some(name) = &func_expr.name {
                 name.as_str().into()
@@ -98,9 +115,10 @@ pub fn compile_function_expression(
                 format!(
                     "<Function (Line {} Column {})>",
                     func_token.line, func_token.column
-                ).into()
-            }
-        }
+                )
+                .into()
+            },
+        },
     };
 
     let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;

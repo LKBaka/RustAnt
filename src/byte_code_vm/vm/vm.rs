@@ -44,7 +44,7 @@ impl Vm {
             instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
-            runtime_info: bytecode.main_info
+            scope_info: bytecode.main_info
         };
 
         let main_closure = Closure {
@@ -74,7 +74,7 @@ impl Vm {
             instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
-            runtime_info: bytecode.main_info
+            scope_info: bytecode.main_info
         };
 
         let main_closure = Closure {
@@ -741,8 +741,8 @@ impl Vm {
                 .iter()
                 .map(|f| format!(
                     "file \"{}\", in {}. (at instruction position {})",
-                    f.closure.func.runtime_info.file_name,
-                    f.closure.func.runtime_info.scope_name,
+                    f.closure.func.scope_info.file_name,
+                    f.closure.func.scope_info.scope_name,
                     f.ip
                 ))
                 .collect::<Vec<String>>()

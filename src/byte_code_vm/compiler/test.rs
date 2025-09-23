@@ -12,7 +12,7 @@ mod tests {
             code::code::{
                 instruction_to_str, make, Instructions, OP_ADD, OP_ARRAY, OP_BANG, OP_CONSTANTS, OP_DIVIDE, OP_EQ, OP_FALSE, OP_GET_GLOBAL, OP_GT, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_MINUS, OP_MULTIPLY, OP_NONE, OP_NOTEQ, OP_POP, OP_SET_GLOBAL, OP_SUBTRACT, OP_TRUE
             },
-            compiler::compiler::Compiler,
+            compiler::compiler::Compiler, scope_info::ScopeInfo,
         }, convert_type_use_box, obj_enum::object::Object, object::{ant_int::AntInt, ant_string::AntString}, parser::utils::parse
     };
 
@@ -631,7 +631,11 @@ mod tests {
 
         compiler.emit(OP_MULTIPLY, vec![]);
 
-        compiler.enter_scope();
+        compiler.enter_scope(ScopeInfo {
+            file_name: "__run_compiler_tests__".into(),
+            scope_name: "__run_compiler_tests__".into()
+        });
+
         if compiler.scope_index != 1 {
             scope_index_wrong_err_print(1, compiler.scope_index);
         }

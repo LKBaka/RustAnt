@@ -5,14 +5,20 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     byte_code_vm::{
-        compiler::{compiler::CompileError, symbol_table::symbol_table::SymbolTable, utils::compile_with_state}, constants::FIELD_POOL, vm::vm::Vm
-    }, obj_enum::object::Object, object::ant_string::AntString
+        compiler::{
+            compile_error::CompileErrorBox, symbol_table::symbol_table::SymbolTable, utils::compile_with_state
+        },
+        constants::FIELD_POOL,
+        vm::vm::Vm,
+    },
+    obj_enum::object::Object,
+    object::ant_string::AntString,
 };
 
 #[derive(Debug)]
 pub enum RunError {
     RuntimeError(Object),
-    CompileError(CompileError),
+    CompileError(CompileErrorBox),
 }
 
 pub fn run(
@@ -33,18 +39,19 @@ pub fn run(
 
         match compile_result {
             Ok(bytecode) => bytecode,
-            Err(msg) => return Err(RunError::CompileError(msg)),
+            Err(err) => return Err(RunError::CompileError(err)),
         }
     };
 
-    
     #[cfg(feature = "debug")]
     println!(
         "{}, ByteCode: {:#?}, Instructions: {}, FieldPool: {:#?}",
         "机器已上电".green(),
         bytecode,
         crate::byte_code_vm::code::code::instruction_to_str(&bytecode.instructions),
-        FIELD_POOL.lock().unwrap()
+        FIELD_POOL
+            .lock()
+            .unwrap()
             .iter()
             .enumerate()
             .collect::<Vec<(usize, &String)>>()
@@ -91,9 +98,9 @@ pub fn run(
                 );
             }
 
-            Err(RunError::RuntimeError(Object::AntString(AntString::new(format!(
-                "{}\n{}", vm.traceback_string(), msg
-            )))))
+            Err(RunError::RuntimeError(Object::AntString(AntString::new(
+                format!("{}\n{}", vm.traceback_string(), msg),
+            ))))
         }
     }
 }
@@ -116,11 +123,10 @@ pub fn run_pop(
 
         match compile_result {
             Ok(bytecode) => bytecode,
-            Err(msg) => return Err(RunError::CompileError(msg)),
+            Err(err) => return Err(RunError::CompileError(err)),
         }
     };
 
-    
     #[cfg(feature = "debug")]
     println!(
         "{}, ByteCode: {:#?}, Instructions: {}",
@@ -146,9 +152,9 @@ pub fn run_pop(
             #[cfg(feature = "debug")]
             println!("{}", fmt_frames(&vm.frames()));
 
-            Err(RunError::RuntimeError(Object::AntString(AntString::new(format!(
-                "{}\n{}", vm.traceback_string(), msg
-            )))))
+            Err(RunError::RuntimeError(Object::AntString(AntString::new(
+                format!("{}\n{}", vm.traceback_string(), msg),
+            ))))
         }
     }
 }

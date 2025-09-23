@@ -1,3 +1,4 @@
+pub mod compile_error;
 pub mod compile_handlers;
 pub mod compiler;
 pub mod constant_pool;

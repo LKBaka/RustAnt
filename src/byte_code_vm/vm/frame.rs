@@ -43,7 +43,7 @@ pub fn fmt_compiled_function(func: CompiledFunction, indent: &str) -> String {
     s.push_str(&format!(
         "{}{:#?}\n",
         &indent.repeat(2),
-        func.runtime_info
+        func.scope_info
     ));
 
     s

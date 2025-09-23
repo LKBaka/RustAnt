@@ -2,7 +2,7 @@ use std::any::Any;
 use std::rc::Rc;
 
 use crate::byte_code_vm::code::code::{Instructions, instruction_to_str};
-use crate::byte_code_vm::vm::runtime_info::RuntimeInfo;
+use crate::byte_code_vm::scope_info::ScopeInfo;
 use crate::impl_object;
 use crate::obj_enum::object::Object;
 use crate::object::object::{COMPILED_FUNCTION, IAntObject, ObjectType};
@@ -13,7 +13,7 @@ pub struct CompiledFunction {
     pub instructions: Rc<Instructions>,
     pub local_count: usize,
     pub param_count: usize,
-    pub runtime_info: RuntimeInfo,
+    pub scope_info: ScopeInfo,
 }
 
 impl Clone for CompiledFunction {
@@ -24,7 +24,7 @@ impl Clone for CompiledFunction {
             instructions: self.instructions.clone(),
             local_count: self.local_count,
             param_count: self.param_count,
-            runtime_info: self.runtime_info.clone(),
+            scope_info: self.scope_info.clone(),
         }
     }
 }

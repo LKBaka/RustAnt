@@ -1,32 +1,54 @@
-use std::{
-    cell::RefCell, fmt::Display, mem, rc::Rc
-};
+use std::{cell::RefCell, fmt::Display, mem, rc::Rc};
 
 use crate::{
     ast::{
-        ast::{INode, Node, Program, TypeNameGetter}, expr::Expression, stmt::Statement
-    }, big_dec, builtin::builtin_map::BUILTIN_MAP_INDEX, byte_code_vm::{
+        ast::{INode, Node, Program, TypeNameGetter},
+        expr::Expression,
+        stmt::Statement,
+    },
+    big_dec,
+    builtin::builtin_map::BUILTIN_MAP_INDEX,
+    byte_code_vm::{
         code::code::{
             make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
-                compile_call_expression::compile_call_expression, compile_class::compile_class, compile_function_expression::compile_function_expression, compile_hash_literal::compile_hash_literal, compile_if_expression::compile_if_expression, compile_infix_expression::compile_infix_expression, compile_prefix_expression::compile_prefix_expression, compile_while_statement::compile_while_statement
+                compile_call_expression::compile_call_expression, compile_class::compile_class,
+                compile_function_expression::compile_function_expression,
+                compile_hash_literal::compile_hash_literal,
+                compile_if_expression::compile_if_expression,
+                compile_infix_expression::compile_infix_expression,
+                compile_prefix_expression::compile_prefix_expression,
+                compile_while_statement::compile_while_statement,
             },
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
-        }, constants::FIELD_POOL, vm::runtime_info::RuntimeInfo,
-    }, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString}, rc_ref_cell, token::token::Token
+        },
+        constants::FIELD_POOL, scope_info::ScopeInfo,
+    },
+    obj_enum::object::Object,
+    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString},
+    rc_ref_cell,
+    token::token::Token,
 };
 
 #[derive(Debug, Clone)]
 pub struct CompilationScope {
+    pub scope_info: ScopeInfo,
     pub instructions: Rc<RefCell<Instructions>>,
     pub last_instruction: EmittedInstruction,
     pub previous_instruction: EmittedInstruction,
 }
 
-impl Default for CompilationScope {
+#[derive(Debug, Clone)]
+pub struct CompilationScopeBuilder {
+    pub instructions: Rc<RefCell<Instructions>>,
+    pub last_instruction: EmittedInstruction,
+    pub previous_instruction: EmittedInstruction,
+}
+
+impl Default for CompilationScopeBuilder {
     fn default() -> Self {
         Self {
             instructions: rc_ref_cell!(vec![]),
@@ -36,13 +58,26 @@ impl Default for CompilationScope {
     }
 }
 
+impl CompilationScopeBuilder {
+    pub fn build(self, scope_info: ScopeInfo) -> CompilationScope {
+        CompilationScope::new(
+            scope_info,
+            self.instructions,
+            self.last_instruction,
+            self.previous_instruction,
+        )
+    }
+}
+
 impl CompilationScope {
     pub fn new(
+        scope_info: ScopeInfo,
         instructions: Rc<RefCell<Instructions>>,
         last_instruction: EmittedInstruction,
         previous_instruction: EmittedInstruction,
     ) -> Self {
         Self {
+            scope_info,
             instructions,
             last_instruction,
             previous_instruction,
@@ -66,19 +101,19 @@ impl EmittedInstruction {
 pub struct ByteCode {
     pub instructions: Instructions,
     pub constants: Vec<Rc<RefCell<Object>>>,
-    pub main_info: RuntimeInfo
+    pub main_info: ScopeInfo,
 }
 
 impl ByteCode {
     pub fn new(
-        instructions: Instructions, 
+        instructions: Instructions,
         constants: Vec<Rc<RefCell<Object>>>,
-        info: RuntimeInfo
+        info: ScopeInfo,
     ) -> Self {
         Self {
             instructions,
             constants,
-            main_info: info
+            main_info: info,
         }
     }
 }
@@ -91,16 +126,13 @@ pub struct CompileError {
 
 impl CompileError {
     pub fn from(message: String, token: Option<Token>) -> Self {
-        Self {
-            message,
-            token
-        }
+        Self { message, token }
     }
 
     pub fn from_none_token(message: String) -> Self {
         Self {
             message,
-            token: None
+            token: None,
         }
     }
 }
@@ -109,13 +141,12 @@ impl Display for CompileError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.token {
             Some(token) => write!(
-                f, "{} at line: {}, at column: {}, at file: {}",
-                self.message, token.line, token.column, token.file
+                f,
+                "{}\n(at line: {}, at column: {})",
+                self.message, token.line, token.column
             ),
 
-            None => write!(
-                f, "{}", self.message
-            )
+            None => write!(f, "{}", self.message),
         }
     }
 }
@@ -128,7 +159,7 @@ pub struct Compiler {
     pub scopes: Vec<CompilationScope>,
     pub scope_index: usize,
 
-    pub file_name: Rc<str>
+    pub file_name: Rc<str>,
 }
 
 impl Compiler {
@@ -141,11 +172,8 @@ impl Compiler {
     }
 
     pub fn new(file_name: Rc<str>) -> Self {
-        let main_scope: CompilationScope = CompilationScope::new(
-            rc_ref_cell!(vec![]),
-            EmittedInstruction::default(),
-            EmittedInstruction::default(),
-        );
+        let main_scope: CompilationScope = CompilationScopeBuilder::default()
+            .build(ScopeInfo { file_name: file_name.clone(), scope_name: "__main__".into() });
 
         let symbol_table = rc_ref_cell!(SymbolTable::new());
 
@@ -156,20 +184,17 @@ impl Compiler {
             symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
-            file_name
+            file_name,
         }
     }
 
     pub fn with_state(
         symbol_table: Rc<RefCell<SymbolTable>>,
         constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-        file_name: Rc<str>
+        file_name: Rc<str>,
     ) -> Self {
-        let main_scope = CompilationScope::new(
-            rc_ref_cell!(vec![]),
-            EmittedInstruction::default(),
-            EmittedInstruction::default(),
-        );
+        let main_scope = CompilationScopeBuilder::default()
+            .build(ScopeInfo { file_name: file_name.clone(), scope_name: "__main__".into() });
 
         Self {
             constants,
@@ -231,8 +256,7 @@ impl Compiler {
             }
 
             Expression::DoubleLiteral(double_literal) => {
-                let double =
-                    Object::AntDouble(AntDouble::from(double_literal.value));
+                let double = Object::AntDouble(AntDouble::from(double_literal.value));
 
                 let constant_index = self.add_constant(double);
                 self.emit(OP_CONSTANTS, vec![constant_index as u16]);
@@ -241,10 +265,7 @@ impl Compiler {
             }
 
             Expression::NoneLiteral(_) => {
-                self.emit(
-                    OP_NONE,
-                    vec![],
-                );
+                self.emit(OP_NONE, vec![]);
 
                 Ok(())
             }
@@ -253,21 +274,22 @@ impl Compiler {
                 let result = self.compile_expr(*assign_expr.value);
 
                 if let Err(msg) = result {
-                    return Err(CompileError::from_none_token(
-                        format!("error compile assignment value: {msg}"),
-                    ));
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile assignment value: {msg}"
+                    )));
                 }
 
                 match *assign_expr.left {
                     Expression::Identifier(ident) => {
-                        let symbol =
-                        if let Some(it) = self.symbol_table.borrow_mut().resolve(&ident.value) {
+                        let symbol = if let Some(it) =
+                            self.symbol_table.borrow_mut().resolve(&ident.value)
+                        {
                             it
                         } else {
-                            return Err(CompileError::from(format!(
-                                "undefined identifier: {}.",
-                                ident.value
-                            ), Some(ident.token)));
+                            return Err(CompileError::from(
+                                format!("undefined identifier: {}.", ident.value),
+                                Some(ident.token),
+                            ));
                         };
 
                         self.emit(
@@ -282,40 +304,42 @@ impl Compiler {
 
                     Expression::IndexExpression(index_expr) => {
                         if let Err(msg) = self.compile_expr(*index_expr.index) {
-                            return Err(CompileError::from_none_token(
-                                format!("error compile index: {msg}"),
-                            ));
+                            return Err(CompileError::from_none_token(format!(
+                                "error compile index: {msg}"
+                            )));
                         }
 
                         if let Err(msg) = self.compile_expr(*index_expr.expr) {
-                            return Err(CompileError::from_none_token(
-                                format!("error compile target: {msg}"),
-                            ));
+                            return Err(CompileError::from_none_token(format!(
+                                "error compile target: {msg}"
+                            )));
                         }
 
                         self.emit(OP_SET_INDEX, vec![]);
                     }
-                
+
                     Expression::ObjectMemberExpression(obj_member) => {
                         if let Expression::Identifier(field) = *obj_member.right {
                             let field_index = self.add_field(&field.value) as u16;
 
                             if let Err(msg) = self.compile_expr(*obj_member.left) {
-                                return Err(CompileError::from_none_token(
-                                    format!("error compile object: {msg}"),
-                                ));
+                                return Err(CompileError::from_none_token(format!(
+                                    "error compile object: {msg}"
+                                )));
                             }
 
                             self.emit(OP_SET_FIELD, vec![field_index]);
                         }
                     }
 
-                    _ => 
-                    return 
-                        Err(CompileError::from(
-                            String::from("cannot assign to literal here. Maybe you meant '==' instead of '='?"),
-                            Some(assign_expr.left.token())
-                        ))
+                    _ => {
+                        return Err(CompileError::from(
+                            String::from(
+                                "cannot assign to literal here. Maybe you meant '==' instead of '='?",
+                            ),
+                            Some(assign_expr.left.token()),
+                        ));
+                    }
                 }
 
                 Ok(())
@@ -329,10 +353,10 @@ impl Compiler {
 
                     Ok(())
                 } else {
-                    Err(CompileError::from(format!(
-                        "undefined identifier: {}.",
-                        ident.value,
-                    ), Some(ident.token)))
+                    Err(CompileError::from(
+                        format!("undefined identifier: {}.", ident.value,),
+                        Some(ident.token),
+                    ))
                 }
             }
 
@@ -342,9 +366,9 @@ impl Compiler {
                 for expr in arr.items {
                     let compile_result = self.compile_expr(*expr);
                     if let Err(msg) = compile_result {
-                        return Err(CompileError::from_none_token(
-                            format!("error compile array item: {msg}")
-                        ));
+                        return Err(CompileError::from_none_token(format!(
+                            "error compile array item: {msg}"
+                        )));
                     }
                 }
 
@@ -355,15 +379,15 @@ impl Compiler {
 
             Expression::IndexExpression(index_expr) => {
                 if let Err(msg) = self.compile_expr(*index_expr.expr) {
-                    return Err(CompileError::from_none_token(
-                        format!("error compile left expression: {msg}")
-                    ));
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile left expression: {msg}"
+                    )));
                 }
 
                 if let Err(msg) = self.compile_expr(*index_expr.index) {
-                    return Err(CompileError::from_none_token(
-                        format!("error compile index: {msg}")
-                    ));
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile index: {msg}"
+                    )));
                 }
 
                 self.emit(OP_INDEX, vec![]);
@@ -373,21 +397,17 @@ impl Compiler {
 
             Expression::ReturnExpression(return_expr) => {
                 // 第一件事 检查作用域
-                if self.symbol_table
-                    .borrow()
-                    .outer
-                    .is_none() 
-                {
+                if self.symbol_table.borrow().outer.is_none() {
                     return Err(CompileError::from(
                         format!("cannot return outside function"),
-                        Some(return_expr.token())
-                    ))
+                        Some(return_expr.token()),
+                    ));
                 }
 
                 if let Err(msg) = self.compile_expr(*return_expr.value) {
-                    return Err(CompileError::from_none_token(
-                        format!("error compile return value: {msg}")
-                    ));
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile return value: {msg}"
+                    )));
                 }
 
                 self.emit(OP_RETURN_VALUE, vec![]);
@@ -397,35 +417,32 @@ impl Compiler {
 
             Expression::ObjectMemberExpression(obj_member_expr) => {
                 if let Err(msg) = self.compile_expr(*obj_member_expr.left) {
-                    return Err(CompileError::from_none_token(
-                        format!("error compile object: {msg}")
-                    ))    
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile object: {msg}"
+                    )));
                 }
-                
+
                 let field = if let Expression::Identifier(it) = *obj_member_expr.right {
                     it
                 } else {
                     return Err(CompileError::from(
                         format!("expected an identifier of object member"),
-                        Some(obj_member_expr.right.token())
-                    ))
+                        Some(obj_member_expr.right.token()),
+                    ));
                 };
-                
+
                 let field_index = self.add_field(&field.value) as u16;
 
-                self.emit(
-                    OP_GET_FIELD,
-                    vec![field_index]
-                );
+                self.emit(OP_GET_FIELD, vec![field_index]);
 
                 Ok(())
             }
 
             Expression::TestPrintExpression(test_print_expr) => {
                 if let Err(msg) = self.compile_expr(*test_print_expr.value) {
-                    return Err(CompileError::from_none_token(
-                        format!("error compile return value: {msg}")
-                    ));
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile return value: {msg}"
+                    )));
                 }
 
                 self.emit(OP_TEST_PRINT, vec![]);
@@ -434,22 +451,20 @@ impl Compiler {
             }
 
             Expression::Decorator(decorator) => {
-                if let &Expression::Identifier(
-                    _
-                ) = &*decorator.decorator {
+                if let &Expression::Identifier(_) = &*decorator.decorator {
                     if let Err(msg) = self.compile_expr(*decorator.decorator) {
-                        return Err(CompileError::from_none_token(
-                            format!("error compile decorator: {msg}")
-                        ))
+                        return Err(CompileError::from_none_token(format!(
+                            "error compile decorator: {msg}"
+                        )));
                     }
 
                     if let Statement::LetStatement(let_stmt) = decorator.to_decorate {
                         let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
 
                         if let Err(msg) = self.compile_expr(*let_stmt.value) {
-                            return Err(CompileError::from_none_token(
-                                format!("error compile decorate expression: {msg}")
-                            ))
+                            return Err(CompileError::from_none_token(format!(
+                                "error compile decorate expression: {msg}"
+                            )));
                         }
 
                         self.emit(OP_CALL, vec![1u16]);
@@ -467,9 +482,9 @@ impl Compiler {
                     }
 
                     if let Err(msg) = self.compile_stmt(decorator.to_decorate) {
-                        return Err(CompileError::from_none_token(
-                            format!("error compile decorate expression: {msg}")
-                        ))
+                        return Err(CompileError::from_none_token(format!(
+                            "error compile decorate expression: {msg}"
+                        )));
                     }
 
                     self.emit(OP_CALL, vec![1u16]);
@@ -479,14 +494,16 @@ impl Compiler {
                             0,
                             match decorator.to_decorate {
                                 Statement::ExpressionStatement(expr_stmt) => expr_stmt,
-                                _ => panic!()
-                            }.expression.unwrap()
+                                _ => panic!(),
+                            }
+                            .expression
+                            .unwrap(),
                         );
 
                         if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
-                            return Err(CompileError::from_none_token(
-                                format!("error compile decorator: {msg}")
-                            ))
+                            return Err(CompileError::from_none_token(format!(
+                                "error compile decorator: {msg}"
+                            )));
                         }
 
                         let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
@@ -507,40 +524,47 @@ impl Compiler {
                         0,
                         match decorator.to_decorate {
                             Statement::ExpressionStatement(expr_stmt) => expr_stmt,
-                            _ => panic!()
-                        }.expression.unwrap()
+                            _ => panic!(),
+                        }
+                        .expression
+                        .unwrap(),
                     );
 
                     if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
-                        return Err(CompileError::from_none_token(
-                            format!("error compile decorator: {msg}")
-                        ))
+                        return Err(CompileError::from_none_token(format!(
+                            "error compile decorator: {msg}"
+                        )));
                     }
                 }
 
                 Ok(())
             }
 
-            Expression::CallExpression(expr) => 
-                compile_call_expression(self, Node::Expression(Expression::CallExpression(expr))),
-            Expression::FunctionExpression(expr) => 
-                compile_function_expression(self, Node::Expression(Expression::FunctionExpression(expr))),
-            Expression::HashLiteral(expr) => 
-                compile_hash_literal(self, Node::Expression(Expression::HashLiteral(expr))),
-            Expression::IfExpression(expr) => 
-                compile_if_expression(self, Node::Expression(Expression::IfExpression(expr))),
-            Expression::InfixExpression(expr) => 
-                compile_infix_expression(self, Node::Expression(Expression::InfixExpression(expr))),
-            Expression::PrefixExpression(expr) => 
-                compile_prefix_expression(self, Node::Expression(Expression::PrefixExpression(expr))),
-
-            _ => {
-                Err(CompileError::from(
-                    format!(
-                    "no compile handler for node: {}",
-                    node.type_name()
-                ), Some(node.token())))
+            Expression::CallExpression(expr) => {
+                compile_call_expression(self, Node::Expression(Expression::CallExpression(expr)))
             }
+            Expression::FunctionExpression(expr) => compile_function_expression(
+                self,
+                Node::Expression(Expression::FunctionExpression(expr)),
+            ),
+            Expression::HashLiteral(expr) => {
+                compile_hash_literal(self, Node::Expression(Expression::HashLiteral(expr)))
+            }
+            Expression::IfExpression(expr) => {
+                compile_if_expression(self, Node::Expression(Expression::IfExpression(expr)))
+            }
+            Expression::InfixExpression(expr) => {
+                compile_infix_expression(self, Node::Expression(Expression::InfixExpression(expr)))
+            }
+            Expression::PrefixExpression(expr) => compile_prefix_expression(
+                self,
+                Node::Expression(Expression::PrefixExpression(expr)),
+            ),
+
+            _ => Err(CompileError::from(
+                format!("no compile handler for node: {}", node.type_name()),
+                Some(node.token()),
+            )),
         }
     }
 
@@ -560,12 +584,14 @@ impl Compiler {
                         Expression::FunctionExpression(_) => true,
                         Expression::Decorator(_) => true,
                         Expression::AssignmentExpression(_) => true,
-                        _ => false
+                        _ => false,
                     };
 
                     self.compile_expr(*expr)?;
 
-                    if need_skip_pop {return Ok(())}
+                    if need_skip_pop {
+                        return Ok(());
+                    }
                     self.emit(OP_POP, vec![]);
                 }
 
@@ -578,9 +604,9 @@ impl Compiler {
                 let result = self.compile_expr(*let_stmt.value);
 
                 if let Err(msg) = result {
-                    return Err(CompileError::from_none_token(
-                        format!("error compile let statement: {msg}")
-                    ));
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile let statement: {msg}"
+                    )));
                 }
 
                 self.emit(
@@ -596,9 +622,9 @@ impl Compiler {
             }
 
             Statement::UseStatement(use_statement) => {
-                let mod_name_index = self.add_constant(Object::AntString(
-                    AntString::new(use_statement.name.value.clone())
-                ));
+                let mod_name_index = self.add_constant(Object::AntString(AntString::new(
+                    use_statement.name.value.clone(),
+                )));
 
                 self.emit(OP_LOAD_MODULE, vec![mod_name_index as u16]);
 
@@ -608,9 +634,7 @@ impl Compiler {
                     &use_statement.name.value
                 };
 
-                let symbol = self.symbol_table.borrow_mut().define(
-                    &name
-                );
+                let symbol = self.symbol_table.borrow_mut().define(&name);
 
                 self.emit(
                     if self.symbol_table.borrow().outer.is_none() {
@@ -624,10 +648,12 @@ impl Compiler {
                 Ok(())
             }
 
-            Statement::ClassStatement(stmt) => 
-                compile_class(self, Node::Statement(Statement::ClassStatement(stmt))),
-            Statement::WhileStatement(stmt) => 
+            Statement::ClassStatement(stmt) => {
+                compile_class(self, Node::Statement(Statement::ClassStatement(stmt)))
+            }
+            Statement::WhileStatement(stmt) => {
                 compile_while_statement(self, Node::Statement(Statement::WhileStatement(stmt)))
+            }
         }
     }
 
@@ -642,10 +668,11 @@ impl Compiler {
         };
     }
 
-    pub fn enter_scope(&mut self) {
+    pub fn enter_scope(&mut self, scope_info: ScopeInfo) {
         self.symbol_table = rc_ref_cell!(SymbolTable::with_outer(self.symbol_table.clone()));
 
-        let scope = CompilationScope::default();
+        let scope = CompilationScopeBuilder::default()
+            .build(scope_info);
 
         self.scopes.push(scope);
 
@@ -674,11 +701,10 @@ impl Compiler {
 
     pub fn add_field(&self, field: &str) -> usize {
         if let Ok(i) = FIELD_POOL.lock().unwrap().binary_search(&field.to_owned()) {
-            return i
+            return i;
         }
 
-        FIELD_POOL.lock().unwrap()
-            .push(field.into());
+        FIELD_POOL.lock().unwrap().push(field.into());
 
         FIELD_POOL.lock().unwrap().len() - 1
     }
@@ -778,10 +804,27 @@ impl Compiler {
         ByteCode::new(
             self.current_instructions().borrow().clone(),
             self.constants.borrow().clone(),
-            RuntimeInfo {
+            ScopeInfo {
                 file_name: self.file_name.clone(),
                 scope_name: Rc::from("__main__"),
-            }
+            },
+        )
+    }
+
+    pub fn traceback_string(&self) -> String {
+        let indent = "  ";
+
+        format!(
+            "traceback (most recent call last):\n{indent}{}",
+            self.scopes
+                .iter()
+                .map(|scope| format!(
+                    "file \"{}\", in {}",
+                    scope.scope_info.file_name,
+                    scope.scope_info.scope_name,
+                ))
+                .collect::<Vec<String>>()
+                .join(&format!("\n{indent}"))
         )
     }
 }

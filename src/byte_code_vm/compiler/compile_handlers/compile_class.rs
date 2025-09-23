@@ -1,28 +1,48 @@
 use std::rc::Rc;
 
+#[cfg(feature = "debug")]
+use crate::object::id_counter::next_id;
 use crate::{
     ast::{ast::Node, stmt::Statement},
-    byte_code_vm::{code::code::{OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL}, compiler::{compiler::{CompileError, Compiler}, symbol_table::symbol_table::SymbolScope}, vm::runtime_info::RuntimeInfo},
-    obj_enum::object::Object, object::{ant_compiled_function::CompiledFunction, ant_string::AntString},
+    byte_code_vm::{
+        code::code::{
+            OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL,
+            OP_SET_LOCAL,
+        },
+        compiler::{
+            compiler::{CompileError, Compiler},
+            symbol_table::symbol_table::SymbolScope,
+        },
+        scope_info::ScopeInfo,
+    },
+    obj_enum::object::Object,
+    object::{ant_compiled_function::CompiledFunction, ant_string::AntString},
 };
 
 pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let clazz = match match node {
         Node::Statement(stmt) => stmt,
-        _ => panic!()
+        _ => panic!(),
     } {
         Statement::ClassStatement(it) => it,
-        _ => panic!()
+        _ => panic!(),
     };
 
     let symbol = compiler.symbol_table.borrow_mut().define(&clazz.name.value);
 
-    compiler.enter_scope();
+    compiler.enter_scope(ScopeInfo {
+        file_name: clazz.token.file.as_str().into(),
+        scope_name: format!(
+            "<Class (Name {} Line {} Column {})>",
+            &clazz.name.value, clazz.token.line, clazz.token.column
+        )
+        .into(),
+    });
 
     if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(clazz.block)) {
-        return Err(CompileError::from_none_token(
-            format!("error compile class: {msg}")
-        ));
+        return Err(CompileError::from_none_token(format!(
+            "error compile class: {msg}"
+        )));
     }
 
     let symbols = compiler.symbol_table.borrow().store.clone();
@@ -52,19 +72,18 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
 
     let compiled_function = CompiledFunction {
         #[cfg(feature = "debug")]
-        id: 0x917813_33550336_69,
+        id: next_id(),
         instructions: Rc::new(ins.borrow().clone()),
         local_count: symbols_len / 2,
         param_count: 0,
-        runtime_info: RuntimeInfo {
+        scope_info: ScopeInfo {
             file_name: clazz.token.file.as_str().into(),
             scope_name: format!(
-                "<Class (Name {} Line {} Column {})>", 
-                &clazz.name.value,
-                clazz.token.line, 
-                clazz.token.column
-            ).into()
-        }
+                "<Class (Name {} Line {} Column {})>",
+                &clazz.name.value, clazz.token.line, clazz.token.column
+            )
+            .into(),
+        },
     };
 
     let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;
