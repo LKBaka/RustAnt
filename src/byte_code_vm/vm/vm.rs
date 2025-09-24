@@ -3,22 +3,39 @@ use std::{cell::RefCell, rc::Rc};
 #[cfg(feature = "debug")]
 use crate::object::id_counter::next_id;
 use crate::{
-    builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX}, byte_code_vm::{
+    builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX},
+    byte_code_vm::{
         code::code::{
-            read_uint16, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_LOAD_MODULE, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
-        }, compiler::compiler::ByteCode, constants::{FALSE_OBJ, FIELD_POOL, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT}, utils::native_boolean_to_object, vm::{
+            OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS,
+            OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL,
+            OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_LOAD_MODULE, OP_MINUS,
+            OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD,
+            OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, read_uint16,
+        },
+        compiler::compiler::ByteCode,
+        constants::{FALSE_OBJ, FIELD_POOL, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT},
+        utils::native_boolean_to_object,
+        vm::{
             eval_functions::{
-                eval_array_literal_utils::build_array, eval_class_utils::build_class, eval_hash_literal_utils::build_hash_map, eval_index_expression::eval_index_expression, eval_infix_operator::eval_infix_operator, eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index
+                eval_array_literal_utils::build_array, eval_class_utils::build_class,
+                eval_hash_literal_utils::build_hash_map,
+                eval_index_expression::eval_index_expression,
+                eval_infix_operator::eval_infix_operator,
+                eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index,
             },
             frame::Frame,
             function_utils::{self, push_closure},
-        }
-    }, module_importer::importer_enum::ModuleImporter, obj_enum::object::Object, object::{
+        },
+    },
+    module_importer::importer_enum::ModuleImporter,
+    obj_enum::object::Object,
+    object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
         object::{IAntObject, UNINIT},
         utils::rrc_is_truthy,
-    }, rc_ref_cell
+    },
+    rc_ref_cell,
 };
 
 pub const STACK_SIZE: u16 = 2048;
@@ -44,7 +61,7 @@ impl Vm {
             instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
-            scope_info: bytecode.main_info
+            scope_info: bytecode.main_info,
         };
 
         let main_closure = Closure {
@@ -74,7 +91,7 @@ impl Vm {
             instructions: Rc::new(bytecode.instructions),
             local_count: 0,
             param_count: 0,
-            scope_info: bytecode.main_info
+            scope_info: bytecode.main_info,
         };
 
         let main_closure = Closure {
@@ -126,16 +143,15 @@ impl Vm {
         let mut op;
 
         while {
+            instructions = self.current_frame().instructions();
+
             let current_frame = self.current_frame();
 
-            current_frame.ip
-                < current_frame.instructions().len() as isize - 1
+            current_frame.ip < instructions.len() as isize - 1
         } {
             self.current_frame().ip += 1;
 
             ip = self.current_frame().ip as usize;
-
-            instructions = self.current_frame().instructions();
 
             op = instructions[ip];
 
@@ -154,25 +170,25 @@ impl Vm {
                 OP_ADD..=OP_NOTEQ => {
                     let right = match self.pop() {
                         Some(it) => it,
-                        None => return Err(format!(
-                            "expected two objects of opcode {}. got 0 objects",
-                            op,
-                        ))
+                        None => {
+                            return Err(format!(
+                                "expected two objects of opcode {}. got 0 objects",
+                                op,
+                            ));
+                        }
                     };
 
                     let left = match self.pop() {
                         Some(it) => it,
-                        None => return Err(format!(
-                            "expected two objects of opcode {}. got 1 object",
-                            op,
-                        ))
+                        None => {
+                            return Err(format!(
+                                "expected two objects of opcode {}. got 1 object",
+                                op,
+                            ));
+                        }
                     };
 
-                    let eval_operator_result = eval_infix_operator(
-                        op,
-                        left,
-                        right,
-                    );
+                    let eval_operator_result = eval_infix_operator(op, left, right);
 
                     if let Err(err) = eval_operator_result {
                         return Err(format!("error evaluating infix operator {}: {}", op, err));
@@ -364,7 +380,7 @@ impl Vm {
 
                     if self.frame_index == 1 {
                         // 没栈帧可榨了 说明已经到了主栈帧 直接报错
-                        return Err(format!("cannot return outside function"))
+                        return Err(format!("cannot return outside function"));
                     }
 
                     let frame = self.pop_frame(); // 弹出当前帧
@@ -383,7 +399,7 @@ impl Vm {
 
                     if self.frame_index == 1 {
                         // 没栈帧可榨了 说明已经到了主栈帧 直接报错
-                        return Err(format!("cannot return outside function"))
+                        return Err(format!("cannot return outside function"));
                     }
 
                     let frame = self.pop_frame(); // 弹出当前帧
@@ -404,9 +420,7 @@ impl Vm {
 
                     let index = frame.base_pointer + local_index as usize;
 
-                    self.stack[index] = self
-                        .pop()
-                        .expect("expected an object to set local");
+                    self.stack[index] = self.pop().expect("expected an object to set local");
                 }
 
                 OP_GET_LOCAL => {
@@ -439,7 +453,7 @@ impl Vm {
                     } else {
                         return Err(String::from("expected an condition"));
                     };
-                        
+
                     let frame = self.current_frame();
 
                     if !rrc_is_truthy(&condition) {
@@ -510,10 +524,10 @@ impl Vm {
                     let builtin_index = read_uint16(&instructions[ip + 1..]);
                     self.current_frame().ip += 2;
 
-                    if let Err(msg) = self.push(
-                        rc_ref_cell!(BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone())
-                    ) {
-                        return Err(format!("error push builtin function: {msg}"))
+                    if let Err(msg) = self.push(rc_ref_cell!(
+                        BUILTIN_MAP[&BUILTIN_MAP_INDEX[builtin_index as usize]].clone()
+                    )) {
+                        return Err(format!("error push builtin function: {msg}"));
                     }
                 }
 
@@ -521,9 +535,7 @@ impl Vm {
                     let symbols_len = read_uint16(&instructions[(ip + 1)..]);
                     self.current_frame().ip += 2;
 
-                    let clazz = build_class(
-                        &self.stack, self.sp - symbols_len as usize, self.sp
-                    )?;
+                    let clazz = build_class(&self.stack, self.sp - symbols_len as usize, self.sp)?;
 
                     self.sp -= symbols_len as usize;
 
@@ -546,49 +558,41 @@ impl Vm {
                         let o_borrow = o.borrow();
 
                         if let Object::AntClass(clazz) = &*o_borrow {
-                            let value = match if let Some(it) = clazz.map
-                                .get(field) 
-                            {
-                                it    
+                            let value = match if let Some(it) = clazz.map.get(field) {
+                                it
                             } else {
                                 return Err(format!(
-                                    "object '{}' has no field '{}'", clazz.inspect(), field
-                                ))
+                                    "object '{}' has no field '{}'",
+                                    clazz.inspect(),
+                                    field
+                                ));
                             } {
                                 Object::Method(method) => {
-                                    let mut  m = method.clone();
+                                    let mut m = method.clone();
 
                                     m.me = obj.clone();
 
                                     Object::Method(m)
-                                },
-                                other => other.clone()
+                                }
+                                other => other.clone(),
                             };
 
-                            if let Err(msg) = self.push(
-                                rc_ref_cell!(value)
-                            ) {
-                                return Err(format!("error push field: {msg}"))
+                            if let Err(msg) = self.push(rc_ref_cell!(value)) {
+                                return Err(format!("error push field: {msg}"));
                             }
 
                             continue;
                         }
 
-                        println!(
-                            "{:#?}, sp: {}",
-                            &self.stack[0..self.sp + 3],
-                            self.sp
-                        );
+                        println!("{:#?}, sp: {}", &self.stack[0..self.sp + 3], self.sp);
 
                         return Err(format!(
                             "expected an class to get field, got: {}",
                             o_borrow.inspect()
-                        ))
+                        ));
                     }
 
-                    return Err(format!(
-                        "expected an object to get field"
-                    ))
+                    return Err(format!("expected an object to get field"));
                 }
 
                 OP_SET_FIELD => {
@@ -616,10 +620,12 @@ impl Vm {
                             clazz.map.insert(ident.clone(), value);
                         }
 
-                        _ => return Err(format!(
-                            "expected an class to set field value, got {}",
-                            target_borrow.get_type()
-                        ))
+                        _ => {
+                            return Err(format!(
+                                "expected an class to set field value, got {}",
+                                target_borrow.get_type()
+                            ));
+                        }
                     }
                 }
 
@@ -627,40 +633,34 @@ impl Vm {
                     let module_name_object_index = read_uint16(&instructions[ip + 1..]);
                     self.current_frame().ip += 2;
 
-                    let mod_name = 
-                    match &*self.constants[module_name_object_index as usize]
-                        .clone().borrow() 
+                    let mod_name = match &*self.constants[module_name_object_index as usize]
+                        .clone()
+                        .borrow()
                     {
                         Object::AntString(s) => s.value.clone(),
-                        it => return Err(format!(
-                            "expected an string module name, got: {}",
-                            it.inspect()
-                        ))
+                        it => {
+                            return Err(format!(
+                                "expected an string module name, got: {}",
+                                it.inspect()
+                            ));
+                        }
                     };
 
-                    let mut importer = ModuleImporter {
-                        vm: self
-                    };
+                    let mut importer = ModuleImporter { vm: self };
 
-                    let m = importer.import(vec![
-                        &mod_name
-                    ]);
+                    let m = importer.import(vec![&mod_name]);
 
                     if m.is_empty() {
-                        return Err(format!("cannot found module '{}'", mod_name))
+                        return Err(format!("cannot found module '{}'", mod_name));
                     }
 
                     let module = match &m[0] {
                         Ok(it) => it.clone(),
-                        Err(msg) => return Err(
-                            format!("error importing module: {msg}"),
-                        )
+                        Err(msg) => return Err(format!("error importing module: {msg}")),
                     };
 
-                    if let Err(msg) = self.push(rc_ref_cell!(
-                        Object::AntClass(module)
-                    )) {
-                        return Err(format!("error push module: {msg}"))
+                    if let Err(msg) = self.push(rc_ref_cell!(Object::AntClass(module))) {
+                        return Err(format!("error push module: {msg}"));
                     }
                 }
 
@@ -719,7 +719,9 @@ impl Vm {
 
     #[inline(always)]
     pub fn pop(&mut self) -> Option<Rc<RefCell<Object>>> {
-        if self.sp == 0 { return None }
+        if self.sp == 0 {
+            return None;
+        }
 
         let result = &self.stack[self.sp - 1];
 
@@ -741,9 +743,7 @@ impl Vm {
                 .iter()
                 .map(|f| format!(
                     "file \"{}\", in {}. (at instruction position {})",
-                    f.closure.func.scope_info.file_name,
-                    f.closure.func.scope_info.scope_name,
-                    f.ip
+                    f.closure.func.scope_info.file_name, f.closure.func.scope_info.scope_name, f.ip
                 ))
                 .collect::<Vec<String>>()
                 .join(&format!("\n{indent}"))
