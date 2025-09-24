@@ -9,6 +9,7 @@ pub struct LetStatement {
     pub token: Token,
     pub name: Identifier,
     pub value: Box<Expression>,
+    pub type_hint: Option<Box<Expression>>,
 }
 
 impl INode for LetStatement {
@@ -32,5 +33,15 @@ pub fn create_let_statement(
     name: Identifier,
     value: Box<Expression>,
 ) -> LetStatement {
-    LetStatement { token, name, value }
+    LetStatement { token, name, value, type_hint: None }
 }
+
+pub fn create_let_statement_with_type(
+    token: Token,
+    name: Identifier,
+    value: Box<Expression>,
+    type_hint: Box<Expression>,
+) -> LetStatement {
+    LetStatement { token, name, value, type_hint: Some(type_hint) }
+}
+
