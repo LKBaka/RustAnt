@@ -4,20 +4,26 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJECT},
         vm::{frame::Frame, vm::Vm},
-    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_method::MethodType, object::{IAntObject, CLOSURE, METHOD, NATIVE_FUNCTION}}, rc_ref_cell
+    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_method::MethodType, object::IAntObject}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
-    let calling_obj = &vm.stack[vm.sp - 1 - arg_count];
+    let top = vm.sp - 1 - arg_count;
+    let obj_tag = {
+        let borrow = vm.stack[top].borrow();
+        match &*borrow {
+            Object::Closure(_) => 0u8,
+            Object::AntNativeFunction(_) => 1u8,
+            Object::Method(_) => 2u8,
+            it => return Err(format!("calling non-function: {}", it.inspect())),
+        }
+    };
 
-    if calling_obj.borrow().get_type() == CLOSURE {
-        call_closure(vm, calling_obj.clone(), arg_count)
-    } else if calling_obj.borrow().get_type() == NATIVE_FUNCTION {
-        call_native(vm, calling_obj.clone(), arg_count)
-    } else if calling_obj.borrow().get_type() == METHOD {
-        call_method(vm, calling_obj.clone(), arg_count)
-    } else {
-        return Err(format!("calling non-function. obj: {:?}", calling_obj.borrow()))
+    match obj_tag {
+        0 => call_closure(vm, vm.stack[top].clone(), arg_count),
+        1 => call_native  (vm, vm.stack[top].clone(), arg_count),
+        2 => call_method  (vm, vm.stack[top].clone(), arg_count),
+        _ => Err(format!("calling non-function")),
     }
 }
 
