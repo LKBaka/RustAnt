@@ -15,7 +15,7 @@ pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
             Object::Closure(_) => 0u8,
             Object::AntNativeFunction(_) => 1u8,
             Object::Method(_) => 2u8,
-            it => return Err(format!("calling non-function: {}", it.inspect())),
+            it => return Err(format!("calling non-function: {it:#?}")),
         }
     };
 
