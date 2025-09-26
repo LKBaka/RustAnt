@@ -52,7 +52,7 @@ clone_trait_object!(IStatement);
 #[derive(Debug)]
 pub struct Program {
     pub token: Token,
-    pub(crate) statements: Vec<Statement>,
+    pub statements: Vec<Statement>,
 }
 
 impl Clone for Program {
