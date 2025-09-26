@@ -10,7 +10,10 @@ use crate::{
     builtin::builtin_map::BUILTIN_MAP_INDEX,
     byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            Instructions, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE,
+            OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX,
+            OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL,
+            OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, make,
         },
         compiler::{
             compile_handlers::{
@@ -25,7 +28,8 @@ use crate::{
             constant_pool::CONSTANT_POOL_0_256,
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-        constants::FIELD_POOL, scope_info::ScopeInfo,
+        constants::FIELD_POOL,
+        scope_info::ScopeInfo,
     },
     obj_enum::object::Object,
     object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString},
@@ -172,8 +176,10 @@ impl Compiler {
     }
 
     pub fn new(file_name: Rc<str>) -> Self {
-        let main_scope: CompilationScope = CompilationScopeBuilder::default()
-            .build(ScopeInfo { file_name: file_name.clone(), scope_name: "__main__".into() });
+        let main_scope: CompilationScope = CompilationScopeBuilder::default().build(ScopeInfo {
+            file_name: file_name.clone(),
+            scope_name: "__main__".into(),
+        });
 
         let symbol_table = rc_ref_cell!(SymbolTable::new());
 
@@ -193,8 +199,10 @@ impl Compiler {
         constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
         file_name: Rc<str>,
     ) -> Self {
-        let main_scope = CompilationScopeBuilder::default()
-            .build(ScopeInfo { file_name: file_name.clone(), scope_name: "__main__".into() });
+        let main_scope = CompilationScopeBuilder::default().build(ScopeInfo {
+            file_name: file_name.clone(),
+            scope_name: "__main__".into(),
+        });
 
         Self {
             constants,
@@ -671,8 +679,7 @@ impl Compiler {
     pub fn enter_scope(&mut self, scope_info: ScopeInfo) {
         self.symbol_table = rc_ref_cell!(SymbolTable::with_outer(self.symbol_table.clone()));
 
-        let scope = CompilationScopeBuilder::default()
-            .build(scope_info);
+        let scope = CompilationScopeBuilder::default().build(scope_info);
 
         self.scopes.push(scope);
 
@@ -820,8 +827,7 @@ impl Compiler {
                 .iter()
                 .map(|scope| format!(
                     "file \"{}\", in {}",
-                    scope.scope_info.file_name,
-                    scope.scope_info.scope_name,
+                    scope.scope_info.file_name, scope.scope_info.scope_name,
                 ))
                 .collect::<Vec<String>>()
                 .join(&format!("\n{indent}"))
