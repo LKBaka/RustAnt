@@ -46,15 +46,17 @@ pub fn rrc_is_truthy(obj: &Rc<RefCell<Object>>) -> bool {
     } else if obj == &*ant_false {
         false
     } else if let Object::AntInt(obj) = obj {
-        !(obj.value == BigDecimal::from(0))
+        obj.value != BigDecimal::from(0)
     } else if let Object::AntDouble(obj) = obj {
-        !(obj.value == BigDecimal::from(0))
+        obj.value != BigDecimal::from(0)
     } else if let Object::AntNone(_) = obj {
         false
     } else if let Object::AntString(s) = obj {
         !s.value.is_empty()
     } else if let Object::AntArray(arr) = obj {
         !arr.items.is_empty()
+    } else if let Object::AntHashMap(map) = obj {
+        !map.map.is_empty()
     } else {
         false
     }

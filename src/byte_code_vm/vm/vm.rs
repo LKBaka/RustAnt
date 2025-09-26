@@ -164,7 +164,7 @@ impl Vm {
                 }
 
                 OP_POP => {
-                    self.pop();
+                    self.pop_unchecked_sp_no_return_value();
                 }
 
                 OP_ADD..=OP_NOTEQ => {
@@ -377,11 +377,6 @@ impl Vm {
 
                 OP_RETURN_VALUE => {
                     let return_value = self.pop();
-
-                    if self.frame_index == 1 {
-                        // 没栈帧可榨了 说明已经到了主栈帧 直接报错
-                        return Err(format!("cannot return outside function"));
-                    }
 
                     let frame = self.pop_frame(); // 弹出当前帧
 
@@ -728,6 +723,11 @@ impl Vm {
         self.sp -= 1;
 
         Some(result.clone())
+    }
+
+    #[inline(always)]
+    pub fn pop_unchecked_sp_no_return_value(&mut self) {
+        self.sp -= 1;
     }
 
     pub fn frames(&self) -> &Vec<Frame> {
