@@ -4,7 +4,7 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJECT},
         vm::{frame::Frame, vm::Vm},
-    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_method::MethodType, object::IAntObject}, rc_ref_cell
+    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_method::MethodType}, rc_ref_cell
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
@@ -21,8 +21,8 @@ pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
 
     match obj_tag {
         0 => call_closure(vm, vm.stack[top].clone(), arg_count),
-        1 => call_native  (vm, vm.stack[top].clone(), arg_count),
-        2 => call_method  (vm, vm.stack[top].clone(), arg_count),
+        1 => call_native(vm, vm.stack[top].clone(), arg_count),
+        2 => call_method(vm, vm.stack[top].clone(), arg_count),
         _ => Err(format!("calling non-function")),
     }
 }
@@ -130,6 +130,15 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
     };
 
     let free_count_usize = free_count as usize;
+
+    if free_count_usize == 0 {
+        let closure = Closure {
+            func: func.clone(),
+            free: rc_ref_cell!(vec![]),
+        };
+
+        return vm.push(rc_ref_cell!(Object::Closure(closure)))
+    }
 
     let mut free = vec![UNINIT_OBJECT.clone(); free_count_usize];
 

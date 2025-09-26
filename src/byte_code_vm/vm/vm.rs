@@ -38,8 +38,8 @@ use crate::{
     rc_ref_cell,
 };
 
-pub const STACK_SIZE: u16 = 2048;
-pub const GLOBALS_SIZE: u16 = 65535;
+pub const STACK_SIZE: usize = 2048;
+pub const GLOBALS_SIZE: usize = 65535;
 
 #[derive(Clone)]
 pub struct Vm {
@@ -73,8 +73,8 @@ impl Vm {
 
         Vm {
             constants: bytecode.constants,
-            stack: vec![uninit.clone(); STACK_SIZE as usize],
-            globals: rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]),
+            stack: vec![uninit.clone(); STACK_SIZE],
+            globals: rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE]),
             frames: vec![main_frame],
             frame_index: 1,
             sp: 0,
@@ -706,7 +706,7 @@ impl Vm {
 
     #[inline(always)]
     pub fn push(&mut self, obj: Rc<RefCell<Object>>) -> Result<(), String> {
-        if self.sp >= STACK_SIZE as usize {
+        if self.sp >= STACK_SIZE {
             return Err("Stack overflow".to_string());
         }
 
