@@ -13,6 +13,7 @@ pub mod ant_hash_map;
 pub mod ant_string;
 pub mod ant_method;
 pub mod ant_uninit;
+pub mod ant_i64;
 pub mod object;
 pub mod object_macro;
 mod test;

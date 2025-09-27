@@ -128,12 +128,20 @@ mod tests {
         let tests = vec![
             VmTestCase::new("[]".into(), vec![]),
             VmTestCase::new(
+                "[] + []".into(),
+                vec![],
+            ),
+            VmTestCase::new(
                 "[1, 2, 3]".into(),
                 vec![big_dec!(1), big_dec!(2), big_dec!(3)],
             ),
             VmTestCase::new(
                 "[1 + 2, 3 * 4, 5 + 6]".into(),
                 vec![big_dec!(3), big_dec!(12), big_dec!(11)],
+            ),
+            VmTestCase::new(
+                "[1, 2] + [3]".into(),
+                vec![big_dec!(1), big_dec!(2), big_dec!(3)],
             ),
         ];
 

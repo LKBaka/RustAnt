@@ -1,14 +1,6 @@
-use crate::token::token::Token;
-
-pub fn print_tokens(tokens: Vec<Token>) {
-    for token in tokens {
-        println!("{}", token.to_string());
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::token::{token::Token, utils::print_tokens};
+    use crate::token::token::Token;
 
     #[test]
     fn test_print_tokens() {
@@ -37,7 +29,7 @@ mod tests {
                 91,
             ),
             Token::new(
-                TokenType::Integer,
+                TokenType::IntegerBig,
                 String::from("1"),
                 "__test_print_tokens__".to_string(),
                 91,
@@ -45,6 +37,6 @@ mod tests {
             ),
         ]);
 
-        print_tokens(tokens);
+        println!("{:#?}", tokens)
     }
 }

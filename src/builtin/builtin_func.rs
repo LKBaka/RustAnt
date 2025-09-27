@@ -9,10 +9,7 @@ use bigdecimal::BigDecimal;
 
 use crate::{
     builtin::builtin_classes::{range_class::RANGE, result_class::RESULT}, obj_enum::object::Object, object::{
-        ant_int::AntInt,
-        ant_method::{Method, MethodType},
-        ant_string::AntString,
-        object::{IAntObject, INT, STRING},
+        ant_double::AntDouble, ant_int::AntInt, ant_method::{Method, MethodType}, ant_string::AntString, object::{IAntObject, DOUBLE, I64, INT, STRING}
     }, utils::run_command
 };
 
@@ -173,6 +170,54 @@ pub fn builtin_str(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, Str
     let s = args[0].borrow().clone();
 
     Ok(Some(Object::AntString(AntString::new(s.inspect()))))
+}
+
+pub fn builtin_double(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let n = args[0].borrow();
+
+    let expected_types: [&str; 3] = [
+        INT, I64, DOUBLE
+    ];
+
+    match &*n {
+        Object::AntI64(i) => Ok(Some(Object::AntDouble(AntDouble::from(
+            i.value
+        )))),
+        Object::AntInt(i) => Ok(Some(Object::AntDouble(AntDouble::from(
+            i.value.clone()
+        )))),
+        Object::AntDouble(d) => Ok(Some(Object::AntDouble(d.clone()))),
+
+        it => Err(format!(
+            "expected type {:#?}, got: {}",
+            expected_types, it.inspect()
+        ))
+    }
+}
+
+pub fn builtin_int(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let n = args[0].borrow();
+
+    let expected_types: [&str; 3] = [
+        INT, I64, DOUBLE
+    ];
+
+    match &*n {
+        Object::AntI64(i) => Ok(Some(Object::AntInt(AntInt::from(
+            i.value
+        )))),
+        Object::AntInt(i) => Ok(Some(Object::AntInt(AntInt::from(
+            i.value.clone()
+        )))),
+        Object::AntDouble(d) => Ok(Some(Object::AntInt(AntInt::from(
+            d.value.with_scale(0)
+        )))),
+
+        it => Err(format!(
+            "expected type {:#?}, got: {}",
+            expected_types, it.inspect()
+        ))
+    }
 }
 
 pub fn builtin_ok(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {

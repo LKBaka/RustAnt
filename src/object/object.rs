@@ -23,12 +23,14 @@ use crate::object::ant_native_function::AntNativeFunction;
 use crate::object::ant_none::AntNone;
 use crate::object::ant_string::AntString;
 use crate::object::ant_uninit::AntUninit;
+use crate::object::ant_i64::AntI64;
 
 pub type ObjectType = String;
 
 pub const ANY: &str = "Any";
 pub const OBJECT: &str = "Object";
 pub const INT: &str = "Int";
+pub const I64: &str = "i64";
 pub const DOUBLE: &str = "Double";
 pub const BOOLEAN: &str = "Boolean";
 pub const STRING: &str = "String";

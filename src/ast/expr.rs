@@ -1,20 +1,35 @@
 use enum_dispatch::enum_dispatch;
 
-use crate::{ast::{
-    ast::{IExpression, INode},
-    expressions::{
-        array_literal::ArrayLiteral, assignment_expression::AssignmentExpression,
-        boolean_literal::BooleanLiteral, call_expression::CallExpression,
-        class_member_expression::ClassMemberExpression, decorator::Decorator,
-        double_literal::DoubleLiteral, function_expression::FunctionExpression,
-        hash_literal::HashLiteral, identifier::Identifier, if_expression::{ElseIfExpression, IfExpression},
-        index_expression::IndexExpression, infix_expression::InfixExpression,
-        integer_literal::IntegerLiteral, none_literal::NoneLiteral,
-        object_member_expression::ObjectMemberExpression, prefix_expression::PrefixExpression,
-        return_expression::ReturnExpression, string_literal::StringLiteral,
-        test_print_expression::TestPrintExpression, tuple_expression::TupleExpression,
+use crate::{
+    ast::{
+        ast::{IExpression, INode},
+        expressions::{
+            array_literal::ArrayLiteral,
+            assignment_expression::AssignmentExpression,
+            boolean_literal::BooleanLiteral,
+            call_expression::CallExpression,
+            class_member_expression::ClassMemberExpression,
+            decorator::Decorator,
+            double_literal::DoubleLiteral,
+            function_expression::FunctionExpression,
+            hash_literal::HashLiteral,
+            identifier::Identifier,
+            if_expression::{ElseIfExpression, IfExpression},
+            index_expression::IndexExpression,
+            infix_expression::InfixExpression,
+            integer_literal::IntegerLiteral,
+            integer64_literal::Int64Literal,
+            none_literal::NoneLiteral,
+            object_member_expression::ObjectMemberExpression,
+            prefix_expression::PrefixExpression,
+            return_expression::ReturnExpression,
+            string_literal::StringLiteral,
+            test_print_expression::TestPrintExpression,
+            tuple_expression::TupleExpression,
+        },
     },
-}, token::token::Token};
+    token::token::Token,
+};
 
 #[enum_dispatch(IExpression)]
 #[derive(Clone, Debug)]
@@ -33,6 +48,7 @@ pub enum Expression {
     IndexExpression,
     InfixExpression,
     IntegerLiteral,
+    Int64Literal,
     NoneLiteral,
     ObjectMemberExpression,
     PrefixExpression,
@@ -68,6 +84,7 @@ macro_rules! auto_expr {
             Expression::TestPrintExpression(expr) => expr.$method(),
             Expression::TupleExpression(expr) => expr.$method(),
             Expression::ElseIfExpression(expr) => expr.$method(),
+            Expression::Int64Literal(expr) => expr.$method(),
         }
     };
 }

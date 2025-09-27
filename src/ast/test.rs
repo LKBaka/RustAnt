@@ -14,7 +14,7 @@ use crate::token::token_type::TokenType;
         let nodes = vec![
             create_expression_statement(Expression::IntegerLiteral(create_integer_literal(
                 Token::new(
-                    TokenType::Integer,
+                    TokenType::IntegerBig,
                     "91".to_string(),
                     "__test_print_nodes__".to_string(),
                     1, 1
@@ -23,7 +23,7 @@ use crate::token::token_type::TokenType;
             ))),
             create_expression_statement(Expression::IntegerLiteral(create_integer_literal(
                 Token::new(
-                    TokenType::Integer,
+                    TokenType::IntegerBig,
                     "78".to_string(),
                     "__test_print_nodes__".to_string(),
                     1, 1

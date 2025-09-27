@@ -9,9 +9,9 @@ fn test_lexer() {
     let file: &'static str = "__test_lexer__";
 
     let expected_tokens = vec![
-    Token::new(TokenType::Integer, "1".into(), file.into(), 1, 1),
+    Token::new(TokenType::IntegerBig, "1".into(), file.into(), 1, 1),
     Token::new(TokenType::Eq, "==".into(), file.into(), 1, 3),
-    Token::new(TokenType::Integer, "2".into(), file.into(), 1, 6),
+    Token::new(TokenType::IntegerBig, "2".into(), file.into(), 1, 6),
     ];
 
     let code = "1 == 2";
@@ -100,7 +100,6 @@ fn test_lexer_print_tokens() {
 fn test_lexer_comments() {
     use super::lexer::Lexer;
     use crate::token::token_type::TokenType;
-    use crate::token::utils::print_tokens;
     use crate::utils::assert_eq;
 
     let mut l = Lexer::new(
@@ -109,17 +108,17 @@ fn test_lexer_comments() {
     );
     let tokens = l.get_tokens();
 
-    let on_failure_function = || print_tokens(tokens.clone());
+    let on_failure_function = || println!("{:#?}", tokens);
     let expected_token_types = vec![
         TokenType::Let,
         TokenType::Ident,
         TokenType::Assign,
-        TokenType::Integer,
+        TokenType::IntegerBig,
         TokenType::Semicolon,
         TokenType::Let,
         TokenType::Ident,
         TokenType::Assign,
-        TokenType::Integer,
+        TokenType::IntegerBig,
         TokenType::Semicolon,
     ];
 

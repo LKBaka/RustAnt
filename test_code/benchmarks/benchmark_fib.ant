@@ -1,9 +1,9 @@
 func fib(n) {
-    if n < 2 {
+    if n < 2i64 {
         n
     } else {
-        fib(n - 1) + fib(n - 2)
+        fib(n - 1i64) + fib(n - 2i64)
     }
 }
 
-print(fib(35));
+print(fib(40i64));

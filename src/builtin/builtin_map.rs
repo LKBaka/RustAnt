@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 
 use crate::{
     builtin::builtin_func::{
-        builtin_clear, builtin_copy, builtin_create_method, builtin_err, builtin_force_exit, builtin_id, builtin_len, builtin_now, builtin_obj_info, builtin_ok, builtin_panic, builtin_print, builtin_range, builtin_shell, builtin_str
+        builtin_clear, builtin_copy, builtin_create_method, builtin_double, builtin_err, builtin_force_exit, builtin_id, builtin_int, builtin_len, builtin_now, builtin_obj_info, builtin_ok, builtin_panic, builtin_print, builtin_range, builtin_shell, builtin_str
     },
     obj_enum::object::Object,
     object::
@@ -74,11 +74,22 @@ lazy_static! {
             Object::AntNativeFunction(create_ant_native_function(None, builtin_panic)),
         );
 
+        
         m.insert(
             "str".into(),
             Object::AntNativeFunction(create_ant_native_function(None, builtin_str)),
         );
-
+        
+        m.insert(
+            "double".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_double)),
+        );
+        
+        m.insert(
+            "int".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_int)),
+        );
+        
         m.insert(
             "Ok".into(),
             Object::AntNativeFunction(create_ant_native_function(None, builtin_ok)),
@@ -106,6 +117,8 @@ lazy_static! {
             "range".into(),
             "panic".into(),
             "str".into(),
+            "int".into(),
+            "double".into(),
             "Ok".into(),
             "Err".into(),
         ]

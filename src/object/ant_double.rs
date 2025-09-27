@@ -31,6 +31,15 @@ impl From<i32> for AntDouble {
     }
 }
 
+impl From<i64> for AntDouble {
+    fn from(value: i64) -> Self {
+        AntDouble {
+            id: next_id(),
+            value: BigDecimal::from(value),
+        }
+    }
+}
+
 impl From<f64> for AntDouble {
     fn from(value: f64) -> Self {
         AntDouble {

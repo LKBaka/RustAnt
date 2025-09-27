@@ -61,6 +61,15 @@ impl From<i32> for AntInt {
     }
 }
 
+impl From<i64> for AntInt {
+    fn from(value: i64) -> Self {
+        AntInt {
+            id: next_id(),
+            value: BigDecimal::from(value),
+        }
+    }
+}
+
 impl From<usize> for AntInt {
     fn from(value: usize) -> Self {
         AntInt {
