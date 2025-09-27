@@ -121,7 +121,7 @@ pub fn call_method(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
 }
 
 pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<(), String> {
-    let constant = vm.constants[const_index as usize].clone();
+    let constant = &vm.constants[const_index as usize];
     let constant_borrow = constant.borrow();
 
     let func = match &*constant_borrow {
@@ -137,6 +137,7 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
             free: rc_ref_cell!(vec![]),
         };
 
+        drop(constant_borrow);
         return vm.push(rc_ref_cell!(Object::Closure(closure)))
     }
 
@@ -153,5 +154,6 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
         free: rc_ref_cell!(free),
     };
 
+    drop(constant_borrow);
     vm.push(rc_ref_cell!(Object::Closure(closure)))
 }

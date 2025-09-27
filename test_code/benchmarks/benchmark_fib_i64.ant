@@ -1,0 +1,9 @@
+func fib(n) {
+    if n < 2i64 {
+        n
+    } else {
+        fib(n - 1i64) + fib(n - 2i64)
+    }
+}
+
+print(fib(35i64));

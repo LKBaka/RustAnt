@@ -33,11 +33,14 @@ pub fn is_truthy(obj: &Object) -> bool {
         !s.value.is_empty()
     } else if let Object::AntArray(arr) = obj {
         !arr.items.is_empty()
+    } else if let Object::AntHashMap(map) = obj {
+        !map.map.is_empty()
     } else {
         false
     }
 }
 
+#[inline(always)]
 pub fn rrc_is_truthy(obj: &Rc<RefCell<Object>>) -> bool {
     let obj = &*obj.borrow();
 

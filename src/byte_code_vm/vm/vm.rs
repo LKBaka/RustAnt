@@ -36,7 +36,7 @@ use crate::{
     object::{
         ant_closure::Closure,
         ant_compiled_function::CompiledFunction,
-        object::{IAntObject, UNINIT},
+        object::IAntObject,
         utils::rrc_is_truthy,
     },
     rc_ref_cell,
@@ -168,7 +168,7 @@ impl Vm {
                 }
 
                 OP_POP => {
-                    self.pop_unchecked_sp_no_return_value();
+                    self.pop_no_return_value();
                 }
 
                 OP_ADD..=OP_NOTEQ => {
@@ -300,7 +300,7 @@ impl Vm {
                         let obj: &Rc<RefCell<Object>> =
                             &self.globals.borrow_mut()[global_index as usize];
 
-                        if obj.borrow().get_type() != UNINIT {
+                        if &*obj.borrow() != &*UNINIT_OBJECT {
                             Some(obj.clone())
                         } else {
                             None
@@ -728,7 +728,11 @@ impl Vm {
     }
 
     #[inline(always)]
-    pub fn pop_unchecked_sp_no_return_value(&mut self) {
+    pub fn pop_no_return_value(&mut self) {
+        if self.sp == 0 {
+            return;
+        }
+
         self.sp -= 1;
     }
 
