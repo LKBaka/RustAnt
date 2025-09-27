@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 use crate::{
-    byte_code_vm::constants::NONE_OBJ,
+    byte_code_vm::{constants::NONE_OBJ, vm::vm::Vm},
     obj_enum::object::Object,
     object::{
         ant_class::AntClass, ant_int::AntInt, ant_method::{Method, MethodType}, ant_native_function::create_ant_native_function, object::IAntObject
@@ -12,7 +12,10 @@ use crate::{
 
 pub static RANGE: Lazy<AntClass> = Lazy::new(|| {
     AntClass::from({
-        let next = |args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>| {
+        let next = |
+            _vm: &mut Vm,
+            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
+        | {
             let mut o = args[0].borrow_mut();
 
             let me = match &mut *o {
