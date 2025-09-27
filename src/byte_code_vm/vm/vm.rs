@@ -579,8 +579,6 @@ impl Vm {
                             continue;
                         }
 
-                        println!("{:#?}, sp: {}", &self.stack[0..self.sp + 3], self.sp);
-
                         return Err(format!(
                             "expected an class to get field, got: {}",
                             o_borrow.inspect()
