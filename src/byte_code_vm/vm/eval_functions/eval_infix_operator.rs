@@ -10,7 +10,7 @@ use crate::{
     },
     obj_enum::object::Object,
     object::{
-        ant_array::AntArray, ant_double::AntDouble, ant_int::AntInt, ant_string::AntString, object::{IAntObject, NULL}
+        ant_array::AntArray, ant_double::AntDouble, ant_i64::AntI64, ant_int::AntInt, ant_string::AntString, object::{IAntObject, NULL}
     },
 };
 
@@ -22,6 +22,9 @@ fn add_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<O
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => {
             Ok(Object::AntInt(AntInt::from(&l.value + &r.value)))
+        }
+        (Object::AntI64(l), Object::AntI64(r)) => {
+            Ok(Object::AntI64(AntI64::from(&l.value + &r.value)))
         }
         (Object::AntDouble(l), Object::AntDouble(r)) => {
             Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value)))
@@ -61,6 +64,9 @@ fn subtract_native(
         (Object::AntInt(l), Object::AntInt(r)) => {
             Ok(Object::AntInt(AntInt::from(&l.value - &r.value)))
         }
+        (Object::AntI64(l), Object::AntI64(r)) => {
+            Ok(Object::AntI64(AntI64::from(&l.value - &r.value)))
+        }
         (Object::AntDouble(l), Object::AntDouble(r)) => {
             Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value)))
         }
@@ -89,6 +95,9 @@ fn multiply_native(
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => {
             Ok(Object::AntInt(AntInt::from(&l.value * &r.value)))
+        }
+        (Object::AntI64(l), Object::AntI64(r)) => {
+            Ok(Object::AntI64(AntI64::from(&l.value * &r.value)))
         }
         (Object::AntDouble(l), Object::AntDouble(r)) => {
             Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value)))
@@ -119,6 +128,19 @@ fn divide_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Resul
             }
 
             let result = &l.value / &r.value;
+            if result.is_integer() {
+                Ok(Object::AntInt(AntInt::from(result)))
+            } else {
+                Ok(Object::AntDouble(AntDouble::from(result)))
+            }
+        }
+
+        (Object::AntI64(l), Object::AntI64(r)) => {
+            if r.value == 0 {
+                return Err("division by zero".to_string());
+            }
+
+            let result = BigDecimal::from(&l.value) / BigDecimal::from(&r.value);
             if result.is_integer() {
                 Ok(Object::AntInt(AntInt::from(result)))
             } else {
@@ -171,6 +193,7 @@ fn gt_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
 
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
+        (Object::AntI64(l), Object::AntI64(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
         (Object::AntDouble(l), Object::AntDouble(r)) => {
             Ok(native_boolean_to_object(&l.value > &r.value))
         }
@@ -205,6 +228,9 @@ fn eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
 
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => {
+            Ok(native_boolean_to_object(&l.value == &r.value))
+        }
+        (Object::AntI64(l), Object::AntI64(r)) => {
             Ok(native_boolean_to_object(&l.value == &r.value))
         }
         (Object::AntDouble(l), Object::AntDouble(r)) => {

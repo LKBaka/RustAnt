@@ -10,10 +10,7 @@ use crate::{
     builtin::builtin_map::BUILTIN_MAP_INDEX,
     byte_code_vm::{
         code::code::{
-            Instructions, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE,
-            OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX,
-            OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL,
-            OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, make,
+            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
@@ -25,14 +22,14 @@ use crate::{
                 compile_prefix_expression::compile_prefix_expression,
                 compile_while_statement::compile_while_statement,
             },
-            constant_pool::CONSTANT_POOL_0_256,
+            constant_pool::{CONSTANT_POOL_0_256, I64_CONSTANT_POOL_0_256},
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
         constants::FIELD_POOL,
         scope_info::ScopeInfo,
     },
     obj_enum::object::Object,
-    object::{ant_double::AntDouble, ant_int::AntInt, ant_string::AntString},
+    object::{ant_double::AntDouble, ant_i64::AntI64, ant_int::AntInt, ant_string::AntString},
     rc_ref_cell,
     token::token::Token,
 };
@@ -233,6 +230,22 @@ impl Compiler {
                     CONSTANT_POOL_0_256[integer_literal.value.to_usize().unwrap()].clone()
                 } else {
                     Object::AntInt(AntInt::from(integer_literal.value))
+                };
+
+                let constant_index = self.add_constant(integer);
+                self.emit(OP_CONSTANTS, vec![constant_index as u16]);
+
+                Ok(())
+            }
+
+            Expression::Int64Literal(integer_literal) => {
+                // 常量池优化
+                let integer = if integer_literal.value > 0
+                    && integer_literal.value < 257
+                {
+                    I64_CONSTANT_POOL_0_256[integer_literal.value as usize].clone()
+                } else {
+                    Object::AntI64(AntI64::from(integer_literal.value))
                 };
 
                 let constant_index = self.add_constant(integer);

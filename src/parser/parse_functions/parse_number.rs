@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use crate::ast::expr::Expression;
 use crate::ast::expressions::double_literal::create_double_literal;
+use crate::ast::expressions::integer64_literal::create_int64_literal;
 use crate::ast::expressions::integer_literal::create_integer_literal;
 use crate::parser::parser::Parser;
 use crate::token::token_type::TokenType;
@@ -43,4 +44,22 @@ pub fn parse_number(parser: &mut Parser) -> Option<Expression> {
     let value = parse_result.unwrap();
 
     return Some(Expression::DoubleLiteral(create_double_literal(token, value)));
+}
+
+pub fn parse_number_i64(parser: &mut Parser) -> Option<Expression> {
+    let token = parser.cur_token.clone();
+
+    let parse_result = i64::from_str(&parser.cur_token.value);
+    if let Err(err) = parse_result {
+        parser.push_err(format!(
+            "could not parse '{}' as int64: {}",
+            parser.cur_token.value.clone(),
+            err
+        ));
+        return None;
+    }
+
+    let value = parse_result.unwrap();
+
+    return Some(Expression::Int64Literal(create_int64_literal(token, value)));
 }

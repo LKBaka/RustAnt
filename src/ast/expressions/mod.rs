@@ -19,3 +19,4 @@ pub mod tuple_expression;
 pub mod none_literal;
 pub mod hash_literal;
 pub mod decorator;
+pub mod integer64_literal;

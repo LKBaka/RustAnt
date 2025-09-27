@@ -3,7 +3,8 @@ use phf::phf_map;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TokenType {
     Nonsense,
-    Integer,
+    IntegerBig,
+    Integer64,
     String,
     None,
     Colon,
@@ -129,7 +130,8 @@ impl TokenType {
             TokenType::Illegal => "Illegal",
             TokenType::Ident => "Identifier",
             TokenType::Nonsense => "Nonsense",
-            TokenType::Integer => "Integer",
+            TokenType::IntegerBig => "Integer",
+            TokenType::Integer64 => "Integer64",
             TokenType::String => "String",
             TokenType::GetClassMember => "::",
             TokenType::TestPrint => "TestPrint",
@@ -203,3 +205,8 @@ pub static TOKEN_TYPE_MAP: phf::Map<&'static str, TokenType> = phf_map! {
     "#" => TokenType::NumberSign,
     "\0" => TokenType::Eof,
 };
+
+pub enum TokenNumType {
+    Int64(String),
+    Big(String)
+}

@@ -1,15 +1,16 @@
 #[cfg(target_arch = "wasm32")]
 use crate::println;
 
+#[cfg(feature = "debug")]
+use crate::byte_code_vm::constants::FIELD_POOL;
+
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     byte_code_vm::{
         compiler::{
             compile_error::CompileErrorBox, symbol_table::symbol_table::SymbolTable, utils::compile_with_state
-        },
-        constants::FIELD_POOL,
-        vm::vm::Vm,
+        }, vm::vm::Vm
     },
     obj_enum::object::Object,
     object::ant_string::AntString,

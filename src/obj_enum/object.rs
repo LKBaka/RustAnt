@@ -12,6 +12,7 @@ use crate::object::ant_closure::Closure;
 use crate::object::ant_compiled_function::CompiledFunction;
 use crate::object::ant_double::AntDouble;
 use crate::object::ant_error::AntError;
+use crate::object::ant_i64::AntI64;
 use crate::object::ant_int::AntInt;
 use crate::object::ant_method::Method;
 use crate::object::ant_native_function::AntNativeFunction;
@@ -40,6 +41,7 @@ pub enum Object {
     AntNone,
     AntString,
     AntUninit,
+    AntI64,
 }
 
 impl AsAnyMut for Object {
@@ -54,6 +56,10 @@ impl Hash for Object {
             Object::AntInt(ant_int) => {
                 // 使用AntInt特定的哈希逻辑
                 ant_int.value.hash(state);
+            },
+            Object::AntI64(ant_i64) => {
+                // 使用AntI64特定的哈希逻辑
+                ant_i64.value.hash(state);
             },
             Object::AntString(ant_string) => {
                 // 使用AntString特定的哈希逻辑

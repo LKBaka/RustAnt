@@ -2,7 +2,7 @@ use unicode_properties::UnicodeEmoji;
 
 use crate::constants::*;
 use crate::token::token::Token;
-use crate::token::token_type::{TOKEN_TYPE_MAP, TokenType};
+use crate::token::token_type::{TokenNumType, TokenType, TOKEN_TYPE_MAP};
 
 pub struct Lexer {
     code: String,
@@ -43,7 +43,17 @@ impl Lexer {
     }
 
     fn peek_char(&self) -> char {
-        self.code_vec[self.next_pos]
+        match self.code_vec.get(self.next_pos) {
+            Some(it) => it.clone(),
+            None => NULL_CHAR
+        }
+    }
+
+    fn get_char(&self, pos: usize) -> char {
+        match self.code_vec.get(pos) {
+            Some(it) => it.clone(),
+            None => NULL_CHAR
+        }
     }
 
     fn is_valid_char(&self, c: char) -> bool {
@@ -94,18 +104,31 @@ impl Lexer {
             .concat()
     }
 
-    fn read_number(&mut self) -> String {
+    fn read_number(&mut self) -> TokenNumType {
         let start = self.pos;
 
         while self.cur_char.is_ascii_digit() {
             self.read_char();
         }
 
-        self.code_vec[start..self.pos]
+        let code = self.code_vec[start..self.pos]
             .iter()
             .map(|ch| ch.to_string())
             .collect::<Vec<String>>()
-            .concat()
+            .concat();
+
+        if 
+            self.peek_char() == '6' &&
+            self.get_char(self.next_pos + 1) == '4'
+        {
+            self.read_char();
+            self.read_char();
+            self.read_char();
+            
+            TokenNumType::Int64(code)
+        } else {
+            TokenNumType::Big(code)
+        }
     }
 
     fn read_string(&mut self) -> String {
@@ -234,8 +257,17 @@ impl Lexer {
                     return token;
                 } else if self.cur_char.is_ascii_digit() {
                     let num = self.read_number();
-                    token.token_type = TokenType::Integer;
-                    token.value = num;
+                    match num {
+                        TokenNumType::Big(num) => {
+                            token.token_type = TokenType::IntegerBig;
+                            token.value = num;
+                        }
+
+                        TokenNumType::Int64(num) => {
+                            token.token_type = TokenType::Integer64;
+                            token.value = num;
+                        }
+                    }
 
                     return token;
                 }
@@ -283,7 +315,6 @@ impl Lexer {
 
 #[test]
 fn test_lexer() {
-    use crate::token::utils::print_tokens;
     use crate::utils::assert_eq;
 
     let mut l = Lexer::new(
@@ -292,19 +323,19 @@ fn test_lexer() {
     );
     let tokens = l.get_tokens();
 
-    let on_failure_function = || print_tokens(tokens.clone());
+    let on_failure_function = || println!("{:#?}", tokens);
     let expected_token_types = vec![
         TokenType::LBrace,
         TokenType::Let,
         TokenType::Ident,
         TokenType::Assign,
-        TokenType::Integer,
+        TokenType::IntegerBig,
         TokenType::Plus,
-        TokenType::Integer,
+        TokenType::IntegerBig,
         TokenType::Asterisk,
-        TokenType::Integer,
+        TokenType::IntegerBig,
         TokenType::Slash,
-        TokenType::Integer,
+        TokenType::IntegerBig,
         TokenType::RBrace,
     ];
 
@@ -320,7 +351,6 @@ fn test_lexer() {
 
 #[test]
 fn test_lexer_unicode() {
-    use crate::token::utils::print_tokens;
     use crate::utils::assert_eq;
 
     let mut l = Lexer::new(
@@ -329,7 +359,7 @@ fn test_lexer_unicode() {
     );
     let tokens = l.get_tokens();
 
-    let on_failure_function = || print_tokens(tokens.clone());
+    let on_failure_function = || println!("{:#?}", tokens);
     let expected_token_types = vec![
         TokenType::Let,
         TokenType::Ident,
@@ -354,7 +384,6 @@ fn test_lexer_unicode() {
 
 #[test]
 fn test_lexer_comment() {
-    use crate::token::utils::print_tokens;
     use crate::utils::assert_eq;
 
     let mut l = Lexer::new(
@@ -363,7 +392,7 @@ fn test_lexer_comment() {
     );
     let tokens = l.get_tokens();
 
-    let on_failure_function = || print_tokens(tokens.clone());
+    let on_failure_function = || println!("{:#?}", tokens);
     let expected_token_types = vec![TokenType::Comment];
 
     // 验证词法单元
@@ -378,7 +407,6 @@ fn test_lexer_comment() {
 
 #[test]
 fn test_lexer_test_print_token() {
-    use crate::token::utils::print_tokens;
     use crate::utils::assert_eq;
 
     let mut l = Lexer::new(
@@ -387,7 +415,7 @@ fn test_lexer_test_print_token() {
     );
     let tokens = l.get_tokens();
 
-    let on_failure_function = || print_tokens(tokens.clone());
+    let on_failure_function = || println!("{:#?}", tokens);
     let expected_token_types = vec![TokenType::TestPrint, TokenType::Ident];
 
     // 验证词法单元

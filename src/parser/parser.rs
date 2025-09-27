@@ -29,7 +29,7 @@ use crate::parser::parse_functions::parse_ident::parse_ident;
 use crate::parser::parse_functions::parse_if_expression::parse_if_expression;
 use crate::parser::parse_functions::parse_infix_expression::parse_infix_expression;
 use crate::parser::parse_functions::parse_let_statement::parse_let_statement;
-use crate::parser::parse_functions::parse_number::parse_number;
+use crate::parser::parse_functions::parse_number::{parse_number, parse_number_i64};
 use crate::parser::parse_functions::parse_string::parse_string;
 use crate::parser::precedence::Precedence::Lowest;
 
@@ -51,7 +51,7 @@ pub struct ParseError {
 impl Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
-            f, "{} at line: {}, at column: {}, at file: {}",
+            f, "{}\n    (at line: {}, at column: {}, at file: {})",
             self.message, self.token.line, self.token.column, self.token.file
         )
     }
@@ -116,7 +116,10 @@ impl Parser {
             .insert(TokenType::Ident, parse_ident);
         parser
             .prefix_parse_fn_map
-            .insert(TokenType::Integer, parse_number);
+            .insert(TokenType::IntegerBig, parse_number);
+        parser
+            .prefix_parse_fn_map
+            .insert(TokenType::Integer64, parse_number_i64);
         parser
             .prefix_parse_fn_map
             .insert(TokenType::BoolTrue, parse_boolean);
