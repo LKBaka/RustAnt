@@ -5,7 +5,7 @@ use crate::{
     object::{ant_closure::Closure, ant_compiled_function::CompiledFunction},
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct Frame {
     pub closure: Closure,
     pub ip: isize,

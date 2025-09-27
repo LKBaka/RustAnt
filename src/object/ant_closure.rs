@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::hash::{Hash, Hasher};
 
 use crate::impl_object;
 use crate::obj_enum::object::Object;
@@ -11,6 +12,13 @@ use crate::object::object::{CLOSURE, IAntObject, ObjectType};
 pub struct Closure {
     pub func: CompiledFunction,
     pub free: Rc<RefCell<Vec<Object>>>,
+}
+
+impl Hash for Closure {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.func.hash(state);
+        self.free.borrow().hash(state);
+    }
 }
 
 impl IAntObject for Closure {

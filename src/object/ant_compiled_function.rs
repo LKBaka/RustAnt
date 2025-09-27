@@ -7,6 +7,7 @@ use crate::impl_object;
 use crate::obj_enum::object::Object;
 use crate::object::object::{COMPILED_FUNCTION, IAntObject, ObjectType};
 
+#[derive(Eq, Hash)]
 pub struct CompiledFunction {
     #[cfg(feature = "debug")]
     pub id: usize,

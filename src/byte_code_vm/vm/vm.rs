@@ -1,4 +1,8 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::HashSet,
+    rc::Rc,
+};
 
 #[cfg(feature = "debug")]
 use crate::object::id_counter::next_id;
@@ -732,19 +736,36 @@ impl Vm {
         &self.frames
     }
 
-    pub fn traceback_string(&self) -> String {
+    pub fn traceback_string(&mut self) -> String {
         let indent = "  ";
+
+        let s = self
+            .frames
+            .iter()
+            .map(|f| {
+                format!(
+                    "file \"{}\", in {}. (at instruction position {})",
+                    f.closure.func.scope_info.file_name, f.closure.func.scope_info.scope_name, f.ip
+                )
+            })
+            .collect::<Vec<String>>();
+
+        let l = s.len();
+
+        let mut seen = HashSet::new();
+        let s_unique: Vec<String> = s
+            .into_iter()
+            .filter(|item| seen.insert(item.clone()))
+            .collect();
 
         format!(
             "traceback (most recent call last):\n{indent}{}",
-            self.frames
-                .iter()
-                .map(|f| format!(
-                    "file \"{}\", in {}. (at instruction position {})",
-                    f.closure.func.scope_info.file_name, f.closure.func.scope_info.scope_name, f.ip
-                ))
-                .collect::<Vec<String>>()
-                .join(&format!("\n{indent}"))
+            if l - s_unique.len() != 0 {
+                s_unique.join(&format!("\n{indent}")) +
+                &format!("\n... other {} call stacks", l - s_unique.len())
+            } else {
+                s_unique.join(&format!("\n{indent}"))
+            }
         )
     }
 }
