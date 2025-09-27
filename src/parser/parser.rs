@@ -8,8 +8,10 @@ use crate::constants::NULL_CHAR;
 use crate::parser::parse_functions::parse_array_literal::parse_array_literal;
 use crate::parser::parse_functions::parse_assignment_expression::parse_assignment_expression;
 use crate::parser::parse_functions::parse_boolean::parse_boolean;
+use crate::parser::parse_functions::parse_break::parse_break;
 use crate::parser::parse_functions::parse_call_expression::parse_call_expression;
 use crate::parser::parse_functions::parse_class_member_expression::parse_class_member_expression;
+use crate::parser::parse_functions::parse_continue::parse_continue;
 use crate::parser::parse_functions::parse_decorator::parse_decorator;
 use crate::parser::parse_functions::parse_hash_literal::parse_hash_literal;
 use crate::parser::parse_functions::parse_index_expression::parse_index_expression;
@@ -159,6 +161,12 @@ impl Parser {
         parser
             .prefix_parse_fn_map
             .insert(TokenType::NumberSign, parse_decorator);
+        parser
+            .prefix_parse_fn_map
+            .insert(TokenType::Break, parse_break);
+        parser
+            .prefix_parse_fn_map
+            .insert(TokenType::Continue, parse_continue);
         parser
             .prefix_parse_fn_map
             .insert(TokenType::TestPrint, parse_test_print_expression);

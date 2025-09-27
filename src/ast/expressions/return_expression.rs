@@ -18,7 +18,7 @@ impl INode for ReturnExpression {
     }
 
     fn to_string(&self) -> String {
-        self.value.to_string()
+        format!("return {}", self.value.to_string())
     }
 }
 

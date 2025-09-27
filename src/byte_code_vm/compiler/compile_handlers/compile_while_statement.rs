@@ -34,10 +34,20 @@ pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<()
 
     compiler.emit(OP_JUMP, vec![start_ip as u16]);
 
-    let jump_not_truthy_to = compiler.current_instructions().borrow().len();
+    let while_loop_end = compiler.current_instructions().borrow().len() as u16;
 
     // 回填 OP_JUMP_NOT_TRUTHY 的 操作数
-    compiler.change_operand(jump_not_truthy_command_pos, jump_not_truthy_to as u16);
+    compiler.change_operand(jump_not_truthy_command_pos, while_loop_end);
+
+    // 回填 break 的操作数
+    for pos in compiler.break_command_pos.clone() {
+        compiler.change_operand(pos, while_loop_end);
+    }
+
+    // 回填 continue 的操作数
+    for pos in compiler.continue_command_pos.clone() {
+        compiler.change_operand(pos, start_ip as u16);
+    }
 
     compiler.emit(OP_NOP, vec![]);
 

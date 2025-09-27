@@ -10,7 +10,7 @@ use crate::{
     builtin::builtin_map::BUILTIN_MAP_INDEX,
     byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
         },
         compiler::{
             compile_handlers::{
@@ -25,7 +25,7 @@ use crate::{
             constant_pool::{CONSTANT_POOL_0_256, I64_CONSTANT_POOL_0_256},
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-        constants::FIELD_POOL,
+        constants::{FAKE_OFFSET_JUMP, FIELD_POOL},
         scope_info::ScopeInfo,
     },
     obj_enum::object::Object,
@@ -155,6 +155,9 @@ impl Display for CompileError {
 pub struct Compiler {
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 
+    pub break_command_pos: Vec<usize>,
+    pub continue_command_pos: Vec<usize>,
+
     pub symbol_table: Rc<RefCell<SymbolTable>>,
 
     pub scopes: Vec<CompilationScope>,
@@ -184,6 +187,8 @@ impl Compiler {
 
         Self {
             constants: rc_ref_cell!(vec![]),
+            break_command_pos: vec![],
+            continue_command_pos: vec![],
             symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
@@ -203,6 +208,8 @@ impl Compiler {
 
         Self {
             constants,
+            break_command_pos: vec![],
+            continue_command_pos: vec![],
             symbol_table,
             scope_index: 0,
             scopes: vec![main_scope],
@@ -455,6 +462,20 @@ impl Compiler {
                 let field_index = self.add_field(&field.value) as u16;
 
                 self.emit(OP_GET_FIELD, vec![field_index]);
+
+                Ok(())
+            }
+
+            Expression::BreakExpression(_) => {
+                let pos = self.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
+                self.break_command_pos.push(pos);
+
+                Ok(())
+            }
+
+            Expression::ContinueExpression(_) => {
+                let pos = self.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
+                self.continue_command_pos.push(pos);
 
                 Ok(())
             }

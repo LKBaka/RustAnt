@@ -66,6 +66,8 @@ pub enum TokenType {
     TestPrint,
     Use,
     NumberSign, // #
+    Break,
+    Continue,
     Eof,
 }
 
@@ -139,6 +141,8 @@ impl TokenType {
             TokenType::None => "None",
             TokenType::Use => "Use",
             TokenType::NumberSign => "#",
+            TokenType::Break => "Break",
+            TokenType::Continue => "Continue",
         }
     }
 }
@@ -203,6 +207,8 @@ pub static TOKEN_TYPE_MAP: phf::Map<&'static str, TokenType> = phf_map! {
     "NONE" => TokenType::None,
     "USE" => TokenType::Use,
     "#" => TokenType::NumberSign,
+    "BREAK" => TokenType::Break,
+    "CONTINUE" => TokenType::Continue,
     "\0" => TokenType::Eof,
 };
 
