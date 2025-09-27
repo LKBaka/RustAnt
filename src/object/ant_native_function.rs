@@ -2,6 +2,7 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use crate::byte_code_vm::vm::vm::Vm;
 use crate::impl_object;
 use crate::obj_enum::object::Object;
 use crate::object::id_counter::next_id;
@@ -9,7 +10,7 @@ use crate::object::object::{IAntObject, NATIVE_FUNCTION, ObjectType};
 
 use super::type_hint::TypeHintMap;
 
-pub type NativeFunction = fn(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String>;
+pub type NativeFunction = fn(vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String>;
 
 #[derive(Clone, Eq)]
 pub struct AntNativeFunction {

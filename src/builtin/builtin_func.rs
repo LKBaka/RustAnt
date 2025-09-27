@@ -8,12 +8,12 @@ use std::{
 use bigdecimal::BigDecimal;
 
 use crate::{
-    builtin::builtin_classes::{range_class::RANGE, result_class::RESULT}, obj_enum::object::Object, object::{
+    builtin::builtin_classes::{range_class::RANGE, result_class::RESULT}, byte_code_vm::vm::vm::Vm, obj_enum::object::Object, object::{
         ant_double::AntDouble, ant_int::AntInt, ant_method::{Method, MethodType}, ant_string::AntString, object::{IAntObject, DOUBLE, I64, INT, STRING}
     }, utils::run_command
 };
 
-pub fn builtin_print(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_print(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     #[cfg(target_arch = "wasm32")]
@@ -24,7 +24,7 @@ pub fn builtin_print(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, S
     Ok(None)
 }
 
-pub fn builtin_len(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_len(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     match &*obj {
@@ -39,25 +39,25 @@ pub fn builtin_len(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, Str
     }
 }
 
-pub fn builtin_copy(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_copy(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0].borrow().clone();
 
     Ok(Some(obj))
 }
 
-pub fn builtin_id(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_id(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     Ok(Some(Object::AntInt(AntInt::from(obj.get_id()))))
 }
 
-pub fn builtin_obj_info(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_obj_info(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     Ok(Some(Object::AntString(AntString::new(format!("{obj:#?}")))))
 }
 
-pub fn builtin_shell(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_shell(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     match &*obj {
@@ -73,7 +73,7 @@ pub fn builtin_shell(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, S
     }
 }
 
-pub fn builtin_clear(_args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_clear(__vm: &mut Vm, _args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     #[cfg(windows)]
     let _ = run_command("cls");
 
@@ -83,7 +83,7 @@ pub fn builtin_clear(_args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, 
     Ok(None)
 }
 
-pub fn builtin_force_exit(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_force_exit(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     match &*obj {
@@ -104,7 +104,7 @@ pub fn builtin_force_exit(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Objec
     }
 }
 
-pub fn builtin_now(_args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_now(__vm: &mut Vm, _args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     Ok(Some(Object::AntInt(AntInt::from(BigDecimal::from(
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -113,7 +113,7 @@ pub fn builtin_now(_args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, St
     )))))
 }
 
-pub fn builtin_create_method(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_create_method(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let to_be_method = args[0].clone();
     let borrowed = to_be_method.borrow();
 
@@ -130,7 +130,7 @@ pub fn builtin_create_method(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Ob
     }
 }
 
-pub fn builtin_range(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_range(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let max_num = args[0].borrow().clone();
     if max_num.get_type() != INT {
         return Err(format!(
@@ -154,7 +154,7 @@ pub fn builtin_range(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, S
     Ok(Some(Object::AntClass(new_range)))
 }
 
-pub fn builtin_panic(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_panic(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let err = args[0].borrow().clone();
     if err.get_type() != STRING {
         return Err(format!(
@@ -166,13 +166,13 @@ pub fn builtin_panic(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, S
     Err(format!("panic: \"{}\"", err.inspect()))
 }
 
-pub fn builtin_str(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_str(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let s = args[0].borrow().clone();
 
     Ok(Some(Object::AntString(AntString::new(s.inspect()))))
 }
 
-pub fn builtin_double(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_double(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let n = args[0].borrow();
 
     let expected_types: [&str; 3] = [
@@ -195,7 +195,7 @@ pub fn builtin_double(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, 
     }
 }
 
-pub fn builtin_int(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_int(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let n = args[0].borrow();
 
     let expected_types: [&str; 3] = [
@@ -220,7 +220,7 @@ pub fn builtin_int(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, Str
     }
 }
 
-pub fn builtin_ok(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_ok(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let value = args[0].borrow().clone();
 
     let mut new_result = RESULT.clone();
@@ -229,7 +229,7 @@ pub fn builtin_ok(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, Stri
     Ok(Some(Object::AntClass(new_result)))
 }
 
-pub fn builtin_err(args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_err(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let err = args[0].borrow().clone();
 
     let mut new_result = RESULT.clone();

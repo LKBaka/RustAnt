@@ -39,7 +39,7 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
     };
 
     let args = &vm.stack[vm.sp - arg_count..vm.sp];
-    let result = (calling_obj.function)(args.to_vec());
+    let result = (calling_obj.function)(vm, args.to_vec());
 
     // 调整栈指针以移除 函数对象 + 参数
     let base_pointer_of_function = vm.sp - arg_count - 1;
