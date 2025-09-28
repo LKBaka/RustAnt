@@ -59,15 +59,20 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
                 None => return Err(format!("object '{}' has no field 'err'", me.inspect())),
             };
 
+
             if &*err == &*NONE_OBJ {
                 let value = me
                     .map
                     .get("value")
                     .ok_or_else(|| format!("object '{}' has no field 'value'", me.inspect()))?;
 
-                vm.push(rc_ref_cell!(value.clone()))?;
+                if args.len() > 1 {
+                    let callback = args[1].clone();
+                    vm.push(callback)?;
+                    vm.push(rc_ref_cell!(value.clone()))?;
 
-                function_utils::call(vm, 1usize)?;
+                    function_utils::call(vm, 1usize)?;
+                }
             }
 
             Ok(None)
@@ -90,9 +95,13 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             };
 
             if &*err != &*NONE_OBJ {
-                vm.push(rc_ref_cell!(err.clone()))?;
+                if args.len() > 1 {
+                    let callback = args[1].clone();
+                    vm.push(callback)?;
+                    vm.push(rc_ref_cell!(err.clone()))?;
 
-                function_utils::call(vm, 1usize)?;
+                    function_utils::call(vm, 1usize)?;
+                }
             }
 
             Ok(None)

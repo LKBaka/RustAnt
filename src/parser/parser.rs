@@ -97,7 +97,7 @@ impl Parser {
             ),
             prefix_parse_fn_map: HashMap::with_capacity(12),
             infix_parse_fn_map: HashMap::with_capacity(12),
-            statement_parse_fn_map: HashMap::with_capacity(3),
+            statement_parse_fn_map: HashMap::with_capacity(5),
         };
 
         parser
@@ -112,6 +112,12 @@ impl Parser {
         parser
             .statement_parse_fn_map
             .insert(TokenType::Use, parse_use_statement);
+        parser
+            .statement_parse_fn_map
+            .insert(TokenType::Continue, parse_continue);
+        parser
+            .statement_parse_fn_map
+            .insert(TokenType::Break, parse_break);
 
         parser
             .prefix_parse_fn_map
@@ -161,12 +167,6 @@ impl Parser {
         parser
             .prefix_parse_fn_map
             .insert(TokenType::NumberSign, parse_decorator);
-        parser
-            .prefix_parse_fn_map
-            .insert(TokenType::Break, parse_break);
-        parser
-            .prefix_parse_fn_map
-            .insert(TokenType::Continue, parse_continue);
         parser
             .prefix_parse_fn_map
             .insert(TokenType::TestPrint, parse_test_print_expression);

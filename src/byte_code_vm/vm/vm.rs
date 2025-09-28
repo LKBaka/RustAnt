@@ -168,7 +168,9 @@ impl Vm {
                 }
 
                 OP_POP => {
-                    self.pop_no_return_value();
+                    if self.sp != 0 {
+                        self.sp -= 1;
+                    }
                 }
 
                 OP_ADD..=OP_NOTEQ => {
@@ -725,15 +727,6 @@ impl Vm {
         self.sp -= 1;
 
         Some(result.clone())
-    }
-
-    #[inline(always)]
-    pub fn pop_no_return_value(&mut self) {
-        if self.sp == 0 {
-            return;
-        }
-
-        self.sp -= 1;
     }
 
     pub fn frames(&self) -> &Vec<Frame> {

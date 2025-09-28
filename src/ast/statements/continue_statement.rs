@@ -2,11 +2,11 @@ use crate::ast::ast::{IExpression, INode};
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
-pub struct ContinueExpression {
+pub struct ContinueStatement {
     token: Token,
 }
 
-impl INode for ContinueExpression {
+impl INode for ContinueStatement {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -20,8 +20,8 @@ impl INode for ContinueExpression {
     }
 }
 
-impl IExpression for ContinueExpression {}
+impl IExpression for ContinueStatement {}
 
-pub fn create_continue_expression(token: Token) -> ContinueExpression {
-    ContinueExpression { token }
+pub fn create_continue_statement(token: Token) -> ContinueStatement {
+    ContinueStatement { token }
 }

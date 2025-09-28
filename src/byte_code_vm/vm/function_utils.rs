@@ -4,7 +4,10 @@ use crate::{
     byte_code_vm::{
         constants::{NONE_OBJ, UNINIT_OBJECT},
         vm::{frame::Frame, vm::Vm},
-    }, obj_enum::object::Object, object::{ant_closure::Closure, ant_method::MethodType}, rc_ref_cell
+    },
+    obj_enum::object::Object,
+    object::{ant_closure::Closure, ant_method::MethodType},
+    rc_ref_cell,
 };
 
 pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
@@ -30,9 +33,7 @@ pub fn call(vm: &mut Vm, arg_count: usize) -> Result<(), String> {
 pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> Result<(), String> {
     let obj_borrow = obj.borrow();
 
-    let calling_obj = 
-    if let Object::AntNativeFunction(it) = &*obj_borrow
-    {
+    let calling_obj = if let Object::AntNativeFunction(it) = &*obj_borrow {
         it
     } else {
         return Err(format!("calling non-native-function"));
@@ -48,7 +49,7 @@ pub fn call_native(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
     // 将返回值放到栈顶（作为函数调用表达式的值）
     if let Some(it) = result? {
         if let Err(msg) = vm.push(rc_ref_cell!(it)) {
-            return Err(format!("error push native function result: {msg}"))
+            return Err(format!("error push native function result: {msg}"));
         }
 
         return Ok(());
@@ -111,12 +112,10 @@ pub fn call_method(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> R
     }
 
     match calling_obj.func {
-        MethodType::Closure(cl) => call_closure(
-            vm, rc_ref_cell!(Object::Closure(cl)), arg_count,
-        ),
-        MethodType::NativeFunction(f) => call_native(
-            vm, rc_ref_cell!(Object::AntNativeFunction(f)), arg_count,
-        ),
+        MethodType::Closure(cl) => call_closure(vm, rc_ref_cell!(Object::Closure(cl)), arg_count),
+        MethodType::NativeFunction(f) => {
+            call_native(vm, rc_ref_cell!(Object::AntNativeFunction(f)), arg_count)
+        }
     }
 }
 
@@ -126,7 +125,7 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
 
     let func = match &*constant_borrow {
         Object::CompiledFunction(f) => f,
-        _ => return Err(format!("not a function: {:?}", constant))
+        _ => return Err(format!("not a function: {:?}", constant)),
     };
 
     let free_count_usize = free_count as usize;
@@ -138,7 +137,7 @@ pub fn push_closure(vm: &mut Vm, const_index: u16, free_count: u16) -> Result<()
         };
 
         drop(constant_borrow);
-        return vm.push(rc_ref_cell!(Object::Closure(closure)))
+        return vm.push(rc_ref_cell!(Object::Closure(closure)));
     }
 
     let mut free = vec![UNINIT_OBJECT.clone(); free_count_usize];

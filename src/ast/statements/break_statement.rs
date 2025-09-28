@@ -2,11 +2,11 @@ use crate::ast::ast::{IExpression, INode};
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
-pub struct BreakExpression {
+pub struct BreakStatement {
     token: Token,
 }
 
-impl INode for BreakExpression {
+impl INode for BreakStatement {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -20,8 +20,8 @@ impl INode for BreakExpression {
     }
 }
 
-impl IExpression for BreakExpression {}
+impl IExpression for BreakStatement {}
 
-pub fn create_break_expression(token: Token) -> BreakExpression {
-    BreakExpression { token }
+pub fn create_break_statement(token: Token) -> BreakStatement {
+    BreakStatement { token }
 }

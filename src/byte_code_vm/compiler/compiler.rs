@@ -25,7 +25,7 @@ use crate::{
             constant_pool::{CONSTANT_POOL_0_256, I64_CONSTANT_POOL_0_256},
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-        constants::{FAKE_OFFSET_JUMP, FIELD_POOL},
+        constants::{FAKE_OFFSET_JUMP, FIELD_POOL, NONE_OBJ},
         scope_info::ScopeInfo,
     },
     obj_enum::object::Object,
@@ -466,20 +466,6 @@ impl Compiler {
                 Ok(())
             }
 
-            Expression::BreakExpression(_) => {
-                let pos = self.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
-                self.break_command_pos.push(pos);
-
-                Ok(())
-            }
-
-            Expression::ContinueExpression(_) => {
-                let pos = self.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
-                self.continue_command_pos.push(pos);
-
-                Ok(())
-            }
-
             Expression::TestPrintExpression(test_print_expr) => {
                 if let Err(msg) = self.compile_expr(*test_print_expr.value) {
                     return Err(CompileError::from_none_token(format!(
@@ -616,6 +602,20 @@ impl Compiler {
                 for stmt in block.statements {
                     self.compile_stmt(stmt)?;
                 }
+
+                Ok(())
+            }
+
+            Statement::BreakStatement(_) => {
+                let pos = self.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
+                self.break_command_pos.push(pos);
+
+                Ok(())
+            }
+
+            Statement::ContinueStatement(_) => {
+                let pos = self.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
+                self.continue_command_pos.push(pos);
 
                 Ok(())
             }

@@ -1,9 +1,9 @@
-use crate::ast::expr::Expression;
-use crate::ast::expressions::break_expression::create_break_expression;
+use crate::ast::statements::break_statement::create_break_statement;
+use crate::ast::stmt::Statement;
 use crate::parser::parser::Parser;
 
-pub fn parse_break(parser: &mut Parser) -> Option<Expression> {
-    Some(Expression::BreakExpression(create_break_expression(
+pub fn parse_break(parser: &mut Parser) -> Option<Statement> {
+    Some(Statement::BreakStatement(create_break_statement(
         parser.cur_token.clone(),
     )))
 }

@@ -1,6 +1,17 @@
 use enum_dispatch::enum_dispatch;
 
-use crate::{ast::{ast::{ExpressionStatement, INode, IStatement}, statements::{block_statement::BlockStatement, class_statement::ClassStatement, let_statement::LetStatement, use_statement::UseStatement, while_statement::WhileStatement}}, token::token::Token};
+use crate::{
+    ast::{
+        ast::{ExpressionStatement, INode, IStatement},
+        statements::{
+            block_statement::BlockStatement, break_statement::BreakStatement,
+            class_statement::ClassStatement, continue_statement::ContinueStatement,
+            let_statement::LetStatement, use_statement::UseStatement,
+            while_statement::WhileStatement,
+        },
+    },
+    token::token::Token,
+};
 
 #[enum_dispatch(IStatement)]
 #[derive(Debug, Clone)]
@@ -11,6 +22,8 @@ pub enum Statement {
     UseStatement,
     WhileStatement,
     ExpressionStatement,
+    BreakStatement,
+    ContinueStatement,
 }
 
 macro_rules! auto_stmt {
@@ -22,6 +35,8 @@ macro_rules! auto_stmt {
             Statement::UseStatement(stmt) => stmt.$method(),
             Statement::WhileStatement(stmt) => stmt.$method(),
             Statement::ExpressionStatement(stmt) => stmt.$method(),
+            Statement::BreakStatement(stmt) => stmt.$method(),
+            Statement::ContinueStatement(stmt) => stmt.$method(),
         }
     };
 }
