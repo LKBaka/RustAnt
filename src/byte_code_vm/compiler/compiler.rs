@@ -25,7 +25,7 @@ use crate::{
             constant_pool::{CONSTANT_POOL_0_256, I64_CONSTANT_POOL_0_256},
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-        constants::{FAKE_OFFSET_JUMP, FIELD_POOL, NONE_OBJ},
+        constants::{FAKE_OFFSET_JUMP, FIELD_POOL},
         scope_info::ScopeInfo,
     },
     obj_enum::object::Object,
