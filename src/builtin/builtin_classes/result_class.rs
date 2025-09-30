@@ -3,14 +3,12 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 use crate::{
-    byte_code_vm::{constants::NONE_OBJ, vm::{function_utils, vm::Vm}},
-    obj_enum::object::Object,
-    object::{
+    builtin::native_to_call_api::native_to_call, byte_code_vm::{constants::NONE_OBJ, vm::{function_utils, vm::Vm}}, obj_enum::object::Object, object::{
         ant_class::AntClass,
         ant_method::{Method, MethodType},
         ant_native_function::create_ant_native_function,
         object::IAntObject,
-    }, rc_ref_cell,
+    }, rc_ref_cell
 };
 
 pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
@@ -59,7 +57,6 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
                 None => return Err(format!("object '{}' has no field 'err'", me.inspect())),
             };
 
-
             if &*err == &*NONE_OBJ {
                 let value = me
                     .map
@@ -68,10 +65,13 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
 
                 if args.len() > 1 {
                     let callback = args[1].clone();
-                    vm.push(callback)?;
-                    vm.push(rc_ref_cell!(value.clone()))?;
 
-                    function_utils::call(vm, 1usize)?;
+                    native_to_call(vm, callback, vec![rc_ref_cell!(value.clone())])?;
+
+                    return Ok(match vm.pop() {
+                        Some(obj) => Some(obj.borrow().clone()),
+                        None => None
+                    })
                 }
             }
 
