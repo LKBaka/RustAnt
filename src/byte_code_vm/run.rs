@@ -1,9 +1,6 @@
 #[cfg(target_arch = "wasm32")]
 use crate::println;
 
-#[cfg(feature = "debug")]
-use crate::byte_code_vm::constants::FIELD_POOL;
-
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
@@ -27,6 +24,7 @@ pub fn run(
     file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    field_pool: Rc<RefCell<Vec<String>>>,
     globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 ) -> Result<Option<Object>, RunError> {
     #[cfg(feature = "debug")]
@@ -36,7 +34,9 @@ pub fn run(
     use crate::byte_code_vm::vm::frame::fmt_frames;
 
     let bytecode = {
-        let compile_result = compile_with_state(code, file, symbol_table, constants);
+        let compile_result = compile_with_state(
+            code, file, symbol_table, constants, field_pool
+        );
 
         match compile_result {
             Ok(bytecode) => bytecode,
@@ -46,16 +46,10 @@ pub fn run(
 
     #[cfg(feature = "debug")]
     println!(
-        "{}, ByteCode: {:#?}, Instructions: {}, FieldPool: {:#?}",
+        "{}, ByteCode: {:#?}, Instructions: {}",
         "机器已上电".green(),
         bytecode,
         crate::byte_code_vm::code::code::instruction_to_str(&bytecode.instructions),
-        FIELD_POOL
-            .lock()
-            .unwrap()
-            .iter()
-            .enumerate()
-            .collect::<Vec<(usize, &String)>>()
     );
 
     let mut vm = Vm::with_globals(bytecode, globals);
@@ -111,6 +105,7 @@ pub fn run_pop(
     file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    field_pool: Rc<RefCell<Vec<String>>>,
     globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
 ) -> Result<Option<Object>, RunError> {
     #[cfg(feature = "debug")]
@@ -120,7 +115,9 @@ pub fn run_pop(
     use crate::byte_code_vm::vm::frame::fmt_frames;
 
     let bytecode = {
-        let compile_result = compile_with_state(code, file, symbol_table, constants);
+        let compile_result = compile_with_state(
+            code, file, symbol_table, constants, field_pool
+        );
 
         match compile_result {
             Ok(bytecode) => bytecode,

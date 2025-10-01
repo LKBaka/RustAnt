@@ -1,5 +1,3 @@
-use std::sync::Mutex;
-
 use once_cell::sync::Lazy;
 
 use crate::{obj_enum::object::Object, object::{ant_boolean::AntBoolean, ant_none::AntNone, ant_uninit::AntUninit}};
@@ -13,5 +11,3 @@ pub static TRUE_OBJ: Lazy<Object> = Lazy::new(|| Object::AntBoolean(AntBoolean::
 pub static FALSE_OBJ: Lazy<Object> = Lazy::new(|| Object::AntBoolean(AntBoolean::from(false)));
 
 pub const FAKE_OFFSET_JUMP: u16 = 91 * 2 + 78 * 4 + 13 * 2;
-
-pub static FIELD_POOL: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(vec![]));

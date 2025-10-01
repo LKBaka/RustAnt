@@ -47,6 +47,7 @@ pub fn compile_with_state(
     file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    field_pool: Rc<RefCell<Vec<String>>>,
 ) -> Result<ByteCode, CompileErrorBox> {
     let program = parse(code, file.clone());
 
@@ -60,7 +61,9 @@ pub fn compile_with_state(
             println!("AST: {}", it.to_string().yellow());
         }
 
-        let mut compiler = Compiler::with_state(symbol_table, constants, file.into());
+        let mut compiler = Compiler::with_state(
+            symbol_table, constants, field_pool, file.into()
+        );
 
         let result = compiler.start_compile(it);
 

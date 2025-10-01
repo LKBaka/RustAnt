@@ -25,7 +25,7 @@ use crate::{
             constant_pool::{CONSTANT_POOL_0_256, I64_CONSTANT_POOL_0_256},
             symbol_table::symbol_table::{Symbol, SymbolScope, SymbolTable},
         },
-        constants::{FAKE_OFFSET_JUMP, FIELD_POOL},
+        constants::FAKE_OFFSET_JUMP,
         scope_info::ScopeInfo,
     },
     obj_enum::object::Object,
@@ -102,6 +102,7 @@ impl EmittedInstruction {
 pub struct ByteCode {
     pub instructions: Instructions,
     pub constants: Vec<Rc<RefCell<Object>>>,
+    pub field_pool: Vec<String>,
     pub main_info: ScopeInfo,
 }
 
@@ -109,11 +110,12 @@ impl ByteCode {
     pub fn new(
         instructions: Instructions,
         constants: Vec<Rc<RefCell<Object>>>,
+        field_pool: Vec<String>,
         info: ScopeInfo,
     ) -> Self {
         Self {
             instructions,
-            constants,
+            constants, field_pool,
             main_info: info,
         }
     }
@@ -154,6 +156,7 @@ impl Display for CompileError {
 
 pub struct Compiler {
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    field_pool: Rc<RefCell<Vec<String>>>,
 
     pub break_command_pos: Vec<usize>,
     pub continue_command_pos: Vec<usize>,
@@ -187,6 +190,7 @@ impl Compiler {
 
         Self {
             constants: rc_ref_cell!(vec![]),
+            field_pool: rc_ref_cell!(vec![]),
             break_command_pos: vec![],
             continue_command_pos: vec![],
             symbol_table,
@@ -199,6 +203,7 @@ impl Compiler {
     pub fn with_state(
         symbol_table: Rc<RefCell<SymbolTable>>,
         constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+        field_pool: Rc<RefCell<Vec<String>>>,
         file_name: Rc<str>,
     ) -> Self {
         let main_scope = CompilationScopeBuilder::default().build(ScopeInfo {
@@ -207,7 +212,7 @@ impl Compiler {
         });
 
         Self {
-            constants,
+            constants, field_pool,
             break_command_pos: vec![],
             continue_command_pos: vec![],
             symbol_table,
@@ -741,13 +746,13 @@ impl Compiler {
     }
 
     pub fn add_field(&self, field: &str) -> usize {
-        if let Ok(i) = FIELD_POOL.lock().unwrap().binary_search(&field.to_owned()) {
+        if let Ok(i) = self.field_pool.borrow().binary_search(&field.to_owned()) {
             return i;
         }
 
-        FIELD_POOL.lock().unwrap().push(field.into());
+        self.field_pool.borrow_mut().push(field.into());
 
-        FIELD_POOL.lock().unwrap().len() - 1
+        self.field_pool.borrow_mut().len() - 1
     }
 
     pub fn current_instructions(&self) -> Rc<RefCell<Instructions>> {
@@ -845,6 +850,7 @@ impl Compiler {
         ByteCode::new(
             self.current_instructions().borrow().clone(),
             self.constants.borrow().clone(),
+            self.field_pool.borrow().clone(),
             ScopeInfo {
                 file_name: self.file_name.clone(),
                 scope_name: Rc::from("__main__"),

@@ -14,7 +14,7 @@ use crate::{
             OP_TEST_PRINT, OP_TRUE, OpCode, read_uint16,
         },
         compiler::compiler::ByteCode,
-        constants::{FALSE_OBJ, FIELD_POOL, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT},
+        constants::{FALSE_OBJ, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT},
         utils::native_boolean_to_object,
         vm::{
             eval_functions::{
@@ -43,10 +43,14 @@ pub const GLOBALS_SIZE: usize = 65535;
 #[derive(Clone)]
 pub struct Vm {
     pub constants: Vec<Rc<RefCell<Object>>>,
+    pub field_pool: Vec<String>,
+
     pub stack: Vec<Rc<RefCell<Object>>>,
     pub globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-    frames: Vec<Frame>,
+    
+    pub frames: Vec<Frame>,
     pub frame_index: usize,
+    
     pub sp: usize, // stack next pos
 }
 
@@ -72,6 +76,7 @@ impl Vm {
 
         Vm {
             constants: bytecode.constants,
+            field_pool: bytecode.field_pool,
             stack: vec![uninit.clone(); STACK_SIZE],
             globals: rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE]),
             frames: vec![main_frame],
@@ -104,6 +109,7 @@ impl Vm {
 
         Vm {
             constants: bytecode.constants,
+            field_pool: bytecode.field_pool,
             stack: vec![uninit.clone(); STACK_SIZE as usize],
             globals,
             frames: vec![main_frame],
@@ -531,7 +537,7 @@ impl Vm {
                 let field_obj_index = read_uint16(&instructions[ip + 1..]);
                 self.current_frame().ip += 2;
 
-                let field = &FIELD_POOL.lock().unwrap()[field_obj_index as usize];
+                let field = self.field_pool[field_obj_index as usize].clone();
 
                 let obj = self.pop();
 
@@ -540,7 +546,7 @@ impl Vm {
                     let o_borrow = o.borrow();
 
                     if let Object::AntClass(clazz) = &*o_borrow {
-                        let value = match if let Some(it) = clazz.map.get(field) {
+                        let value = match if let Some(it) = clazz.map.get(&field) {
                             it
                         } else {
                             return Err(format!(
@@ -584,7 +590,7 @@ impl Vm {
                     None => return Err(format!("expected an object to set field value")),
                 };
 
-                let ident = &FIELD_POOL.lock().unwrap()[field_index as usize];
+                let ident = self.field_pool[field_index as usize].clone();
 
                 let value = match self.pop() {
                     Some(it) => it,
@@ -597,7 +603,7 @@ impl Vm {
 
                 match &mut *target_borrow {
                     Object::AntClass(clazz) => {
-                        clazz.map.insert(ident.clone(), value);
+                        clazz.map.insert(ident, value);
                     }
 
                     _ => {

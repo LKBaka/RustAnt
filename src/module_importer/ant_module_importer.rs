@@ -56,6 +56,7 @@ impl<'a> AntModuleImporter<'a> {
                     table
                 },
                 rc_ref_cell!(self.vm.constants.clone()),
+                rc_ref_cell!(self.vm.field_pool.clone()),
                 self.file.clone().into(),
             );
 
