@@ -97,10 +97,13 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             if &*err != &*NONE_OBJ {
                 if args.len() > 1 {
                     let callback = args[1].clone();
-                    vm.push(callback)?;
-                    vm.push(rc_ref_cell!(err.clone()))?;
 
-                    function_utils::call(vm, 1usize)?;
+                    native_to_call(vm, callback, vec![rc_ref_cell!(err.clone())])?;
+
+                    return Ok(match vm.pop() {
+                        Some(obj) => Some(obj.borrow().clone()),
+                        None => None
+                    })
                 }
             }
 
