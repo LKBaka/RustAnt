@@ -1,8 +1,5 @@
 use std::{
-    cell::RefCell,
-    process::exit,
-    rc::Rc,
-    time::{SystemTime, UNIX_EPOCH},
+    cell::RefCell, process::exit, rc::Rc, str::FromStr, time::{SystemTime, UNIX_EPOCH}
 };
 
 use bigdecimal::BigDecimal;
@@ -175,8 +172,8 @@ pub fn builtin_str(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Optio
 pub fn builtin_double(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let n = args[0].borrow();
 
-    let expected_types: [&str; 3] = [
-        INT, I64, DOUBLE
+    let expected_types: [&str; 4] = [
+        INT, I64, DOUBLE, STRING
     ];
 
     match &*n {
@@ -186,6 +183,14 @@ pub fn builtin_double(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Op
         Object::AntInt(i) => Ok(Some(Object::AntDouble(AntDouble::from(
             i.value.clone()
         )))),
+        Object::AntString(s) => Ok(Some(Object::AntDouble(AntDouble::from({
+            match BigDecimal::from_str(
+                &s.value
+            ) {
+                Ok(it) => it,
+                Err(err) => return Err(err.to_string())
+            }
+        })))),
         Object::AntDouble(d) => Ok(Some(Object::AntDouble(d.clone()))),
 
         it => Err(format!(
@@ -198,8 +203,8 @@ pub fn builtin_double(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Op
 pub fn builtin_int(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let n = args[0].borrow();
 
-    let expected_types: [&str; 3] = [
-        INT, I64, DOUBLE
+    let expected_types: [&str; 4] = [
+        INT, I64, DOUBLE, STRING
     ];
 
     match &*n {
@@ -212,6 +217,14 @@ pub fn builtin_int(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Optio
         Object::AntDouble(d) => Ok(Some(Object::AntInt(AntInt::from(
             d.value.with_scale(0)
         )))),
+        Object::AntString(s) => Ok(Some(Object::AntInt(AntInt::from({
+            match BigDecimal::from_str(
+                &s.value
+            ) {
+                Ok(it) => it.with_scale(0),
+                Err(err) => return Err(err.to_string())
+            }
+        })))),
 
         it => Err(format!(
             "expected type {:#?}, got: {}",
