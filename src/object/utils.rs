@@ -97,6 +97,21 @@ pub fn unsupported_operand_type_err(
 }
 
 #[macro_export]
+macro_rules! convert_type_ref {
+    ($t:ty, $value:expr) => {{
+        let value = $value as &dyn std::any::Any;
+
+        let converted = value.downcast_ref::<$t>().expect(&format!(
+            "cannot convert '{:?}' to type '{}'",
+            $value,
+            std::any::type_name::<$t>()
+        ));
+
+        converted.clone()
+    }};
+}
+
+#[macro_export]
 macro_rules! convert_type_use_box {
     ($t:ty, $value:expr) => {{
         let value = Box::new($value) as Box<dyn Any>;
