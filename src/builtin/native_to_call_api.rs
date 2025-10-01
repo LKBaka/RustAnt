@@ -98,6 +98,8 @@ fn native_to_call_method(
     method: Rc<RefCell<Object>>,
     args: Vec<Rc<RefCell<Object>>>,
 ) -> Result<(), String> {
+    vm.push(method.clone())?;
+
     for arg in args.iter() {
         vm.push(arg.clone())?;
     }
