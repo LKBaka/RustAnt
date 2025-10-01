@@ -71,7 +71,7 @@ pub fn call_closure(vm: &mut Vm, obj: Rc<RefCell<Object>>, arg_count: usize) -> 
         return Err(format!("calling non-function"));
     };
 
-    let func = calling_obj.func.clone();
+    let func = &calling_obj.func;
 
     if arg_count != func.param_count {
         return Err(format!(
