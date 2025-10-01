@@ -12,14 +12,8 @@ use crate::{
 fn next(
     vm: &mut Vm
 ) -> Result<(), String> {
-    let ip;
-
-    let instructions;
-
-    let op;
-
     while {
-        instructions = vm.current_frame().instructions();
+        let instructions = vm.current_frame().instructions();
 
         let current_frame = vm.current_frame();
 
@@ -27,9 +21,11 @@ fn next(
     } {
         vm.current_frame().ip += 1;
 
-        ip = vm.current_frame().ip as usize;
+        let ip = vm.current_frame().ip as usize;
 
-        op = instructions[ip];
+        let instructions = vm.current_frame().instructions();
+
+        let op = instructions[ip];
 
         match op {
             OP_RETURN_VALUE => {
@@ -68,7 +64,7 @@ fn next(
             }
 
             _ => {
-                return vm.next(op, ip, instructions);
+                vm.next(op, ip, instructions)?;
             },
         }
     }
@@ -82,10 +78,15 @@ fn native_to_call_closure(
     cl: Rc<RefCell<Object>>,
     args: Vec<Rc<RefCell<Object>>>,
 ) -> Result<(), String> {
+    // 将闭包对象压入栈
+    vm.push(cl.clone())?;
+    
+    // 将参数压入栈
     for arg in args.iter() {
         vm.push(arg.clone())?;
     }
 
+    // 调用闭包，这会创建新的栈帧
     call_closure(vm, cl, args.len())?;
 
     next(vm)
