@@ -108,6 +108,72 @@ fn multiply_native(
         (Object::AntDouble(l), Object::AntInt(r)) => {
             Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value)))
         }
+        (Object::AntString(l), Object::AntInt(r)) => {
+            if l.value == "" {
+                return Ok(left.clone())
+            }
+
+            use num_traits::ToPrimitive;
+
+            let repeat_count = r.value.to_usize().ok_or_else(|| format!(
+                "expected repeat count"
+            ))?;
+
+            Ok(Object::AntString(AntString::new(l.value.repeat(repeat_count))))
+        }
+        (Object::AntInt(l), Object::AntString(r)) => {
+            if r.value == "" {
+                return Ok(left.clone())
+            }
+
+            use num_traits::ToPrimitive;
+
+            let repeat_count = l.value.to_usize().ok_or_else(|| format!(
+                "expected repeat count"
+            ))?;
+
+            Ok(Object::AntString(AntString::new(r.value.repeat(repeat_count))))
+        }
+        (Object::AntArray(l), Object::AntInt(r)) => {
+            if l.items.is_empty() {
+                return Ok(left.clone())
+            }
+
+            use num_traits::ToPrimitive;
+
+            let repeat_count = r.value.to_usize().ok_or_else(|| format!(
+                "expected repeat count"
+            ))?;
+
+            Ok(Object::AntArray(AntArray::from(
+                l.items
+                    .iter()
+                    .cloned()
+                    .cycle()
+                    .take(repeat_count)
+                    .collect::<Vec<_>>()
+            )))
+        }
+        (Object::AntInt(l), Object::AntArray(r)) => {
+            if r.items.is_empty() {
+                return Ok(left.clone())
+            }
+
+            use num_traits::ToPrimitive;
+
+            let repeat_count = l.value.to_usize().ok_or_else(|| format!(
+                "expected repeat count"
+            ))?;
+
+            Ok(Object::AntArray(AntArray::from(
+                r.items
+                    .iter()
+                    .cloned()
+                    .cycle()
+                    .take(repeat_count)
+                    .collect::<Vec<_>>()
+            )))
+        }
 
         (l, r) => Err(format!(
             "unimplemented for types: {} and {}",
