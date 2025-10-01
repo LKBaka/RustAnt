@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 use crate::{
-    builtin::native_to_call_api::native_to_call, byte_code_vm::{constants::NONE_OBJ, vm::{function_utils, vm::Vm}}, obj_enum::object::Object, object::{
+    builtin::native_to_call_api::native_to_call, byte_code_vm::{constants::NONE_OBJ, vm::vm::Vm}, obj_enum::object::Object, object::{
         ant_class::AntClass,
         ant_method::{Method, MethodType},
         ant_native_function::create_ant_native_function,

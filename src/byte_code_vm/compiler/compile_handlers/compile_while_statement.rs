@@ -23,8 +23,10 @@ pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<()
             format!("error compile while loop condition: {msg}")
         ));
     }
-
     let jump_not_truthy_command_pos = compiler.emit(OP_JUMP_NOT_TRUTHY, vec![FAKE_OFFSET_JUMP]);
+
+    let prev_break_positions = std::mem::take(&mut compiler.break_command_pos);
+    let prev_continue_positions = std::mem::take(&mut compiler.continue_command_pos);
 
     if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(while_stmt.block)) {
         return Err(CompileError::from_none_token(
@@ -39,15 +41,19 @@ pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<()
     // 回填 OP_JUMP_NOT_TRUTHY 的 操作数
     compiler.change_operand(jump_not_truthy_command_pos, while_loop_end);
 
-    // 回填 break 的操作数
+    // 回填 break 的操作数 — 仅回填在本次 while 编译期间收集到的位置
     for pos in compiler.break_command_pos.clone() {
         compiler.change_operand(pos, while_loop_end);
     }
 
-    // 回填 continue 的操作数
+    // 回填 continue 的操作数 — 仅回填在本次 while 编译期间收集到的位置
     for pos in compiler.continue_command_pos.clone() {
         compiler.change_operand(pos, start_ip as u16);
     }
+
+    // 恢复外层的 break/continue 位置记录（我们已经回填了本次循环的）
+    compiler.break_command_pos = prev_break_positions;
+    compiler.continue_command_pos = prev_continue_positions;
 
     compiler.emit(OP_NOP, vec![]);
 

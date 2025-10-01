@@ -2,7 +2,7 @@ use std::{cell::RefCell, fmt::Display, mem, rc::Rc};
 
 use crate::{
     ast::{
-        ast::{INode, Node, Program, TypeNameGetter},
+        ast::{INode, Node, Program},
         expr::Expression,
         stmt::Statement,
     },
@@ -590,7 +590,7 @@ impl Compiler {
             ),
 
             _ => Err(CompileError::from(
-                format!("no compile handler for node: {}", node.type_name()),
+                format!("no compile handler for node: {}", node.to_string()),
                 Some(node.token()),
             )),
         }
