@@ -431,20 +431,19 @@ impl Vm {
             OP_JUMP_NOT_TRUTHY => {
                 let jump_to = read_uint16(&instructions[(ip + 1)..]);
 
-                let condition = if let Some(cond) = self.pop() {
-                    cond.clone()
+                let condition = if let Some(cond) = self.pop_ref() {
+                    cond
                 } else {
                     return Err(String::from("expected an condition"));
                 };
 
-                let frame = self.current_frame();
-
+                
                 if !rrc_is_truthy(&condition) {
-                    frame.ip = (jump_to as isize) - 1;
+                    self.current_frame().ip = (jump_to as isize) - 1;
                     return Ok(());
                 }
 
-                frame.ip += 2;
+                self.current_frame().ip += 2;
             }
 
             OP_SET_INDEX => {
@@ -485,9 +484,9 @@ impl Vm {
                 let free_index = read_uint16(&instructions[ip + 1..]);
                 current_frame.ip += 2;
 
-                let current_closure = current_frame.closure.clone();
+                let free = current_frame.closure.free.borrow()[free_index as usize].clone();
                 if let Err(msg) = self.push(rc_ref_cell!(
-                    current_closure.free.borrow()[free_index as usize].clone()
+                    free
                 )) {
                     return Err(format!("error push free variable: {msg}"));
                 }
@@ -736,6 +735,19 @@ impl Vm {
         self.sp -= 1;
 
         Some(result.clone())
+    }
+
+    #[inline(always)]
+    pub fn pop_ref(&mut self) -> Option<&Rc<RefCell<Object>>> {
+        if self.sp == 0 {
+            return None;
+        }
+
+        let result = &self.stack[self.sp - 1];
+
+        self.sp -= 1;
+
+        Some(result)
     }
 
     pub fn frames(&self) -> &Vec<Frame> {
