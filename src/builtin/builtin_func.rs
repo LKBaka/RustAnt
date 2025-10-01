@@ -1,21 +1,36 @@
 use std::{
-    cell::RefCell, process::exit, rc::Rc, str::FromStr, time::{SystemTime, UNIX_EPOCH}
+    cell::RefCell,
+    process::exit,
+    rc::Rc,
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use bigdecimal::BigDecimal;
 
 use crate::{
-    builtin::builtin_classes::{range_class::RANGE, result_class::RESULT}, byte_code_vm::vm::vm::Vm, obj_enum::object::Object, object::{
-        ant_double::AntDouble, ant_int::AntInt, ant_method::{Method, MethodType}, ant_string::AntString, object::{IAntObject, DOUBLE, I64, INT, STRING}
-    }, utils::run_command
+    builtin::builtin_classes::{range_class::RANGE, result_class::RESULT},
+    byte_code_vm::vm::vm::Vm,
+    obj_enum::object::Object,
+    object::{
+        ant_double::AntDouble,
+        ant_int::AntInt,
+        ant_method::{Method, MethodType},
+        ant_string::AntString,
+        object::{DOUBLE, I64, IAntObject, INT, STRING},
+    },
+    utils::run_command,
 };
 
-pub fn builtin_print(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_print(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     #[cfg(target_arch = "wasm32")]
     use crate::println;
-    
+
     println!("{}", obj.inspect());
 
     Ok(None)
@@ -36,7 +51,10 @@ pub fn builtin_len(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Optio
     }
 }
 
-pub fn builtin_copy(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_copy(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let obj = args[0].borrow().clone();
 
     Ok(Some(obj))
@@ -48,13 +66,19 @@ pub fn builtin_id(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option
     Ok(Some(Object::AntInt(AntInt::from(obj.get_id()))))
 }
 
-pub fn builtin_obj_info(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_obj_info(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     Ok(Some(Object::AntString(AntString::new(format!("{obj:#?}")))))
 }
 
-pub fn builtin_shell(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_shell(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     match &*obj {
@@ -70,7 +94,10 @@ pub fn builtin_shell(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Opt
     }
 }
 
-pub fn builtin_clear(__vm: &mut Vm, _args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_clear(
+    __vm: &mut Vm,
+    _args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     #[cfg(windows)]
     let _ = run_command("cls");
 
@@ -80,7 +107,10 @@ pub fn builtin_clear(__vm: &mut Vm, _args: Vec<Rc<RefCell<Object>>>) -> Result<O
     Ok(None)
 }
 
-pub fn builtin_force_exit(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_force_exit(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let obj = args[0].borrow();
 
     match &*obj {
@@ -101,7 +131,10 @@ pub fn builtin_force_exit(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Resul
     }
 }
 
-pub fn builtin_now(__vm: &mut Vm, _args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_now(
+    __vm: &mut Vm,
+    _args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     Ok(Some(Object::AntInt(AntInt::from(BigDecimal::from(
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -110,7 +143,10 @@ pub fn builtin_now(__vm: &mut Vm, _args: Vec<Rc<RefCell<Object>>>) -> Result<Opt
     )))))
 }
 
-pub fn builtin_create_method(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_create_method(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let to_be_method = args[0].clone();
     let borrowed = to_be_method.borrow();
 
@@ -127,37 +163,32 @@ pub fn builtin_create_method(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Re
     }
 }
 
-pub fn builtin_range(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_range(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let max_num = args[0].borrow().clone();
     if max_num.get_type() != INT {
-        return Err(format!(
-            "expected an integer, got: {}",
-            max_num.inspect()
-        ))
+        return Err(format!("expected an integer, got: {}", max_num.inspect()));
     }
 
-
     let mut new_range = RANGE.clone();
-    new_range.map.insert(
-        "next_num".into(),
-        Object::AntInt(AntInt::from(-1))
-    );
+    new_range
+        .map
+        .insert("next_num".into(), Object::AntInt(AntInt::from(-1)));
 
-    new_range.map.insert(
-        "max_num".into(),
-        max_num
-    );
+    new_range.map.insert("max_num".into(), max_num);
 
     Ok(Some(Object::AntClass(new_range)))
 }
 
-pub fn builtin_panic(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_panic(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let err = args[0].borrow().clone();
     if err.get_type() != STRING {
-        return Err(format!(
-            "expected an string, got: {}",
-            err.inspect()
-        ))
+        return Err(format!("expected an string, got: {}", err.inspect()));
     }
 
     Err(format!("panic: \"{}\"", err.inspect()))
@@ -169,67 +200,54 @@ pub fn builtin_str(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Optio
     Ok(Some(Object::AntString(AntString::new(s.inspect()))))
 }
 
-pub fn builtin_double(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_double(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let n = args[0].borrow();
 
-    let expected_types: [&str; 4] = [
-        INT, I64, DOUBLE, STRING
-    ];
+    let expected_types: [&str; 4] = [INT, I64, DOUBLE, STRING];
 
     match &*n {
-        Object::AntI64(i) => Ok(Some(Object::AntDouble(AntDouble::from(
-            i.value
-        )))),
-        Object::AntInt(i) => Ok(Some(Object::AntDouble(AntDouble::from(
-            i.value.clone()
-        )))),
+        Object::AntI64(i) => Ok(Some(Object::AntDouble(AntDouble::from(i.value)))),
+        Object::AntInt(i) => Ok(Some(Object::AntDouble(AntDouble::from(i.value.clone())))),
         Object::AntString(s) => Ok(Some(Object::AntDouble(AntDouble::from({
-            match BigDecimal::from_str(
-                &s.value
-            ) {
+            match BigDecimal::from_str(&s.value) {
                 Ok(it) => it,
-                Err(err) => return Err(err.to_string())
+                Err(err) => return Err(err.to_string()),
             }
         })))),
         Object::AntDouble(d) => Ok(Some(Object::AntDouble(d.clone()))),
 
         it => Err(format!(
             "expected type {:#?}, got: {}",
-            expected_types, it.inspect()
-        ))
+            expected_types,
+            it.inspect()
+        )),
     }
 }
 
 pub fn builtin_int(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let n = args[0].borrow();
 
-    let expected_types: [&str; 4] = [
-        INT, I64, DOUBLE, STRING
-    ];
+    let expected_types: [&str; 4] = [INT, I64, DOUBLE, STRING];
 
     match &*n {
-        Object::AntI64(i) => Ok(Some(Object::AntInt(AntInt::from(
-            i.value
-        )))),
-        Object::AntInt(i) => Ok(Some(Object::AntInt(AntInt::from(
-            i.value.clone()
-        )))),
-        Object::AntDouble(d) => Ok(Some(Object::AntInt(AntInt::from(
-            d.value.with_scale(0)
-        )))),
+        Object::AntI64(i) => Ok(Some(Object::AntInt(AntInt::from(i.value)))),
+        Object::AntInt(i) => Ok(Some(Object::AntInt(AntInt::from(i.value.clone())))),
+        Object::AntDouble(d) => Ok(Some(Object::AntInt(AntInt::from(d.value.with_scale(0))))),
         Object::AntString(s) => Ok(Some(Object::AntInt(AntInt::from({
-            match BigDecimal::from_str(
-                &s.value
-            ) {
+            match BigDecimal::from_str(&s.value) {
                 Ok(it) => it.with_scale(0),
-                Err(err) => return Err(err.to_string())
+                Err(err) => return Err(err.to_string()),
             }
         })))),
 
         it => Err(format!(
             "expected type {:#?}, got: {}",
-            expected_types, it.inspect()
-        ))
+            expected_types,
+            it.inspect()
+        )),
     }
 }
 
