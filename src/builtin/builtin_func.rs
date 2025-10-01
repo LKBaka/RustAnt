@@ -236,17 +236,25 @@ pub fn builtin_int(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Optio
 pub fn builtin_ok(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let value = args[0].borrow().clone();
 
-    let mut new_result = RESULT.clone();
-    new_result.map.insert("value".into(), value);
-
-    Ok(Some(Object::AntClass(new_result)))
+    Ok(Some(ant_ok(value)))
 }
 
 pub fn builtin_err(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
     let err = args[0].borrow().clone();
 
+    Ok(Some(ant_err(err)))
+}
+
+pub fn ant_ok(value: Object) -> Object {
+    let mut new_result = RESULT.clone();
+    new_result.map.insert("value".into(), value);
+
+    Object::AntClass(new_result)
+}
+
+pub fn ant_err(err: Object) -> Object {
     let mut new_result = RESULT.clone();
     new_result.map.insert("err".into(), err);
 
-    Ok(Some(Object::AntClass(new_result)))
+    Object::AntClass(new_result)
 }
