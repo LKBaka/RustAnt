@@ -30,7 +30,27 @@ impl IAntObject for AntClass {
     }
 
     fn inspect(&self) -> String {
-        format!("<Class Id: {}, IdentMap: {:#?}>", self.id, self.map)
+        let indent = "  ";
+
+        format!(
+            "class {{\n{}}}",
+            self.map
+                .iter()
+                .map(
+                    |(k, v)| format!(
+                        "{}{}: {}",
+                        indent,
+                        k,
+                        if let Object::AntString(s) = v {
+                            format!("\"{}\"", s.value)
+                        } else {
+                            v.inspect()
+                        },
+                    )
+                )
+                .collect::<Vec<String>>()
+                .join(", \n") + "\n"
+        )
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
