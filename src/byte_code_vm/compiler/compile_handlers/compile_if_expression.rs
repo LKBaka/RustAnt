@@ -5,7 +5,7 @@ use crate::{
         ast::{INode, Node}, expr::Expression
     },
     byte_code_vm::{
-        code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_POP},
+        code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NONE, OP_POP},
         compiler::compiler::{CompileError, Compiler},
         constants::FAKE_OFFSET_JUMP,
     },
@@ -51,6 +51,8 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
         let after_all_pos = compiler.current_instructions().borrow().len();
 
         compiler.change_operand(jump_not_truthy_command_pos, after_all_pos as u16);
+
+        compiler.emit(OP_NONE, vec![]);
 
         return Ok(());
     }
@@ -151,6 +153,8 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
     for pos in else_if_jump_to_end_command_pos {
         compiler.change_operand(pos, end_pos as u16);
     }
+
+    compiler.emit(OP_NONE, vec![]);
 
     Ok(())
 }
