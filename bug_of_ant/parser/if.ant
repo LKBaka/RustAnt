@@ -1,0 +1,66 @@
+"
+this function will be parse to:
+func {
+    ...
+    block: {
+        ...
+        statements: [infix {
+            ...
+            left: if {
+                cond: infix {
+                    ...
+                    left: n
+                    op: "<"
+                    right: 2
+                }
+
+                block: {
+                    ...
+                    statements: [return {
+                        ...
+                        val: n
+                    }]
+                }
+
+                ...
+            }
+            
+            op: "-"
+
+            right: 1
+        }]
+    }    
+}
+
+yes, '
+    if n < 2 {
+        return n
+    }
+
+    -1
+' will be errorly parse to '
+    (if n < 2 {return n}) - (1)
+' not '
+    (if n < 2 {return n}); (-1)
+'
+
+how to fix it?
+
+use '
+    if n < 2 {
+        return n
+    };
+
+    -1
+' rewrite the if expression
+"
+
+func f(n) {
+    if n < 2 {
+        return n
+    }
+
+    -1
+}
+
+print(f(4))
