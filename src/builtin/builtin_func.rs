@@ -1,23 +1,19 @@
 use std::{
-    cell::RefCell,
-    process::exit,
-    rc::Rc,
-    str::FromStr,
-    time::{SystemTime, UNIX_EPOCH},
+    cell::RefCell, cmp::Ordering, process::exit, rc::Rc, str::FromStr, time::{SystemTime, UNIX_EPOCH}
 };
 
 use bigdecimal::BigDecimal;
 
 use crate::{
     builtin::builtin_classes::{range_class::RANGE, result_class::RESULT},
-    byte_code_vm::vm::vm::Vm,
+    byte_code_vm::vm::{eval_functions::eval_infix_operator::{eq_native_ref, gt_native_ref}, vm::Vm},
     obj_enum::object::Object,
     object::{
         ant_double::AntDouble,
         ant_int::AntInt,
         ant_method::{Method, MethodType},
         ant_string::AntString,
-        object::{DOUBLE, I64, IAntObject, INT, STRING},
+        object::{IAntObject, DOUBLE, I64, INT, STRING},
     },
     utils::run_command,
 };
@@ -275,4 +271,42 @@ pub fn ant_err(err: Object) -> Object {
     new_result.map.insert("err".into(), err);
 
     Object::AntClass(new_result)
+}
+
+pub fn builtin_sorted(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+    let mut arr = match args[0].borrow().clone() {
+        Object::AntArray(arr) => arr,
+        it => return Err(format!("expected an array to sort, got: {}", it.inspect()))
+    };
+
+    let mut err = None;
+
+    arr.items.sort_by(
+        // 调换 l, r 实现小于
+        |l, r| 
+        match gt_native_ref(r, l) {
+            Ok(less_than) => {
+                if less_than {
+                    return Ordering::Less
+                }
+
+                match eq_native_ref(l, r) {
+                    Ok(eq) => if eq { Ordering::Equal } else { Ordering::Greater },
+                    Err(eq_err) => {
+                        err = Some(eq_err);
+                        Ordering::Equal
+                    }
+                }
+            }
+            Err(it) => {
+                err = Some(it);
+                Ordering::Equal
+            }
+        }
+    );
+
+    match err {
+        None => Ok(Some(Object::AntArray(arr))),
+        Some(it) => Err(it),
+    }
 }
