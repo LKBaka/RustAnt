@@ -3,12 +3,12 @@ use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
-pub struct ReturnExpression {
+pub struct ReturnStatement {
     pub value: Box<Expression>,
     token: Token,
 }
 
-impl INode for ReturnExpression {
+impl INode for ReturnStatement {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -22,8 +22,8 @@ impl INode for ReturnExpression {
     }
 }
 
-impl IExpression for ReturnExpression {}
+impl IExpression for ReturnStatement {}
 
-pub fn create_return_expression(token: Token, value: Box<Expression>) -> ReturnExpression {
-    ReturnExpression { token, value }
+pub fn create_return_statement(token: Token, value: Box<Expression>) -> ReturnStatement {
+    ReturnStatement { token, value }
 }

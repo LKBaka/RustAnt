@@ -6,8 +6,8 @@ use crate::{
         statements::{
             block_statement::BlockStatement, break_statement::BreakStatement,
             class_statement::ClassStatement, continue_statement::ContinueStatement,
-            let_statement::LetStatement, use_statement::UseStatement,
-            while_statement::WhileStatement,
+            let_statement::LetStatement, return_statement::ReturnStatement,
+            use_statement::UseStatement, while_statement::WhileStatement,
         },
     },
     token::token::Token,
@@ -24,6 +24,7 @@ pub enum Statement {
     ExpressionStatement,
     BreakStatement,
     ContinueStatement,
+    ReturnStatement,
 }
 
 macro_rules! auto_stmt {
@@ -37,6 +38,7 @@ macro_rules! auto_stmt {
             Statement::ExpressionStatement(stmt) => stmt.$method(),
             Statement::BreakStatement(stmt) => stmt.$method(),
             Statement::ContinueStatement(stmt) => stmt.$method(),
+            Statement::ReturnStatement(stmt) => stmt.$method(),
         }
     };
 }

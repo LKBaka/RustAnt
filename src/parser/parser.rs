@@ -17,6 +17,7 @@ use crate::parser::parse_functions::parse_hash_literal::parse_hash_literal;
 use crate::parser::parse_functions::parse_index_expression::parse_index_expression;
 use crate::parser::parse_functions::parse_none::parse_none;
 use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
+use crate::parser::parse_functions::parse_return_statement::parse_return_statement;
 use crate::parser::parse_functions::parse_test_print_expression::parse_test_print_expression;
 use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expression;
 use crate::parser::parse_functions::parse_use_statement::parse_use_statement;
@@ -37,7 +38,6 @@ use crate::parser::precedence::Precedence::Lowest;
 
 use super::parse_functions::parse_class_statement::parse_class_statement;
 use super::parse_functions::parse_object_member_expression::parse_object_member_expression;
-use super::parse_functions::parse_return_expression::parse_return_expression;
 use super::parse_functions::parse_while_statement::parse_while_statement;
 
 type PrefixParseFn = fn(&mut Parser) -> Option<Expression>;
@@ -118,6 +118,9 @@ impl Parser {
         parser
             .statement_parse_fn_map
             .insert(TokenType::Break, parse_break);
+        parser
+            .statement_parse_fn_map
+            .insert(TokenType::Return, parse_return_statement);
 
         parser
             .prefix_parse_fn_map
@@ -137,9 +140,6 @@ impl Parser {
         parser
             .prefix_parse_fn_map
             .insert(TokenType::String, parse_string);
-        parser
-            .prefix_parse_fn_map
-            .insert(TokenType::Return, parse_return_expression);
         parser
             .prefix_parse_fn_map
             .insert(TokenType::If, parse_if_expression);

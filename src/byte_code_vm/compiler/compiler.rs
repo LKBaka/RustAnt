@@ -10,7 +10,10 @@ use crate::{
     builtin::builtin_map::BUILTIN_MAP_INDEX,
     byte_code_vm::{
         code::code::{
-            make, Instructions, OpCode, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE
+            Instructions, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE,
+            OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX,
+            OP_JUMP, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL,
+            OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, make,
         },
         compiler::{
             compile_handlers::{
@@ -115,7 +118,8 @@ impl ByteCode {
     ) -> Self {
         Self {
             instructions,
-            constants, field_pool,
+            constants,
+            field_pool,
             main_info: info,
         }
     }
@@ -212,7 +216,8 @@ impl Compiler {
         });
 
         Self {
-            constants, field_pool,
+            constants,
+            field_pool,
             break_command_pos: vec![],
             continue_command_pos: vec![],
             symbol_table,
@@ -252,9 +257,7 @@ impl Compiler {
 
             Expression::Int64Literal(integer_literal) => {
                 // 常量池优化
-                let integer = if integer_literal.value > 0
-                    && integer_literal.value < 257
-                {
+                let integer = if integer_literal.value > 0 && integer_literal.value < 257 {
                     I64_CONSTANT_POOL_0_256[integer_literal.value as usize].clone()
                 } else {
                     Object::AntI64(AntI64::from(integer_literal.value))
@@ -424,26 +427,6 @@ impl Compiler {
                 }
 
                 self.emit(OP_INDEX, vec![]);
-
-                Ok(())
-            }
-
-            Expression::ReturnExpression(return_expr) => {
-                // 第一件事 检查作用域
-                if self.symbol_table.borrow().outer.is_none() {
-                    return Err(CompileError::from(
-                        format!("cannot return outside function"),
-                        Some(return_expr.token()),
-                    ));
-                }
-
-                if let Err(msg) = self.compile_expr(*return_expr.value) {
-                    return Err(CompileError::from_none_token(format!(
-                        "error compile return value: {msg}"
-                    )));
-                }
-
-                self.emit(OP_RETURN_VALUE, vec![]);
 
                 Ok(())
             }
@@ -628,7 +611,11 @@ impl Compiler {
             Statement::ExpressionStatement(expr_stmt) => {
                 if let Some(expr) = expr_stmt.expression {
                     let need_skip_pop = match &*expr {
-                        Expression::FunctionExpression(_) => true,
+                        /*
+                        仅当函数表达式具名
+                        (编译器会编译 OpSetLocal/OpSetGlobal 指令消费栈顶)时，才跳过 OpPop
+                        */
+                        Expression::FunctionExpression(f) => f.name.is_some(),
                         Expression::Decorator(_) => true,
                         Expression::AssignmentExpression(_) => true,
                         _ => false,
@@ -664,6 +651,26 @@ impl Compiler {
                     },
                     vec![symbol.index as u16],
                 );
+
+                Ok(())
+            }
+
+            Statement::ReturnStatement(ret_stmt) => {
+                // 第一件事 检查作用域
+                if self.symbol_table.borrow().outer.is_none() {
+                    return Err(CompileError::from(
+                        format!("cannot return outside function"),
+                        Some(ret_stmt.token()),
+                    ));
+                }
+
+                if let Err(msg) = self.compile_expr(*ret_stmt.value) {
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile return value: {msg}"
+                    )));
+                }
+
+                self.emit(OP_RETURN_VALUE, vec![]);
 
                 Ok(())
             }

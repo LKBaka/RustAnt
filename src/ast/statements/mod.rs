@@ -5,3 +5,4 @@ pub mod while_statement;
 pub mod use_statement;
 pub mod break_statement;
 pub mod continue_statement;
+pub mod return_statement;

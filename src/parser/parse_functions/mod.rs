@@ -15,7 +15,7 @@ pub mod parse_let_statement;
 pub mod parse_number;
 pub mod parse_object_member_expression;
 pub mod parse_prefix_expression;
-pub mod parse_return_expression;
+pub mod parse_return_statement;
 pub mod parse_string;
 pub mod parse_test_print_expression;
 pub mod parse_tuple_expression;
