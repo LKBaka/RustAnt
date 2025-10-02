@@ -45,9 +45,8 @@ pub const OP_GET_FIELD: u8 = 34;
 pub const OP_SET_FIELD: u8 = 35;
 pub const OP_CLASS: u8 = 36;
 pub const OP_LOAD_MODULE: u8 = 37;
-pub const OP_BREAK: u8 = 38;
-pub const OP_TEST_PRINT: u8 = 39;
-pub const OP_NOP: u8 = 40;
+pub const OP_TEST_PRINT: u8 = 38;
+pub const OP_NOP: u8 = 39;
 
 pub const INFIX_OPERATOR_TO_OPCODE: phf::Map<&'static str, OpCode> = phf::phf_map! {
     "+" => OP_ADD,
@@ -140,7 +139,6 @@ lazy_static! {
         m.insert(OP_SET_FIELD, Definition::new("OpSetField".into(), vec![2]));
         m.insert(OP_CLASS, Definition::new("OpClass".into(), vec![2]));
         m.insert(OP_LOAD_MODULE, Definition::new("OpLoadModule".into(), vec![2]));
-        m.insert(OP_BREAK, Definition::new("OpBreak".into(), vec![]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));
         m.insert(OP_NOP, Definition::new("OpNop".into(), vec![]));
 
