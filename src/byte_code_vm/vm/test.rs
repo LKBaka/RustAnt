@@ -96,6 +96,24 @@ mod tests {
     }
 
     #[test]
+    fn test_if() {
+        let tests1 = vec![
+            VmTestCase::<()>::new("if 0 {}".into(), ()),
+            VmTestCase::<()>::new("if 0 {} else if 0 {1}".into(), ()),
+        ];
+
+        run_vm_tests(tests1);
+
+        let tests2 = vec![
+            VmTestCase::new("if 0 {} else {1}".into(), big_dec!(1)),
+            VmTestCase::new("if 0 {} else if 1 {1} else {2}".into(), big_dec!(1)),
+            VmTestCase::new("if 0 {} else if 0 {1} else {2}".into(), big_dec!(2)),
+        ];
+
+        run_vm_tests(tests2);
+    }
+
+    #[test]
     fn test_global_let_statements() {
         let tests = vec![
             VmTestCase::new("let one = 1; one".into(), big_dec!(1)),
