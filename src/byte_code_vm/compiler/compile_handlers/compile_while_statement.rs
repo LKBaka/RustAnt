@@ -1,7 +1,7 @@
 use crate::{
     ast::{ast::Node, stmt::Statement},
     byte_code_vm::{
-        code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NOP},
+        code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY},
         compiler::compiler::{CompileError, Compiler},
         constants::FAKE_OFFSET_JUMP,
     },
@@ -54,8 +54,6 @@ pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<()
     // 恢复外层的 break/continue 位置记录（我们已经回填了本次循环的）
     compiler.break_command_pos = prev_break_positions;
     compiler.continue_command_pos = prev_continue_positions;
-
-    compiler.emit(OP_NOP, vec![]);
 
     Ok(())
 }

@@ -9,7 +9,7 @@ use crate::{
             Instructions, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE,
             OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE,
             OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY,
-            OP_LOAD_MODULE, OP_MINUS, OP_NONE, OP_NOP, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN,
+            OP_LOAD_MODULE, OP_MINUS, OP_NONE, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN,
             OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL,
             OP_TEST_PRINT, OP_TRUE, OpCode, read_uint16,
         },
@@ -443,7 +443,6 @@ impl Vm {
                     return Err(String::from("expected an condition"));
                 };
 
-                
                 if !rrc_is_truthy(&condition) {
                     self.current_frame().ip = (jump_to as isize) - 1;
                     return Ok(());
@@ -667,11 +666,7 @@ impl Vm {
                 use crate::println;
 
                 println!("{}", obj.borrow().inspect());
-
-                self.push(rc_ref_cell!(NONE_OBJ.clone()))?;
             }
-
-            OP_NOP => {}
 
             _ => return Err(format!("unknown opcode: {}", op)),
         }
