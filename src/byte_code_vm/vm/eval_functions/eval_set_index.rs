@@ -20,8 +20,8 @@ fn eval_set_index_array(
     // 直接借用 target 并在匹配到 AntArray 时就地修改 items，保持直接可变性
     let mut target_borrow = target.borrow_mut();
 
-    match *target_borrow {
-        Object::AntArray(ref mut arr) => {
+    match &mut *target_borrow {
+        Object::AntArray(arr) => {
 
             // index 检查
             if !index.is_integer() {

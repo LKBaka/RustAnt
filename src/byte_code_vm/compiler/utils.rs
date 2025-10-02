@@ -18,9 +18,7 @@ pub fn compile_it(code: String, file: String) -> Result<ByteCode, CompileErrorBo
         {
             use colored::Colorize;
 
-            use crate::ast::ast::INode;
-
-            println!("AST: {}", it.to_string().yellow());
+            println!("AST: {}", format!("{:#?}", it).yellow());
         }
 
         let mut compiler = Compiler::new(file.into());
@@ -56,9 +54,7 @@ pub fn compile_with_state(
         {
             use colored::Colorize;
 
-            use crate::ast::ast::INode;
-
-            println!("AST: {}", it.to_string().yellow());
+            println!("AST: {}", format!("{:#?}", it).yellow());
         }
 
         let mut compiler = Compiler::with_state(
