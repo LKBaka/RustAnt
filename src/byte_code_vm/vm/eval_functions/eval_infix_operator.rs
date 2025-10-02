@@ -278,6 +278,67 @@ fn gt_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
     }
 }
 
+pub fn gt_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => Ok(&l.value > &r.value),
+        (Object::AntI64(l), Object::AntI64(r)) => Ok(&l.value > &r.value),
+        (Object::AntDouble(l), Object::AntDouble(r)) => {
+            Ok(&l.value > &r.value)
+        }
+        (Object::AntInt(l), Object::AntDouble(r)) => {
+            Ok(&l.value > &r.value)
+        }
+        (Object::AntDouble(l), Object::AntInt(r)) => {
+            Ok(&l.value > &r.value)
+        }
+
+        (l, r) => Err(format!(
+            "unimplemented for types: {} and {}",
+            l.get_type(),
+            r.get_type()
+        )),
+    }
+}
+
+pub fn eq_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
+    if left.get_type() == NULL && right.get_type() != NULL {
+        return Ok(false);
+    } else if right.get_type() == NULL && left.get_type() != NULL {
+        return Ok(false);
+    }
+
+    if left.get_type() == NULL && right.get_type() == NULL {
+        return Ok(false);
+    }
+
+    match (left, right) {
+        (Object::AntInt(l), Object::AntInt(r)) => {
+            Ok(&l.value == &r.value)
+        }
+        (Object::AntI64(l), Object::AntI64(r)) => {
+            Ok(&l.value == &r.value)
+        }
+        (Object::AntDouble(l), Object::AntDouble(r)) => {
+            Ok(&l.value == &r.value)
+        }
+        (Object::AntInt(l), Object::AntDouble(r)) => {
+            Ok(&l.value == &r.value)
+        }
+        (Object::AntDouble(l), Object::AntInt(r)) => {
+            Ok(&l.value == &r.value)
+        }
+        (Object::AntBoolean(l), Object::AntBoolean(r)) => {
+            Ok(l.value == r.value)
+        }
+
+        (l, r) => Err(format!(
+            "unimplemented for types: {} and {}",
+            l.get_type(),
+            r.get_type()
+        )),
+    }
+}
+
 fn eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
     let left = &*left.borrow();
     let right = &*right.borrow();

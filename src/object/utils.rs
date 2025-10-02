@@ -6,17 +6,6 @@ use bigdecimal::BigDecimal;
 use crate::constants::{ant_false, ant_true};
 
 use crate::obj_enum::object::Object;
-use crate::object::ant_error::AntError;
-use crate::object::id_counter::next_id;
-use crate::object::object::{IAntObject, ERROR};
-
-pub fn is_native_error(obj: &Object) -> bool {
-    obj.get_type() == ERROR
-}
-
-pub fn is_error(obj: &Object) -> bool {
-    is_native_error(obj)
-}
 
 pub fn is_truthy(obj: &Object) -> bool {
     if obj == &*ant_true {
@@ -63,37 +52,6 @@ pub fn rrc_is_truthy(obj: &Rc<RefCell<Object>>) -> bool {
     } else {
         false
     }
-}
-
-
-pub fn create_error(message: String) -> Object {
-    Object::AntError(AntError {
-        id: next_id(),
-        error_name: "Error".to_string(),
-        message,
-    })
-}
-
-pub fn create_error_with_name(error_name: &'static str, message: String) -> Object {
-    Object::AntError(AntError {
-        id: next_id(),
-        error_name: error_name.to_string(),
-        message,
-    })
-}
-
-pub fn unsupported_operand_type_err(
-    op: &'static str,
-    left_type: String,
-    right_type: String,
-) -> Object {
-    create_error_with_name(
-        "TypeError",
-        format!(
-            "TypeError: unsupported operand type(s) for {}: '{}' and '{}'",
-            op, left_type, right_type
-        ),
-    )
 }
 
 #[macro_export]
