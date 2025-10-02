@@ -17,7 +17,6 @@ pub mod parser;
 pub mod runner;
 pub mod token;
 pub mod utils;
-// pub mod lg_ir_gen;
 
 #[wasm_bindgen]
 pub fn run_wasm(code: String, file: String) {
