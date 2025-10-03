@@ -73,7 +73,7 @@ impl TypeHintMap {
 }
 
 impl IntoIterator for &'static TypeHintMap {
-    type Item = (String, TypeHint);
+    type Item = (&'static String, &'static TypeHint);
     type IntoIter = TypeHintIterator;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -94,10 +94,10 @@ impl TypeHintIterator {
 }
 
 impl Iterator for TypeHintIterator {
-    type Item = (String, TypeHint);
+    type Item = (&'static String, &'static TypeHint);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|(k, v)| (k.clone(), v.clone()))
+        self.inner.next().map(|(k, v)| (k, v))
     }
 }
 
