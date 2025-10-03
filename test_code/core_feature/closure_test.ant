@@ -12,6 +12,8 @@ func new_adder(a, b) {
 	func 我是棍木(c) {
 		a + b + c
 	}
+
+	我是棍木
 }
 
 let adder = new_adder(1, 2);

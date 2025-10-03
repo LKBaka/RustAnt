@@ -1,5 +1,5 @@
 func counter(x) {
-    if x > 100 {
+    if x > 1000 {
         x
     } else {
         let foobar = 9999
