@@ -117,10 +117,12 @@ mod tests {
                     // 0004
                     make(OP_CONSTANTS, &vec![0u16]),
                     // 0007
-                    make(OP_POP, &vec![]),
+                    make(OP_NONE, &vec![]),
                     // 0008
+                    make(OP_POP, &vec![]),
+                    // 0009
                     make(OP_CONSTANTS, &vec![1u16]),
-                    // 0011
+                    // 0012
                     make(OP_POP, &vec![]),
                 ],
             ),
