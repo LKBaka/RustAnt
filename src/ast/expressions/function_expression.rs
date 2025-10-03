@@ -1,5 +1,6 @@
 use crate::ast::ast::{IExpression, INode};
 use crate::ast::expr::Expression;
+use crate::ast::expressions::identifier::Identifier;
 use crate::ast::statements::block_statement::BlockStatement;
 use crate::ast::utils::expressions_to_string;
 
@@ -10,6 +11,7 @@ pub struct FunctionExpression {
     pub token: Token,
     pub name: Option<String>,
     pub params: Vec<Box<Expression>>,
+    pub return_type: Option<Identifier>,
     pub block: BlockStatement,
 }
 
@@ -39,11 +41,13 @@ pub fn create_function_expression(
     name: Option<String>,
     params: Vec<Box<Expression>>,
     block: BlockStatement,
+    return_type: Option<Identifier>
 ) -> FunctionExpression {
     FunctionExpression {
         token,
         name,
         params,
+        return_type,
         block,
     }
 }

@@ -1,6 +1,7 @@
 use std::any::Any;
 
 use crate::ast::ast::INode;
+use crate::ast::expressions::identifier::Identifier;
 use crate::ast::stmt::Statement;
 use crate::parser::parse_functions::parse_block_statement::parse_block_statement;
 use crate::ast::expr::Expression;
@@ -28,7 +29,30 @@ pub fn parse_function_expression(parser: &mut Parser) -> Option<Expression> {
 
     let params = parser.parse_expression_list(TokenType::RParen);
 
-    parser.next_token(); // 离开右括号 (正常应前进到左大括号)
+    parser.next_token(); // 离开右括号 (正常应前进到左大括号 或者 '->' )
+
+    let mut ret_type = None;
+
+    if parser.cur_token_is(TokenType::Minus) {
+        if !parser.expect_peek(TokenType::Gt) {
+            return None
+        }
+
+        parser.next_token(); // 前进到 >
+
+        if !parser.expect_peek(TokenType::Ident) {
+            return None;
+        }
+
+        parser.next_token(); // 前进到 Ident
+
+        ret_type = Some(Identifier {
+            token: parser.cur_token.clone(),
+            value: parser.cur_token.value.clone()
+        });
+
+        parser.next_token(); // 理应前进到左大括号
+    }
 
     let block = parse_block_statement(parser);
 
@@ -48,6 +72,7 @@ pub fn parse_function_expression(parser: &mut Parser) -> Option<Expression> {
                 name,
                 params,
                 converted_block,
+                ret_type,
             )))
         }
         None => {
