@@ -2,19 +2,21 @@ class A {
 	let val = 0;
 	
 	#[method]
-	let plus = func (self) {
-		self.val = self.val + 1
+	let plus = func (self, n) {
+		self.val = self.val + n
+		self
+	}
+
+	#[method]
+	let to_int = func(self) {
 		self.val
 	}
 
-	func new() {
+	func create() {
 		copy(A)
 	}
 }
 
-let s = now();
+let a = A.create();
 
-let a = A.new();
-print(a.plus(1).plus(1))
-
-print(now() - s);
+print(a.plus(1).plus(1).to_int());
