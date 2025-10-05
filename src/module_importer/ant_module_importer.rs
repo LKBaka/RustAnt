@@ -38,25 +38,34 @@ impl<'a> AntModuleImporter<'a> {
                 println!("AST: {}", it.to_string().yellow());
             }
 
+            let table_num_def_cnt = self
+                .vm
+                .globals
+                .borrow()
+                .iter()
+                .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
+                .count() + 1;
+
             let mut compiler = Compiler::with_state(
                 {
-                    let mut table = SymbolTable::new();
-
-                    table.num_definitions = self
-                        .vm
-                        .globals
-                        .borrow()
-                        .iter()
-                        .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
-                        .count();
+                    let table = SymbolTable::new();
 
                     let table = rc_ref_cell!(table);
 
                     Compiler::init_builtin_map(table.clone());
+
+                    table.borrow_mut().num_definitions += table_num_def_cnt;
+
                     table
                 },
-                rc_ref_cell!(self.vm.constants.clone()),
-                rc_ref_cell!(self.vm.field_pool.clone()),
+                rc_ref_cell!(vec![
+                    rc_ref_cell!(UNINIT_OBJECT.clone());
+                    self.vm.constants.len()
+                ]),
+                rc_ref_cell!(vec![
+                    String::from("invaild string");
+                    self.vm.field_pool.len()
+                ]),
                 self.file.clone().into(),
             );
 
@@ -67,13 +76,30 @@ impl<'a> AntModuleImporter<'a> {
                 Err(msg) => return Err(format!("error compile module: {msg}")),
             };
 
+            #[cfg(feature = "debug")]
+            {
+                use colored::Colorize;
+
+                println!(
+                    "{}, ByteCode: {:#?}, Instructions: {}",
+                    "机器已上电".green(),
+                    bytecode,
+                    crate::byte_code_vm::code::code::instruction_to_str(&bytecode.instructions),
+                );
+            }
+
             let mut vm = Vm::new(bytecode);
+
             match vm.run() {
                 Ok(_) => {}
                 Err(msg) => return Err(format!("error running module: {msg}")),
             };
 
-            let mut vm_globals = vm.globals.borrow_mut();
+            let vm_globals = vm.globals.borrow_mut();
+
+            let vm_field_pool = &vm.field_pool[self.vm.field_pool.len()..];
+            let vm_constants = &vm.constants[self.vm.constants.len()..];
+
             let symbol_table = compiler.symbol_table.borrow();
 
             let mut globals = HashMap::new();
@@ -88,7 +114,13 @@ impl<'a> AntModuleImporter<'a> {
                 globals.insert(name.clone(), global);
             });
 
-            self.vm.globals.borrow_mut().append(&mut vm_globals);
+            self.vm.constants.append(&mut vm_constants.to_vec());
+            self.vm.field_pool.append(&mut vm_field_pool.to_vec());
+
+            self.vm
+                .globals
+                .borrow_mut()
+                .append(&mut vm_globals[table_num_def_cnt..].to_vec());
 
             return Ok(AntClass::from(globals));
         }
