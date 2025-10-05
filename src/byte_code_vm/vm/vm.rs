@@ -21,7 +21,7 @@ use crate::{
                 eval_array_literal_utils::build_array, eval_class_utils::build_class,
                 eval_hash_literal_utils::build_hash_map,
                 eval_index_expression::eval_index_expression,
-                eval_infix_operator::eval_infix_operator,
+                eval_infix_operator::eval_infix_operator, eval_obj_member::eval_obj_member,
                 eval_prefix_operator::eval_prefix_operator, eval_set_index::eval_set_index,
             },
             frame::Frame,
@@ -40,17 +40,17 @@ use crate::{
 pub const STACK_SIZE: usize = 2048;
 pub const GLOBALS_SIZE: usize = 65535;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Vm {
     pub constants: Vec<Rc<RefCell<Object>>>,
     pub field_pool: Vec<String>,
 
     pub stack: Vec<Rc<RefCell<Object>>>,
     pub globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-    
+
     pub frames: Vec<Frame>,
     pub frame_index: usize,
-    
+
     pub sp: usize, // stack next pos
 }
 
@@ -490,9 +490,7 @@ impl Vm {
                 current_frame.ip += 2;
 
                 let free = current_frame.closure.free.borrow()[free_index as usize].clone();
-                if let Err(msg) = self.push(rc_ref_cell!(
-                    free
-                )) {
+                if let Err(msg) = self.push(rc_ref_cell!(free)) {
                     return Err(format!("error push free variable: {msg}"));
                 }
             }
@@ -538,46 +536,12 @@ impl Vm {
 
                 let field = self.field_pool[field_obj_index as usize].clone();
 
-                let obj = self.pop();
+                let obj = match self.pop() {
+                    Some(it) => it,
+                    None => Err(format!("expected an object to get field"))?,
+                };
 
-                // 天哪那么多缩进我不会被拉去皮豆吧
-                if let Some(ref o) = obj {
-                    let o_borrow = o.borrow();
-
-                    if let Object::AntClass(clazz) = &*o_borrow {
-                        let value = match if let Some(it) = clazz.map.get(&field) {
-                            it
-                        } else {
-                            return Err(format!(
-                                "object '{}' has no field '{}'",
-                                clazz.inspect(),
-                                field
-                            ));
-                        } {
-                            Object::Method(method) => {
-                                let mut m = method.clone();
-
-                                m.me = obj.clone();
-
-                                Object::Method(m)
-                            }
-                            other => other.clone(),
-                        };
-
-                        if let Err(msg) = self.push(rc_ref_cell!(value)) {
-                            return Err(format!("error push field: {msg}"));
-                        }
-
-                        return Ok(());
-                    }
-
-                    return Err(format!(
-                        "expected an class to get field, got: {}",
-                        o_borrow.inspect()
-                    ));
-                }
-
-                return Err(format!("expected an object to get field"));
+                return eval_obj_member(self, obj, field);
             }
 
             OP_SET_FIELD => {
@@ -764,7 +728,9 @@ impl Vm {
             .map(|f| {
                 format!(
                     "file \"{}\", in {}. (at instruction position {})",
-                    f.closure.func.scope_info.file_name, f.closure.func.scope_info.scope_name, f.ip
+                    f.closure.func.scope_info.file_name,
+                    f.closure.func.scope_info.scope_name,
+                    f.ip + 1
                 )
             })
             .collect::<Vec<String>>();
