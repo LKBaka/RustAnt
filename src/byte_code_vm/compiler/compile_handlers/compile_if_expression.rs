@@ -5,7 +5,7 @@ use crate::{
         ast::{INode, Node}, expr::Expression
     },
     byte_code_vm::{
-        code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NONE, OP_POP},
+        code::code::{OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_NONE, OP_POP, OP_SET_FIELD},
         compiler::compiler::{CompileError, Compiler},
         constants::FAKE_OFFSET_JUMP,
     },
@@ -39,6 +39,10 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
 
     if compiler.last_instruction_is(OP_POP) {
         compiler.remove_last_pop();
+    }
+
+    if compiler.last_instruction_is(OP_SET_FIELD) {
+        compiler.emit(OP_NONE, vec![]);
     }
 
     // 只有 if
@@ -103,6 +107,10 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
                 compiler.remove_last_pop();
             }
 
+            if compiler.last_instruction_is(OP_SET_FIELD) {
+                compiler.emit(OP_NONE, vec![]);
+            }
+
             // 发出跳过后续块的无条件跳转
             let jump_pos = compiler.emit(OP_JUMP, vec![FAKE_OFFSET_JUMP]);
             else_if_jump_to_end_command_pos.push(jump_pos);
@@ -131,6 +139,10 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
 
         if compiler.last_instruction_is(OP_POP) {
             compiler.remove_last_pop();
+        }
+
+        if compiler.last_instruction_is(OP_SET_FIELD) {
+            compiler.emit(OP_NONE, vec![]);
         }
 
         let end_pos = compiler.current_instructions().borrow().len();
