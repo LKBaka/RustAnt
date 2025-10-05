@@ -330,6 +330,9 @@ pub fn eq_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
         (Object::AntBoolean(l), Object::AntBoolean(r)) => {
             Ok(l.value == r.value)
         }
+        (Object::AntString(l), Object::AntString(r)) => {
+            Ok(l.value == r.value)
+        }
 
         (l, r) => Err(format!(
             "unimplemented for types: {} and {}",
@@ -353,32 +356,7 @@ fn eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
         return Ok(TRUE_OBJ.clone());
     }
 
-    match (left, right) {
-        (Object::AntInt(l), Object::AntInt(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntI64(l), Object::AntI64(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntDouble(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntInt(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntDouble(l), Object::AntInt(r)) => {
-            Ok(native_boolean_to_object(&l.value == &r.value))
-        }
-        (Object::AntBoolean(l), Object::AntBoolean(r)) => {
-            Ok(native_boolean_to_object(l.value == r.value))
-        }
-
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
-    }
+    Ok(native_boolean_to_object(eq_native_ref(left, right)?))
 }
 
 fn not_eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
