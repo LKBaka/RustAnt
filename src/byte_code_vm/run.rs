@@ -62,11 +62,22 @@ pub fn run(
 
                 println!("{}", fmt_frames(&vm.frames()));
                 println!(
+                    "Constants: {:#?}",
+                    vm.constants
+                );
+                println!(
                     "Globals: {:#?}",
                     vm.globals
                         .borrow()
                         .iter()
                         .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
+                        .collect::<Vec<&Rc<RefCell<Object>>>>()
+                );
+                println!(
+                    "Stack: {:#?}",
+                    vm.stack
+                        .iter()
+                        .filter(|o| &*o.borrow() != &*UNINIT_OBJECT)
                         .collect::<Vec<&Rc<RefCell<Object>>>>()
                 );
             }
@@ -84,11 +95,22 @@ pub fn run(
 
                 println!("{}", fmt_frames(&vm.frames()));
                 println!(
+                    "Constants: {:#?}",
+                    vm.constants
+                );
+                println!(
                     "Globals: {:#?}",
                     vm.globals
                         .borrow()
                         .iter()
                         .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
+                        .collect::<Vec<&Rc<RefCell<Object>>>>()
+                );
+                println!(
+                    "Stack: {:#?}",
+                    vm.stack
+                        .iter()
+                        .filter(|o| &*o.borrow() != &*UNINIT_OBJECT)
                         .collect::<Vec<&Rc<RefCell<Object>>>>()
                 );
             }
