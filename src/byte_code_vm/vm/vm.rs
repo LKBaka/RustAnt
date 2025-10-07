@@ -40,7 +40,7 @@ use crate::{
 pub const STACK_SIZE: usize = 2048;
 pub const GLOBALS_SIZE: usize = 65535;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Vm {
     pub constants: Vec<Rc<RefCell<Object>>>,
     pub field_pool: Vec<String>,
@@ -52,6 +52,8 @@ pub struct Vm {
     pub frame_index: usize,
 
     pub sp: usize, // stack next pos
+
+    pub global_count: usize
 }
 
 impl Vm {
@@ -82,6 +84,7 @@ impl Vm {
             frames: vec![main_frame],
             frame_index: 1,
             sp: 0,
+            global_count: bytecode.global_count
         }
     }
 
@@ -110,6 +113,7 @@ impl Vm {
         Vm {
             constants: bytecode.constants,
             field_pool: bytecode.field_pool,
+            global_count: bytecode.global_count,
             stack: vec![uninit.clone(); STACK_SIZE as usize],
             globals,
             frames: vec![main_frame],
@@ -722,8 +726,7 @@ impl Vm {
     pub fn traceback_string(&mut self) -> String {
         let indent = "  ";
 
-        let s = self
-            .frames
+        let s = self.frames[0..self.frame_index]
             .iter()
             .map(|f| {
                 format!(
