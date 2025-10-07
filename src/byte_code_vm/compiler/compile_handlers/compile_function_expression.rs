@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 #[cfg(feature = "debug")]
 use crate::object::id_counter::next_id;
 use crate::{
@@ -104,7 +102,7 @@ pub fn compile_function_expression(
     let compiled_function = CompiledFunction {
         #[cfg(feature = "debug")]
         id: next_id(),
-        instructions: Rc::new(instructions),
+        instructions: instructions.into(),
         local_count,
         param_count,
         scope_info: ScopeInfo {

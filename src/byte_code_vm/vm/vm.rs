@@ -6,7 +6,7 @@ use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX},
     byte_code_vm::{
         code::code::{
-            Instructions, OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE,
+            OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE,
             OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE,
             OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY,
             OP_LOAD_MODULE, OP_MINUS, OP_NONE, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN,
@@ -63,7 +63,7 @@ impl Vm {
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
             id: next_id(),
-            instructions: Rc::new(bytecode.instructions),
+            instructions: bytecode.instructions.into(),
             local_count: 0,
             param_count: 0,
             scope_info: bytecode.main_info,
@@ -95,7 +95,7 @@ impl Vm {
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
             id: next_id(),
-            instructions: Rc::new(bytecode.instructions),
+            instructions: bytecode.instructions.into(),
             local_count: 0,
             param_count: 0,
             scope_info: bytecode.main_info,
@@ -149,7 +149,7 @@ impl Vm {
         &mut self,
         op: OpCode,
         ip: usize,
-        instructions: Rc<Instructions>,
+        instructions: Rc<[u8]>,
     ) -> Result<(), String> {
         match op {
             OP_CONSTANTS => {

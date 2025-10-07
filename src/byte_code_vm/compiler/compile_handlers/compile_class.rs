@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 #[cfg(feature = "debug")]
 use crate::object::id_counter::next_id;
 use crate::{
@@ -73,7 +71,7 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
     let compiled_function = CompiledFunction {
         #[cfg(feature = "debug")]
         id: next_id(),
-        instructions: Rc::new(ins.borrow().clone()),
+        instructions: ins.borrow().clone().into(),
         local_count: symbols_len / 2,
         param_count: 0,
         scope_info: ScopeInfo {

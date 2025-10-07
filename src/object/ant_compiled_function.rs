@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::rc::Rc;
 
-use crate::byte_code_vm::code::code::{Instructions, instruction_to_str};
+use crate::byte_code_vm::code::code::instruction_to_str;
 use crate::byte_code_vm::scope_info::ScopeInfo;
 use crate::impl_object;
 use crate::obj_enum::object::Object;
@@ -11,7 +11,7 @@ use crate::object::object::{COMPILED_FUNCTION, IAntObject, ObjectType};
 pub struct CompiledFunction {
     #[cfg(feature = "debug")]
     pub id: usize,
-    pub instructions: Rc<Instructions>,
+    pub instructions: Rc<[u8]>,
     pub local_count: usize,
     pub param_count: usize,
     pub scope_info: ScopeInfo,
@@ -58,7 +58,7 @@ impl IAntObject for CompiledFunction {
             self.id,
             self.local_count,
             self.param_count,
-            instruction_to_str(&self.instructions)
+            instruction_to_str(&self.instructions.to_vec())
         );
 
         #[cfg(not(feature = "debug"))]
@@ -66,7 +66,7 @@ impl IAntObject for CompiledFunction {
             "<CompiledFunction locals_count: {} param_count: {} {}>",
             self.local_count,
             self.param_count,
-            instruction_to_str(&self.instructions)
+            instruction_to_str(&self.instructions.to_vec())
         )
     }
 

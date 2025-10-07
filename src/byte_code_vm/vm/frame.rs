@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    byte_code_vm::code::code::{Instructions, instruction_to_str_with_indent},
+    byte_code_vm::code::code::instruction_to_str_with_indent,
     object::{ant_closure::Closure, ant_compiled_function::CompiledFunction},
 };
 
@@ -13,6 +13,7 @@ pub struct Frame {
 }
 
 impl Frame {
+    #[inline(always)]
     pub fn new(closure: Closure, base_pointer: usize) -> Self {
         Self {
             closure,
@@ -22,7 +23,7 @@ impl Frame {
     }
 
     #[inline(always)]
-    pub fn instructions(&self) -> Rc<Instructions> {
+    pub fn instructions(&self) -> Rc<[u8]> {
         self.closure.func.instructions.clone()
     }
 }
@@ -34,7 +35,7 @@ pub fn fmt_compiled_function(func: CompiledFunction, indent: &str) -> String {
     s.push_str(&format!("{indent}Instructions:\n"));
     s.push_str(&format!(
         "{}\n",
-        instruction_to_str_with_indent(&func.instructions, &indent.repeat(2))
+        instruction_to_str_with_indent(&func.instructions.to_vec(), &indent.repeat(2))
     ));
     s.push_str(&format!("{indent}RuntimeInfo:\n"));
     s.push_str(&format!("{}{:#?}\n", &indent.repeat(2), func.scope_info));
