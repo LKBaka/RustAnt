@@ -1,0 +1,29 @@
+class Lexer {
+	let code = None;
+	let cur_char = None;
+
+	let pos = 0;
+	let next_pos = 0;
+
+	func create(code) {
+		let l = copy(Lexer);
+
+		l.code = code;
+
+		l
+	}
+
+	#[method]
+	let read_char = func (self) {
+		if self.next_pos < len(self.code) {
+            self.cur_char = self.code[self.next_pos];
+        } else {
+            self.cur_char = ""; 
+        }
+
+        self.pos = self.next_pos;
+        self.next_pos = self.next_pos + 1;
+	
+		self.cur_char
+	}
+}

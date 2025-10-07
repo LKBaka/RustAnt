@@ -1,0 +1,19 @@
+use io;
+
+use a;
+
+let L = a.L;
+
+func main() {
+    while true {
+        let _ = io.console.input("... ")
+
+        let l = L.create(_);
+
+        while l.val != "" {
+            l.val = ""
+        }
+    }
+}
+
+main()
