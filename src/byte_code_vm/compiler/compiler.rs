@@ -107,6 +107,8 @@ pub struct ByteCode {
     pub constants: Vec<Rc<RefCell<Object>>>,
     pub field_pool: Vec<String>,
     pub main_info: ScopeInfo,
+
+    pub global_count: usize,
 }
 
 impl ByteCode {
@@ -115,12 +117,14 @@ impl ByteCode {
         constants: Vec<Rc<RefCell<Object>>>,
         field_pool: Vec<String>,
         info: ScopeInfo,
+        global_count: usize
     ) -> Self {
         Self {
             instructions,
             constants,
             field_pool,
             main_info: info,
+            global_count,
         }
     }
 }
@@ -862,6 +866,7 @@ impl Compiler {
                 file_name: self.file_name.clone(),
                 scope_name: Rc::from("__main__"),
             },
+            self.symbol_table.borrow().num_definitions,
         )
     }
 

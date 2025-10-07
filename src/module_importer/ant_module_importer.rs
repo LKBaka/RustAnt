@@ -38,13 +38,17 @@ impl<'a> AntModuleImporter<'a> {
                 println!("AST: {}", it.to_string().yellow());
             }
 
-            let table_num_def_cnt = self
-                .vm
-                .globals
-                .borrow()
-                .iter()
-                .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
-                .count() + 1;
+            // 考虑在再次出现 bug 时尝试启用他
+            // let table_num_def_cnt =
+            //     self
+            //         .vm
+            //         .globals
+            //         .borrow()
+            //         .iter()
+            //         .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
+            //         .count() + 1;
+
+            let table_num_def_cnt = self.vm.global_count + 1;
 
             let mut compiler = Compiler::with_state(
                 {
@@ -117,10 +121,15 @@ impl<'a> AntModuleImporter<'a> {
             self.vm.constants.append(&mut vm_constants.to_vec());
             self.vm.field_pool.append(&mut vm_field_pool.to_vec());
 
-            self.vm
-                .globals
-                .borrow_mut()
-                .append(&mut vm_globals[table_num_def_cnt..].to_vec());
+            // 将子 VM 的新全局按符号索引写回主 VM，保持原有语义
+            for (_name, symbol) in symbol_table.store.iter() {
+                if symbol.scope == SymbolScope::Builtin {
+                    continue;
+                }
+
+                self.vm.globals.borrow_mut()[symbol.index] = 
+                    vm_globals[symbol.index].clone();
+            }
 
             return Ok(AntClass::from(globals));
         }
