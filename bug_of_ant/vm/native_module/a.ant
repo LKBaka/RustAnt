@@ -2,10 +2,6 @@ class L {
     let val = ""
 
     func create(_) {
-        let l = copy(L);
-
-        l.val = ""
-
-        l
+        L
     }
 }

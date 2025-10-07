@@ -1,19 +1,7 @@
 use io;
 
-use a;
+while true {
+    let _ = io.console.input("... ")
 
-let L = a.L;
-
-func main() {
-    while true {
-        let _ = io.console.input("... ")
-
-        let l = L.create(_);
-
-        while l.val != "" {
-            l.val = ""
-        }
-    }
+    print(_)
 }
-
-main()

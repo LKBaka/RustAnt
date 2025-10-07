@@ -257,27 +257,10 @@ fn gt_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
     let left = &*left.borrow();
     let right = &*right.borrow();
 
-    match (left, right) {
-        (Object::AntInt(l), Object::AntInt(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
-        (Object::AntI64(l), Object::AntI64(r)) => Ok(native_boolean_to_object(&l.value > &r.value)),
-        (Object::AntDouble(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value > &r.value))
-        }
-        (Object::AntInt(l), Object::AntDouble(r)) => {
-            Ok(native_boolean_to_object(&l.value > &r.value))
-        }
-        (Object::AntDouble(l), Object::AntInt(r)) => {
-            Ok(native_boolean_to_object(&l.value > &r.value))
-        }
-
-        (l, r) => Err(format!(
-            "unimplemented for types: {} and {}",
-            l.get_type(),
-            r.get_type()
-        )),
-    }
+    Ok(native_boolean_to_object(gt_native_ref(left, right)?))
 }
 
+#[inline(always)]
 pub fn gt_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
     match (left, right) {
         (Object::AntInt(l), Object::AntInt(r)) => Ok(&l.value > &r.value),
@@ -300,6 +283,7 @@ pub fn gt_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
     }
 }
 
+#[inline(always)]
 pub fn eq_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
     if left.get_type() == NULL && right.get_type() != NULL {
         return Ok(false);
@@ -360,15 +344,8 @@ fn eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
 }
 
 fn not_eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
-    match eq_native(left, right) {
-        Ok(obj) => {
-            if let Object::AntBoolean(b) = obj {
-                return Ok(native_boolean_to_object(!b.value));
-            }
-
-            Err(format!("expected a boolean object, got: {:?}", obj))
-        }
-
+    match eq_native_ref(&*left.borrow(), &*right.borrow()) {
+        Ok(eq) => Ok(native_boolean_to_object(eq)),
         Err(e) => Err(e),
     }
 }
