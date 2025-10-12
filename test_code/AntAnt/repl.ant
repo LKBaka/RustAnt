@@ -1,16 +1,33 @@
 use io;
 
 use lexer;
+use token;
 
 let Lexer = lexer.Lexer;
 
+func str_trim(s) {
+	let new_s = ""
+
+	let i = 0;
+	while i < len(s) {
+		if s[i] != "\n" and s[i] != "\r" and s[i] != "\t" {
+			new_s = new_s + s[i]
+		}
+
+		i = i + 1
+	}
+
+	new_s
+}
+
 while true {
-	let code = io.console.input(">>> ");
+	let code = str_trim(io.console.input(">>> "));
 
 	let l = Lexer.create(code);
 
-	while l.cur_char != "" {
-		let r = l.read_char();
-		print(r)
+	let r = l.next_token();
+	while r != token.eof() {
+		print(r.to_string())
+		r = l.next_token()
 	}
 }

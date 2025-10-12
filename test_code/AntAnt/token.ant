@@ -1,0 +1,28 @@
+let TOK_UNINIT = "Uninit Token"
+let TOK_INT = "Integer"
+let TOK_EOF = "Eof"
+
+let token_type_map = None;
+
+class Token {
+    let ty = None
+    let value = None
+
+    func create(ty, value) {
+        let tok = copy(Token);
+
+        tok.ty = ty
+        tok.value = value
+
+        tok
+    }
+
+    #[method]
+    let to_string = func (self) {
+        "Token { " + "ty = " + ty + " value = \"" + value + "\" }"
+    }
+}
+
+func eof() {
+    Token.create(TOK_EOF, "\0")
+}

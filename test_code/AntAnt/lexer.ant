@@ -1,3 +1,5 @@
+use token;
+
 class Lexer {
 	let code = None;
 	let cur_char = None;
@@ -25,5 +27,18 @@ class Lexer {
         self.next_pos = self.next_pos + 1;
 	
 		self.cur_char
+	}
+
+	#[method]
+	let next_token = func (self) {
+		let tok = token.Token.create(token.TOK_UNINIT, self.cur_char)
+
+		if tok.value == "\0" {
+			tok.ty = token.TOK_EOF
+		}
+
+		self.read_char()
+
+		tok
 	}
 }
