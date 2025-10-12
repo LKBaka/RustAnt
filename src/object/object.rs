@@ -63,6 +63,7 @@ pub trait IAntObject: DynClone + Sync + Send + Any + Debug + AsAnyMut {
 clone_trait_object!(IAntObject);
 
 impl PartialEq for Object {
+    #[inline(always)]
     fn eq(&self, other: &Object) -> bool {
         self.equals(other)
     }
