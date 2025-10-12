@@ -10,10 +10,14 @@ mod tests {
     use colored::Colorize;
 
     use crate::{
-        big_dec, big_dec_from_str, byte_code_vm::{compiler::utils::compile_it, vm::vm::Vm}, convert_type_use_box, obj_enum::object::Object, object::{
+        big_dec, big_dec_from_str, byte_code_vm::{
+            compiler::utils::compile_it,
+            constants::UNINIT_OBJECT,
+            vm::vm::{Vm, GLOBALS_SIZE},
+        }, convert_type_use_box, obj_enum::object::Object, object::{
             ant_array::AntArray,
             object::{IAntObject, DOUBLE, INT},
-        }, try_unwrap
+        }, rc_ref_cell, try_unwrap
     };
 
     struct VmTestCase<T: Debug + Clone + 'static> {
@@ -433,7 +437,8 @@ mod tests {
 
             let bytecode = compile_result.expect("compiler failed!");
 
-            let mut vm = Vm::new(bytecode);
+            let mut globals = vec![rc_ref_cell!(UNINIT_OBJECT.clone()); GLOBALS_SIZE as usize];
+            let mut vm = Vm::new(bytecode, &mut globals);
 
             let result = vm.run();
             if let Err(msg) = result {

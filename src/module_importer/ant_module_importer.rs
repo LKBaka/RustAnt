@@ -7,19 +7,19 @@ use crate::{
             symbol_table::symbol_table::{SymbolScope, SymbolTable},
         },
         constants::UNINIT_OBJECT,
-        vm::vm::Vm,
+        vm::vm::{Vm, GLOBALS_SIZE},
     },
     object::ant_class::AntClass,
     parser::utils::parse,
     rc_ref_cell,
 };
 
-pub struct AntModuleImporter<'a> {
+pub struct AntModuleImporter<'a, 'b> {
     pub file: String,
-    pub vm: &'a mut Vm,
+    pub vm: &'a mut Vm<'b>,
 }
 
-impl<'a> AntModuleImporter<'a> {
+impl<'a, 'b> AntModuleImporter<'a, 'b> {
     pub fn import(&mut self) -> Result<AntClass, String> {
         let code = fs::read_to_string(&self.file);
         if let Err(err) = code {
@@ -92,14 +92,15 @@ impl<'a> AntModuleImporter<'a> {
                 );
             }
 
-            let mut vm = Vm::new(bytecode);
+            let mut temp_globals = vec![rc_ref_cell!(UNINIT_OBJECT.clone()); GLOBALS_SIZE];
+            let mut vm = Vm::new(bytecode, &mut temp_globals);
 
             match vm.run() {
                 Ok(_) => {}
                 Err(msg) => return Err(format!("error running module: {msg}")),
             };
 
-            let vm_globals = vm.globals.borrow_mut();
+            let vm_globals = &mut vm.globals;
 
             let vm_field_pool = &vm.field_pool[self.vm.field_pool.len()..];
             let vm_constants = &vm.constants[self.vm.constants.len()..];
@@ -127,7 +128,7 @@ impl<'a> AntModuleImporter<'a> {
                     continue;
                 }
 
-                self.vm.globals.borrow_mut()[symbol.index] = 
+                self.vm.globals[symbol.index] = 
                     vm_globals[symbol.index].clone();
             }
 

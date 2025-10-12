@@ -40,13 +40,13 @@ use crate::{
 pub const STACK_SIZE: usize = 2048;
 pub const GLOBALS_SIZE: usize = 65535;
 
-#[derive(Clone, PartialEq, Debug)]
-pub struct Vm {
+#[derive(Debug)]
+pub struct Vm<'a> {
     pub constants: Vec<Rc<RefCell<Object>>>,
     pub field_pool: Vec<String>,
 
     pub stack: Vec<Rc<RefCell<Object>>>,
-    pub globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    pub globals: &'a mut Vec<Rc<RefCell<Object>>>,
 
     pub frames: Vec<Frame>,
     pub frame_index: usize,
@@ -56,8 +56,8 @@ pub struct Vm {
     pub global_count: usize
 }
 
-impl Vm {
-    pub fn new(bytecode: ByteCode) -> Self {
+impl<'a> Vm<'a> {
+    pub fn new(bytecode: ByteCode, globals: &'a mut Vec<Rc<RefCell<Object>>>) -> Self {
         let uninit: Rc<RefCell<Object>> = rc_ref_cell!(UNINIT_OBJECT.clone());
 
         let main_func = CompiledFunction {
@@ -80,7 +80,7 @@ impl Vm {
             constants: bytecode.constants,
             field_pool: bytecode.field_pool,
             stack: vec![uninit.clone(); STACK_SIZE],
-            globals: rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE]),
+            globals,
             frames: vec![main_frame],
             frame_index: 1,
             sp: 0,
@@ -90,7 +90,7 @@ impl Vm {
 
     pub fn with_globals(
         bytecode: ByteCode,
-        globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+        globals: &'a mut Vec<Rc<RefCell<Object>>>,
     ) -> Self {
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
@@ -108,13 +108,11 @@ impl Vm {
 
         let main_frame = Frame::new(main_closure, 0);
 
-        let uninit = rc_ref_cell!(UNINIT_OBJECT.clone());
-
         Vm {
             constants: bytecode.constants,
             field_pool: bytecode.field_pool,
             global_count: bytecode.global_count,
-            stack: vec![uninit.clone(); STACK_SIZE as usize],
+            stack: vec![rc_ref_cell!(UNINIT_OBJECT.clone()); STACK_SIZE as usize],
             globals,
             frames: vec![main_frame],
             frame_index: 1,
@@ -282,7 +280,7 @@ impl Vm {
                 self.current_frame().ip += 2;
 
                 if let Some(obj) = self.pop() {
-                    self.globals.borrow_mut()[global_index as usize] = obj.clone();
+                    self.globals[global_index as usize] = obj;
                 }
             }
 
@@ -290,21 +288,11 @@ impl Vm {
                 let global_index = read_uint16(&instructions[(ip + 1)..]);
                 self.current_frame().ip += 2;
 
-                let obj_clone = {
-                    let obj: &Rc<RefCell<Object>> =
-                        &self.globals.borrow_mut()[global_index as usize];
+                let obj_clone = 
+                    self.globals[global_index as usize].clone();
 
-                    if &*obj.borrow() != &*UNINIT_OBJECT {
-                        Some(obj.clone())
-                    } else {
-                        None
-                    }
-                };
-
-                if let Some(obj) = obj_clone {
-                    if let Err(msg) = self.push(obj) {
-                        return Err(format!("error push global variable: {}", msg));
-                    }
+                if let Err(msg) = self.push(obj_clone) {
+                    return Err(format!("error push global variable: {}", msg));
                 }
             }
 
@@ -599,17 +587,18 @@ impl Vm {
                     }
                 };
 
-                let mut importer = ModuleImporter { vm: self };
-
-                let m = importer.import(vec![&mod_name]);
-
-                if m.is_empty() {
-                    return Err(format!("cannot found module '{}'", mod_name));
-                }
-
-                let module = match &m[0] {
-                    Ok(it) => it.clone(),
-                    Err(msg) => return Err(format!("error importing module: {msg}")),
+                let module = {
+                    let mut importer = ModuleImporter { vm: self };
+                    let m = importer.import(vec![&mod_name]);
+                    
+                    if m.is_empty() {
+                        return Err(format!("cannot found module '{}'", mod_name));
+                    }
+                    
+                    match &m[0] {
+                        Ok(it) => it.clone(),
+                        Err(msg) => return Err(format!("error importing module: {msg}")),
+                    }
                 };
 
                 if let Err(msg) = self.push(rc_ref_cell!(Object::AntClass(module))) {

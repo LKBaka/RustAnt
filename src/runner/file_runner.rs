@@ -38,7 +38,7 @@ impl FileRunner {
 
                 let symbol_table = rc_ref_cell!(SymbolTable::new());
                 let constants = rc_ref_cell!(vec![]);
-                let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);
+                let mut globals = vec![uninit.clone(); GLOBALS_SIZE as usize];
 
                 Compiler::init_builtin_map(symbol_table.clone());
 
@@ -48,7 +48,7 @@ impl FileRunner {
                     symbol_table,
                     constants,
                     rc_ref_cell!(vec![]),
-                    globals,
+                    &mut globals,
                 );
 
                 if let Err(err_enum) = result {

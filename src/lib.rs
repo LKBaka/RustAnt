@@ -25,14 +25,14 @@ pub fn run_wasm(code: String, file: String) {
     let symbol_table = rc_ref_cell!(SymbolTable::new());
     let constants = rc_ref_cell!(vec![]);
     let field_pool = rc_ref_cell!(vec![]);
-    let globals = rc_ref_cell!(vec![uninit.clone(); GLOBALS_SIZE as usize]);
+    let mut globals = vec![uninit.clone(); GLOBALS_SIZE as usize];
 
     Compiler::init_builtin_map(symbol_table.clone());
 
     let result = run(
         code.to_owned(),
         file.to_owned(),
-        symbol_table, constants, field_pool, globals
+        symbol_table, constants, field_pool, &mut globals
     );
 
     match result {

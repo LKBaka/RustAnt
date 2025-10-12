@@ -7,8 +7,8 @@ mod tests {
     use bigdecimal::BigDecimal;
     use colored::Colorize;
 
-    use crate::byte_code_vm::compiler::utils::compile_it;
-    use crate::byte_code_vm::vm::vm::Vm;
+    use crate::byte_code_vm::{compiler::utils::compile_it, constants::UNINIT_OBJECT, vm::vm::{Vm, GLOBALS_SIZE}};
+    use crate::rc_ref_cell;
 
     fn test_speed() {
         let bytecode = compile_it(
@@ -27,7 +27,8 @@ mod tests {
         for _ in 0..TEST_COUNT {
             let start = Instant::now();
 
-            let mut vm = Vm::new(bytecode.clone());
+            let mut globals = vec![rc_ref_cell!(UNINIT_OBJECT.clone()); GLOBALS_SIZE as usize];
+            let mut vm = Vm::new(bytecode.clone(), &mut globals);
             vm.run().expect("an error of vm");
 
             total += start.elapsed()

@@ -25,7 +25,7 @@ pub fn run(
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
     field_pool: Rc<RefCell<Vec<String>>>,
-    globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    globals: &mut Vec<Rc<RefCell<Object>>>,
 ) -> Result<Option<Object>, RunError> {
     #[cfg(feature = "debug")]
     use colored::Colorize;
@@ -68,7 +68,6 @@ pub fn run(
                 println!(
                     "Globals: {:#?}",
                     vm.globals
-                        .borrow()
                         .iter()
                         .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
                         .collect::<Vec<&Rc<RefCell<Object>>>>()
@@ -101,7 +100,6 @@ pub fn run(
                 println!(
                     "Globals: {:#?}",
                     vm.globals
-                        .borrow()
                         .iter()
                         .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
                         .collect::<Vec<&Rc<RefCell<Object>>>>()
@@ -128,7 +126,7 @@ pub fn run_pop(
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
     field_pool: Rc<RefCell<Vec<String>>>,
-    globals: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
+    globals: &mut Vec<Rc<RefCell<Object>>>,
 ) -> Result<Option<Object>, RunError> {
     #[cfg(feature = "debug")]
     use colored::Colorize;

@@ -11,11 +11,11 @@ use crate::{
     }, obj_enum::object::Object, object::ant_class::AntClass
 };
 
-pub struct ModuleImporter<'a> {
-    pub vm: &'a mut Vm
+pub struct ModuleImporter<'a, 'b> {
+    pub vm: &'a mut Vm<'b>
 }
 
-impl<'a> ModuleImporter<'a> {
+impl<'a, 'b> ModuleImporter<'a, 'b> {
     pub fn import(&mut self, imports: Vec<&str>) -> Vec<Result<AntClass, String>> {
         let mut results = vec![];
 
