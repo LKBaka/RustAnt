@@ -150,76 +150,75 @@ impl Lexer {
                 break;
             }
 
-            if self.cur_char != '\\' {
-                result.push(self.cur_char);
-
+            if self.cur_char == '\\' {
+                // 处理转义字符
                 self.read_char();
-            }
+                match self.cur_char {
+                    'n' => result.push('\n'),
+                    't' => result.push('\t'),
+                    'r' => result.push('\r'),
+                    '\\' => result.push('\\'),
+                    '"' => result.push('"'),
+                    '0' => result.push('\0'),
+                    'b' => result.push('\u{0008}'), // backspace
+                    'f' => result.push('\u{000C}'), // form feed
+                    'u' => {
+                        // Unicode转义: \u{XXXX}
+                        if self.peek_char() == '{' {
+                            self.read_char(); // 跳过 {
+                            let mut hex_digits = String::new();
 
-            // 处理转义字符
-            self.read_char();
-            match self.cur_char {
-                'n' => result.push('\n'),
-                't' => result.push('\t'),
-                'r' => result.push('\r'),
-                '\\' => result.push('\\'),
-                '"' => result.push('"'),
-                '0' => result.push('\0'),
-                'b' => result.push('\u{0008}'), // backspace
-                'f' => result.push('\u{000C}'), // form feed
-                'u' => {
-                    // Unicode转义: \u{XXXX}
-                    if self.peek_char() == '{' {
-                        self.read_char(); // 跳过 {
-                        let mut hex_digits = String::new();
-
-                        loop {
-                            self.read_char();
-                            if self.cur_char == '}' {
-                                break;
-                            }
-                            if self.eof() || !self.cur_char.is_ascii_hexdigit() {
-                                self.errors.push(format!(
-                                        "invalid unicode escape sequence. at file: <{}>, line {}, column {}",
-                                        self.file, self.line, self.column
-                                    ));
-                                return "".to_string();
-                            }
-                            hex_digits.push(self.cur_char);
-                        }
-
-                        match u32::from_str_radix(&hex_digits, 16) {
-                            Ok(code_point) => match char::from_u32(code_point) {
-                                Some(ch) => result.push(ch),
-                                None => {
+                            loop {
+                                self.read_char();
+                                if self.cur_char == '}' {
+                                    break;
+                                }
+                                if self.eof() || !self.cur_char.is_ascii_hexdigit() {
                                     self.errors.push(format!(
-                                        "invalid unicode code point. at file: <{}>, line {}, column {}",
+                                            "invalid unicode escape sequence. at file: <{}>, line {}, column {}",
+                                            self.file, self.line, self.column
+                                        ));
+                                    return "".to_string();
+                                }
+                                hex_digits.push(self.cur_char);
+                            }
+
+                            match u32::from_str_radix(&hex_digits, 16) {
+                                Ok(code_point) => match char::from_u32(code_point) {
+                                    Some(ch) => result.push(ch),
+                                    None => {
+                                        self.errors.push(format!(
+                                            "invalid unicode code point. at file: <{}>, line {}, column {}",
+                                            self.file, self.line, self.column
+                                        ));
+                                        return "".to_string();
+                                    }
+                                },
+                                Err(_) => {
+                                    self.errors.push(format!(
+                                        "invalid hex digits in unicode escape. at file: <{}>, line {}, column {}",
                                         self.file, self.line, self.column
                                     ));
                                     return "".to_string();
                                 }
-                            },
-                            Err(_) => {
-                                self.errors.push(format!(
-                                    "invalid hex digits in unicode escape. at file: <{}>, line {}, column {}",
-                                    self.file, self.line, self.column
-                                ));
-                                return "".to_string();
                             }
+                        } else {
+                            self.errors.push(format!(
+                                "invalid unicode escape sequence, expected '{{' after '\\u'. at file: <{}>, line {}, column {}",
+                                self.file, self.line, self.column
+                            ));
+                            return "".to_string();
                         }
-                    } else {
-                        self.errors.push(format!(
-                            "invalid unicode escape sequence, expected '{{' after '\\u'. at file: <{}>, line {}, column {}",
-                            self.file, self.line, self.column
-                        ));
-                        return "".to_string();
+                    }
+                    _ => {
+                        // 未知的转义序列，原样输出
+                        result.push('\\');
+                        result.push(self.cur_char);
                     }
                 }
-                _ => {
-                    // 未知的转义序列，原样输出
-                    result.push('\\');
-                    result.push(self.cur_char);
-                }
+            } else {
+                // 普通字符，直接添加
+                result.push(self.cur_char);
             }
 
             self.read_char();
