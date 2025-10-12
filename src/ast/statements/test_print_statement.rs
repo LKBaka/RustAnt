@@ -3,12 +3,12 @@ use crate::ast::expr::Expression;
 use crate::token::token::Token;
 
 #[derive(Debug, Clone)]
-pub struct TestPrintExpression {
+pub struct TestPrintStatement {
     pub value: Box<Expression>,
     pub token: Token,
 }
 
-impl INode for TestPrintExpression {
+impl INode for TestPrintStatement {
     fn token_literal(&self) -> String {
         self.token.value.clone()
     }
@@ -22,11 +22,11 @@ impl INode for TestPrintExpression {
     }
 }
 
-impl IExpression for TestPrintExpression {}
+impl IExpression for TestPrintStatement {}
 
-pub fn create_test_print_expression(
+pub fn create_test_print_statement(
     token: Token,
     value: Box<Expression>,
-) -> TestPrintExpression {
-    TestPrintExpression { token, value }
+) -> TestPrintStatement {
+    TestPrintStatement { token, value }
 }

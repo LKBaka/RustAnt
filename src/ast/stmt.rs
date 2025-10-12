@@ -4,10 +4,7 @@ use crate::{
     ast::{
         ast::{ExpressionStatement, INode, IStatement},
         statements::{
-            block_statement::BlockStatement, break_statement::BreakStatement,
-            class_statement::ClassStatement, continue_statement::ContinueStatement,
-            let_statement::LetStatement, return_statement::ReturnStatement,
-            use_statement::UseStatement, while_statement::WhileStatement,
+            block_statement::BlockStatement, break_statement::BreakStatement, class_statement::ClassStatement, continue_statement::ContinueStatement, let_statement::LetStatement, return_statement::ReturnStatement, test_print_statement::TestPrintStatement, use_statement::UseStatement, while_statement::WhileStatement
         },
     },
     token::token::Token,
@@ -25,6 +22,7 @@ pub enum Statement {
     BreakStatement,
     ContinueStatement,
     ReturnStatement,
+    TestPrintStatement,
 }
 
 macro_rules! auto_stmt {
@@ -39,6 +37,7 @@ macro_rules! auto_stmt {
             Statement::BreakStatement(stmt) => stmt.$method(),
             Statement::ContinueStatement(stmt) => stmt.$method(),
             Statement::ReturnStatement(stmt) => stmt.$method(),
+            Statement::TestPrintStatement(stmt) => stmt.$method(),
         }
     };
 }

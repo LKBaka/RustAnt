@@ -458,18 +458,6 @@ impl Compiler {
                 Ok(())
             }
 
-            Expression::TestPrintExpression(test_print_expr) => {
-                if let Err(msg) = self.compile_expr(*test_print_expr.value) {
-                    return Err(CompileError::from_none_token(format!(
-                        "error compile return value: {msg}"
-                    )));
-                }
-
-                self.emit(OP_TEST_PRINT, vec![]);
-
-                Ok(())
-            }
-
             Expression::Decorator(decorator) => {
                 if let &Expression::Identifier(_) = &*decorator.decorator {
                     if let Err(msg) = self.compile_expr(*decorator.decorator) {
@@ -702,6 +690,18 @@ impl Compiler {
                     },
                     vec![symbol.index as u16],
                 );
+
+                Ok(())
+            }
+
+            Statement::TestPrintStatement(test_print_stmt) => {
+                if let Err(msg) = self.compile_expr(*test_print_stmt.value) {
+                    return Err(CompileError::from_none_token(format!(
+                        "error compile return value: {msg}"
+                    )));
+                }
+
+                self.emit(OP_TEST_PRINT, vec![]);
 
                 Ok(())
             }

@@ -23,7 +23,6 @@ use crate::{
             object_member_expression::ObjectMemberExpression,
             prefix_expression::PrefixExpression,
             string_literal::StringLiteral,
-            test_print_expression::TestPrintExpression,
             tuple_expression::TupleExpression,
         },
     },
@@ -52,7 +51,6 @@ pub enum Expression {
     ObjectMemberExpression,
     PrefixExpression,
     StringLiteral,
-    TestPrintExpression,
     TupleExpression,
     ElseIfExpression,
 }
@@ -78,7 +76,6 @@ macro_rules! auto_expr {
             Expression::ObjectMemberExpression(expr) => expr.$method(),
             Expression::PrefixExpression(expr) => expr.$method(),
             Expression::StringLiteral(expr) => expr.$method(),
-            Expression::TestPrintExpression(expr) => expr.$method(),
             Expression::TupleExpression(expr) => expr.$method(),
             Expression::ElseIfExpression(expr) => expr.$method(),
             Expression::Int64Literal(expr) => expr.$method(),

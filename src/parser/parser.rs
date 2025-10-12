@@ -18,7 +18,7 @@ use crate::parser::parse_functions::parse_index_expression::parse_index_expressi
 use crate::parser::parse_functions::parse_none::parse_none;
 use crate::parser::parse_functions::parse_prefix_expression::parse_prefix_expression;
 use crate::parser::parse_functions::parse_return_statement::parse_return_statement;
-use crate::parser::parse_functions::parse_test_print_expression::parse_test_print_expression;
+use crate::parser::parse_functions::parse_test_print_statement::parse_test_print_statement;
 use crate::parser::parse_functions::parse_tuple_expression::parse_tuple_expression;
 use crate::parser::parse_functions::parse_use_statement::parse_use_statement;
 use crate::parser::precedence::*;
@@ -121,6 +121,9 @@ impl Parser {
         parser
             .statement_parse_fn_map
             .insert(TokenType::Return, parse_return_statement);
+        parser
+            .statement_parse_fn_map
+            .insert(TokenType::TestPrint, parse_test_print_statement);
 
         parser
             .prefix_parse_fn_map
@@ -167,9 +170,6 @@ impl Parser {
         parser
             .prefix_parse_fn_map
             .insert(TokenType::NumberSign, parse_decorator);
-        parser
-            .prefix_parse_fn_map
-            .insert(TokenType::TestPrint, parse_test_print_expression);
         parser
             .prefix_parse_fn_map
             .insert(TokenType::Comment, |_| None);
