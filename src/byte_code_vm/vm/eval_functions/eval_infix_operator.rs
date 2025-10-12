@@ -345,7 +345,7 @@ fn eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Ob
 
 fn not_eq_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<Object, String> {
     match eq_native_ref(&*left.borrow(), &*right.borrow()) {
-        Ok(eq) => Ok(native_boolean_to_object(eq)),
+        Ok(eq) => Ok(native_boolean_to_object(!eq)),
         Err(e) => Err(e),
     }
 }
