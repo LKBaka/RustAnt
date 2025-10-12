@@ -30,7 +30,8 @@ web-sys = { version = "0.3.81", features = ["console"] }
 
 [profile.dev]
 opt-level = 0
-lto = true
+debug = "full"
+# lto = true
 
 [profile.release]
 lto = true

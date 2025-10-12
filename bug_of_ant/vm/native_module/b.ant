@@ -1,7 +1,0 @@
-use io;
-
-while true {
-    let _ = io.console.input("... ")
-
-    print(_)
-}

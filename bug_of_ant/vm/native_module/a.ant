@@ -1,7 +1,0 @@
-class L {
-    let val = ""
-
-    func create(_) {
-        L
-    }
-}

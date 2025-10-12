@@ -10,18 +10,6 @@ while true {
 	let l = Lexer.create(code);
 
 	while l.cur_char != "" {
-		// let r = "";
-		// print("")
-		l.cur_char = ""
-	}
-}
-
-while true {
-	let code = io.console.input(">>> ");
-
-	let l = Lexer.create(code);
-
-	while l.cur_char != "" {
 		let r = l.read_char();
 		print(r)
 	}
