@@ -2,7 +2,7 @@ use unicode_properties::UnicodeEmoji;
 
 use crate::constants::*;
 use crate::token::token::Token;
-use crate::token::token_type::{TokenNumType, TokenType, TOKEN_TYPE_MAP};
+use crate::token::token_type::{TOKEN_TYPE_MAP, TokenNumType, TokenType};
 
 pub struct Lexer {
     code: String,
@@ -45,14 +45,14 @@ impl Lexer {
     fn peek_char(&self) -> char {
         match self.code_vec.get(self.next_pos) {
             Some(it) => it.clone(),
-            None => NULL_CHAR
+            None => NULL_CHAR,
         }
     }
 
     fn get_char(&self, pos: usize) -> char {
         match self.code_vec.get(pos) {
             Some(it) => it.clone(),
-            None => NULL_CHAR
+            None => NULL_CHAR,
         }
     }
 
@@ -117,14 +117,11 @@ impl Lexer {
             .collect::<Vec<String>>()
             .concat();
 
-        if 
-            self.peek_char() == '6' &&
-            self.get_char(self.next_pos + 1) == '4'
-        {
+        if self.peek_char() == '6' && self.get_char(self.next_pos + 1) == '4' {
             self.read_char();
             self.read_char();
             self.read_char();
-            
+
             TokenNumType::Int64(code)
         } else {
             TokenNumType::Big(code)
@@ -132,22 +129,17 @@ impl Lexer {
     }
 
     fn read_string(&mut self) -> String {
-        let start = self.pos + 1;
         let start_line = self.line;
         let start_column = self.column;
+        let mut result = String::new();
+
+        // 跳过起始双引号
+        self.read_char();
 
         loop {
-            self.read_char();
-
             if self.cur_char == '"' {
-                let s = self.code_vec[start..self.pos]
-                    .iter()
-                    .map(|ch| ch.to_string())
-                    .collect::<Vec<String>>()
-                    .join("");
-
-                self.read_char();
-                return s;
+                self.read_char(); // 跳过结束双引号
+                return result;
             }
 
             if self.eof() {
@@ -157,6 +149,80 @@ impl Lexer {
                 ));
                 break;
             }
+
+            if self.cur_char != '\\' {
+                result.push(self.cur_char);
+
+                self.read_char();
+            }
+
+            // 处理转义字符
+            self.read_char();
+            match self.cur_char {
+                'n' => result.push('\n'),
+                't' => result.push('\t'),
+                'r' => result.push('\r'),
+                '\\' => result.push('\\'),
+                '"' => result.push('"'),
+                '0' => result.push('\0'),
+                'b' => result.push('\u{0008}'), // backspace
+                'f' => result.push('\u{000C}'), // form feed
+                'u' => {
+                    // Unicode转义: \u{XXXX}
+                    if self.peek_char() == '{' {
+                        self.read_char(); // 跳过 {
+                        let mut hex_digits = String::new();
+
+                        loop {
+                            self.read_char();
+                            if self.cur_char == '}' {
+                                break;
+                            }
+                            if self.eof() || !self.cur_char.is_ascii_hexdigit() {
+                                self.errors.push(format!(
+                                        "invalid unicode escape sequence. at file: <{}>, line {}, column {}",
+                                        self.file, self.line, self.column
+                                    ));
+                                return "".to_string();
+                            }
+                            hex_digits.push(self.cur_char);
+                        }
+
+                        match u32::from_str_radix(&hex_digits, 16) {
+                            Ok(code_point) => match char::from_u32(code_point) {
+                                Some(ch) => result.push(ch),
+                                None => {
+                                    self.errors.push(format!(
+                                        "invalid unicode code point. at file: <{}>, line {}, column {}",
+                                        self.file, self.line, self.column
+                                    ));
+                                    return "".to_string();
+                                }
+                            },
+                            Err(_) => {
+                                self.errors.push(format!(
+                                    "invalid hex digits in unicode escape. at file: <{}>, line {}, column {}",
+                                    self.file, self.line, self.column
+                                ));
+                                return "".to_string();
+                            }
+                        }
+                    } else {
+                        self.errors.push(format!(
+                            "invalid unicode escape sequence, expected '{{' after '\\u'. at file: <{}>, line {}, column {}",
+                            self.file, self.line, self.column
+                        ));
+                        return "".to_string();
+                    }
+                }
+                _ => {
+                    // 未知的转义序列，原样输出
+                    result.push('\\');
+                    result.push(self.cur_char);
+                }
+            }
+
+            self.read_char();
         }
 
         "".to_string()
