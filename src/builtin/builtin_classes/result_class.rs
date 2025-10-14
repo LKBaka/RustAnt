@@ -3,18 +3,22 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 use crate::{
-    builtin::native_to_call_api::native_to_call, byte_code_vm::{constants::NONE_OBJ, vm::vm::Vm}, obj_enum::object::Object, object::{
+    byte_code_vm::{constants::NONE_OBJ, vm::vm::Vm},
+    function_caller::native_to_call_api::native_to_call,
+    obj_enum::object::Object,
+    object::{
         ant_class::AntClass,
         ant_method::{Method, MethodType},
         ant_native_function::create_ant_native_function,
         object::IAntObject,
-    }, rc_ref_cell
+    },
+    rc_ref_cell,
 };
 
 pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
     AntClass::from({
         let unwrap_func = |
-            _vm: &mut Vm,
+            _vm: &mut Vm, 
             args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
         | {
             let o = args[0].borrow();
@@ -41,10 +45,9 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             Err(format!("unwrap failed: {}", err.inspect()))
         };
 
-        let when_ok_func = |
-            vm: &mut Vm,
-            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
-        | -> Result<Option<Object>, String> {
+        let when_ok_func = |vm: &mut Vm,
+                            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
+         -> Result<Option<Object>, String> {
             let o = args[0].borrow();
 
             let me = match &*o {
@@ -70,8 +73,8 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
 
                     return Ok(match vm.pop() {
                         Some(obj) => Some(obj.borrow().clone()),
-                        None => None
-                    })
+                        None => None,
+                    });
                 }
             }
 
@@ -102,8 +105,8 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
 
                     return Ok(match vm.pop() {
                         Some(obj) => Some(obj.borrow().clone()),
-                        None => None
-                    })
+                        None => None,
+                    });
                 }
             }
 
@@ -127,9 +130,7 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             "when_ok".into(),
             Object::Method(Method {
                 me: None,
-                func: MethodType::NativeFunction(create_ant_native_function(
-                    None, when_ok_func
-                )),
+                func: MethodType::NativeFunction(create_ant_native_function(None, when_ok_func)),
             }),
         );
 
@@ -137,9 +138,7 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             "when_err".into(),
             Object::Method(Method {
                 me: None,
-                func: MethodType::NativeFunction(create_ant_native_function(
-                    None, when_err_func
-                )),
+                func: MethodType::NativeFunction(create_ant_native_function(None, when_err_func)),
             }),
         );
 

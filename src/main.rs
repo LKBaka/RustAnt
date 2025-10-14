@@ -11,6 +11,7 @@ mod utils;
 mod builtin;
 mod obj_enum;
 mod module_importer;
+mod function_caller;
 
 extern crate lazy_static;
 

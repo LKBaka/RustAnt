@@ -17,6 +17,7 @@ pub mod parser;
 pub mod runner;
 pub mod token;
 pub mod utils;
+pub mod function_caller;
 
 #[wasm_bindgen]
 pub fn run_wasm(code: String, file: String) {

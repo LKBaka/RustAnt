@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    builtin::native_to_call_api::native_to_call,
+    function_caller::native_to_call_api::native_to_call,
     byte_code_vm::vm::vm::Vm,
     obj_enum::object::Object,
     object::{ant_string::AntString, object::IAntObject},
