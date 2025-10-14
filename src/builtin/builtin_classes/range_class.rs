@@ -3,11 +3,9 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 use crate::{
-    byte_code_vm::{constants::NONE_OBJ, vm::vm::Vm},
-    obj_enum::object::Object,
-    object::{
-        ant_class::AntClass, ant_int::AntInt, ant_method::{Method, MethodType}, ant_native_function::create_ant_native_function, object::IAntObject
-    },
+    builtin::builtin_func::{ant_err, ant_ok}, byte_code_vm::{constants::NONE_OBJ, vm::vm::Vm}, obj_enum::object::Object, object::{
+        ant_class::AntClass, ant_int::AntInt, ant_method::{Method, MethodType}, ant_native_function::create_ant_native_function, ant_string::AntString, object::IAntObject
+    }
 };
 
 pub static RANGE: Lazy<AntClass> = Lazy::new(|| {
@@ -45,9 +43,9 @@ pub static RANGE: Lazy<AntClass> = Lazy::new(|| {
                 let next_num_obj = Object::AntInt(AntInt::from(next_num));
 
                 me.map.insert("next_num".into(), next_num_obj.clone());
-                Ok(Some(next_num_obj))
+                Ok(Some(ant_ok(next_num_obj)))
             } else {
-                Ok(None)
+                Ok(Some(ant_err(Object::AntString(AntString::new(String::from("StopIteration"))))))
             }
         };
 
