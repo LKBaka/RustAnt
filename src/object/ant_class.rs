@@ -32,7 +32,6 @@ impl AntClass {
                 format!("{}{}: {}", inner_indent, key, formatted_value)
             })
             .collect();
-            
         if entries.is_empty() {
             "class {}".to_string()
         } else {

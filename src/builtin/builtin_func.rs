@@ -11,17 +11,20 @@ use bigdecimal::BigDecimal;
 
 use crate::{
     builtin::builtin_classes::{option_class::OPTION, range_class::RANGE, result_class::RESULT},
-    byte_code_vm::{utils::native_boolean_to_object, vm::{
-        eval_functions::eval_infix_operator::{eq_native_ref, gt_native_ref},
-        vm::Vm,
-    }},
+    byte_code_vm::{
+        utils::native_boolean_to_object,
+        vm::{
+            eval_functions::eval_infix_operator::{eq_native_ref, gt_native_ref},
+            vm::Vm,
+        },
+    },
     obj_enum::object::Object,
     object::{
         ant_double::AntDouble,
         ant_int::AntInt,
         ant_method::{Method, MethodType},
         ant_string::AntString,
-        object::{IAntObject, DOUBLE, I64, INT, STRING},
+        object::{DOUBLE, I64, IAntObject, INT, STRING},
     },
     utils::run_command,
 };
@@ -267,7 +270,10 @@ pub fn builtin_err(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Optio
     Ok(Some(ant_err(err)))
 }
 
-pub fn builtin_some(_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>) -> Result<Option<Object>, String> {
+pub fn builtin_some(
+    _vm: &mut Vm,
+    args: Vec<Rc<RefCell<Object>>>,
+) -> Result<Option<Object>, String> {
     let value = args[0].borrow().clone();
 
     Ok(Some(ant_some(value)))
@@ -294,7 +300,9 @@ pub fn ant_null() -> Object {
 
 pub fn ant_some(val: Object) -> Object {
     let mut new_option = OPTION.clone();
-    new_option.map.insert("is_null".into(), native_boolean_to_object(false));
+    new_option
+        .map
+        .insert("is_null".into(), native_boolean_to_object(false));
     new_option.map.insert("value".into(), val);
 
     Object::AntClass(new_option)

@@ -7,10 +7,7 @@ use crate::{
     function_caller::native_to_call_api::native_to_call,
     obj_enum::object::Object,
     object::{
-        ant_class::AntClass,
-        ant_method::{Method, MethodType},
-        ant_native_function::create_ant_native_function,
-        object::IAntObject,
+        ant_class::AntClass, ant_method::{Method, MethodType}, ant_native_function::create_ant_native_function, ant_string::AntString, object::IAntObject
     },
     rc_ref_cell,
 };
@@ -80,8 +77,8 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
 
             let value = me
                 .map
-                .get("is_null")
-                .ok_or_else(|| format!("object '{}' has no field 'is_null'", me.inspect()))?;
+                .get("value")
+                .ok_or_else(|| format!("object '{}' has no field 'value'", me.inspect()))?;
 
             if args.len() > 1 {
                 let callback = args[1].clone();
@@ -138,6 +135,41 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
             Ok(None)
         };
 
+        let to_string = |
+            _vm: &mut Vm,
+            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
+        | -> Result<Option<Object>, String> {
+            let o = args[0].borrow();
+
+            let me = match &*o {
+                Object::AntClass(clazz) => clazz,
+                _ => return Err(format!("expected an class (self) got: {}", o.inspect())),
+            };
+
+            let is_null = match me
+                .map
+                .get("is_null")
+                .ok_or_else(|| format!("object '{}' has no field 'is_null'", me.inspect()))?
+            {
+                Object::AntBoolean(boolean) => boolean.value,
+                it => Err(format!(
+                    "expected field 'is_null' a boolean, got: {}",
+                    it.inspect()
+                ))?,
+            };
+
+            if is_null {
+                return Ok(Some(Object::AntString(AntString::new(String::from("Null")))));
+            }
+
+            let value = me
+                .map
+                .get("value")
+                .ok_or_else(|| format!("object '{}' has no field 'value'", me.inspect()))?;
+
+            return Ok(Some(Object::AntString(AntString::new(format!("Some({})", value.inspect())))));
+        };
+
         let mut m = HashMap::new();
 
         m.insert("value".into(), NONE_OBJ.clone());
@@ -168,6 +200,14 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
                 func: MethodType::NativeFunction(create_ant_native_function(
                     None, when_null_func
                 )),
+            }),
+        );
+
+        m.insert(
+            "to_string".into(),
+            Object::Method(Method {
+                me: None,
+                func: MethodType::NativeFunction(create_ant_native_function(None, to_string)),
             }),
         );
 
