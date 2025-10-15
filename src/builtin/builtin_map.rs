@@ -2,10 +2,7 @@ use lazy_static::lazy_static;
 
 use crate::{
     builtin::builtin_func::{
-        builtin_clear, builtin_copy, builtin_create_method, builtin_double, builtin_err,
-        builtin_force_exit, builtin_id, builtin_int, builtin_len, builtin_now, builtin_obj_info,
-        builtin_ok, builtin_panic, builtin_print, builtin_range, builtin_shell, builtin_sorted,
-        builtin_str,
+        ant_null, builtin_clear, builtin_copy, builtin_create_method, builtin_double, builtin_err, builtin_force_exit, builtin_id, builtin_int, builtin_len, builtin_now, builtin_obj_info, builtin_ok, builtin_panic, builtin_print, builtin_range, builtin_shell, builtin_some, builtin_sorted, builtin_str
     },
     obj_enum::object::Object,
     object::ant_native_function::create_ant_native_function,
@@ -105,6 +102,21 @@ lazy_static! {
             Object::AntNativeFunction(create_ant_native_function(None, builtin_err)),
         );
 
+        m.insert(
+            "Some".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_some)),
+        );
+
+        m.insert(
+            "Null".into(),
+            ant_null(),
+        );
+
+        m.insert(
+            "Err".into(),
+            Object::AntNativeFunction(create_ant_native_function(None, builtin_err)),
+        );
+
         m
     };
     pub static ref BUILTIN_MAP_INDEX: Vec<String> = {
@@ -125,6 +137,8 @@ lazy_static! {
             "int".into(),
             "double".into(),
             "sorted".into(),
+            "Some".into(),
+            "Null".into(),
             "Ok".into(),
             "Err".into(),
         ]
