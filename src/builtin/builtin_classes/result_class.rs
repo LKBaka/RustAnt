@@ -25,7 +25,7 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
 
             let me = match &*o {
                 Object::AntClass(clazz) => clazz,
-                _ => return Err(format!("expected an class (self) got {}", o.inspect())),
+                _ => return Err(format!("expected an class (self) got: {}", o.inspect())),
             };
 
             let err = match me.map.get("err") {
@@ -52,7 +52,7 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
 
             let me = match &*o {
                 Object::AntClass(clazz) => clazz,
-                _ => return Err(format!("expected an class (self) got {}", o.inspect())),
+                _ => return Err(format!("expected an class (self) got: {}", o.inspect())),
             };
 
             let err = match me.map.get("err") {
@@ -89,7 +89,7 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
 
             let me = match &*o {
                 Object::AntClass(clazz) => clazz,
-                _ => return Err(format!("expected an class (self) got {}", o.inspect())),
+                _ => return Err(format!("expected an class (self) got: {}", o.inspect())),
             };
 
             let err = match me.map.get("err") {
