@@ -1,4 +1,5 @@
-use bigdecimal::BigDecimal;
+use bigdecimal::num_bigint::Sign;
+use bigdecimal::{BigDecimal, Context};
 use std::any::Any;
 use std::str::FromStr;
 
@@ -67,7 +68,7 @@ impl IAntObject for AntDouble {
     }
 
     fn inspect(&self) -> String {
-        format!("{}", self.value.to_string())
+        format!("{}", self.value.normalized().to_string())
     }
 
     fn equals(&self, other: &dyn IAntObject) -> bool {
@@ -95,3 +96,54 @@ impl IAntObject for AntDouble {
 }
 
 impl_object!(AntDouble);
+
+fn fast_path(d: &BigDecimal) -> bool {
+    use bigdecimal::num_bigint::ToBigInt;
+
+    // 负数直接拒绝（sqrt 返回 NaN，与 BigDecimal 行为一致）
+    if d.sign() == Sign::Minus {
+        return false;
+    }
+
+    // 必须无小数位（scale <= 0）
+    if !d.is_integer() {
+        return false;
+    }
+    
+    // 整数部分位数 <= 53 bit
+    let int = d.with_scale(0).to_bigint().expect("already checked");
+    int.bits() <= 53
+}
+
+#[inline(always)]
+pub fn sqrt_big_dec(d: &BigDecimal, ctx: &Context) -> Option<BigDecimal> {
+    use bigdecimal::num_bigint::ToBigInt;
+    use num_traits::ToPrimitive;
+    use num_traits::FromPrimitive;
+
+    const MAX_PREC: u64 = 16;
+
+    let prec = ctx.precision().get();
+
+    // fast path    
+    if prec <= MAX_PREC && fast_path(d) {
+        // 此时 d 一定是非负整数，且 < 2^53
+        let i = d.to_bigint().unwrap();
+        let v = i.to_f64()?;      // 必成功
+        let r = v.sqrt();         // 硬件指令
+        
+        // f64 -> BigDecimal 再按用户精度舍入一次
+        return BigDecimal::from_f64(r)
+            .map(|b| b.with_precision_round(ctx.precision(), ctx.rounding_mode()));
+    }
+
+    d.sqrt_with_context(ctx)
+}
+
+pub fn sqrt_default(d: &BigDecimal) -> Option<BigDecimal> {
+    use std::num::NonZero;
+
+    let ctx = Context::new(NonZero::new(16).unwrap(), bigdecimal::RoundingMode::HalfUp);
+
+    sqrt_big_dec(d, &ctx)
+}
