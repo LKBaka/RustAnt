@@ -1,11 +1,11 @@
 use lazy_static::lazy_static;
 
 use crate::{
-    builtin::builtin_func::{
+    builtin::{builtin_classes::math_class::MATH, builtin_func::{
         ant_null, builtin_clear, builtin_copy, builtin_create_method, builtin_double, builtin_err, builtin_force_exit, builtin_id, builtin_int, builtin_len, builtin_now, builtin_obj_info, builtin_ok, builtin_panic, builtin_print, builtin_range, builtin_shell, builtin_some, builtin_sorted, builtin_str
-    },
+    }},
     obj_enum::object::Object,
-    object::ant_native_function::create_ant_native_function,
+    object::{ant_int::AntInt, ant_native_function::create_ant_native_function},
 };
 
 lazy_static! {
@@ -91,6 +91,11 @@ lazy_static! {
             "sorted".into(),
             Object::AntNativeFunction(create_ant_native_function(None, builtin_sorted)),
         );
+        
+        m.insert(
+            "math".into(),
+            Object::AntClass(MATH.clone())
+        );
 
         m.insert(
             "Ok".into(),
@@ -113,8 +118,8 @@ lazy_static! {
         );
 
         m.insert(
-            "Err".into(),
-            Object::AntNativeFunction(create_ant_native_function(None, builtin_err)),
+            "Int".into(),
+            Object::AntInt(AntInt::from(0))
         );
 
         m
@@ -137,10 +142,12 @@ lazy_static! {
             "int".into(),
             "double".into(),
             "sorted".into(),
+            "math".into(),
             "Some".into(),
             "Null".into(),
             "Ok".into(),
             "Err".into(),
+            "Int".into(),
         ]
     };
 }
