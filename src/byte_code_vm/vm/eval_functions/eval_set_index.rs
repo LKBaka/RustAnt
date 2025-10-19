@@ -13,7 +13,7 @@ fn eval_set_index_array(
     target: Rc<RefCell<Object>>,
 ) -> Result<(), String> {
     let casted_index = try_unwrap_ref!(index, Object::AntInt(index))
-        .expect(&format!("expected an integer, but got: {:?}", index));
+        .ok_or(format!("expected an integer, but got: {}", index.borrow().inspect()))?;
 
     let index = &casted_index.value;
 
@@ -22,7 +22,6 @@ fn eval_set_index_array(
 
     match &mut *target_borrow {
         Object::AntArray(arr) => {
-
             // index 检查
             if !index.is_integer() {
                 return Err(format!("unsupported array index: {}", index));
