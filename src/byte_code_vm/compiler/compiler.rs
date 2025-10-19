@@ -10,14 +10,15 @@ use crate::{
     builtin::builtin_map::BUILTIN_MAP_INDEX,
     byte_code_vm::{
         code::code::{
-            Instructions, OP_ARRAY, OP_CALL, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE,
-            OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX,
-            OP_JUMP, OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL,
+            Instructions, OP_ARRAY, OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN,
+            OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL, OP_GET_LOCAL, OP_INDEX, OP_JUMP,
+            OP_LOAD_MODULE, OP_NONE, OP_POP, OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL,
             OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, make,
         },
         compiler::{
             compile_handlers::{
                 compile_call_expression::compile_call_expression, compile_class::compile_class,
+                compile_decorator::compile_decorator,
                 compile_function_expression::compile_function_expression,
                 compile_hash_literal::compile_hash_literal,
                 compile_if_expression::compile_if_expression,
@@ -117,7 +118,7 @@ impl ByteCode {
         constants: Vec<Rc<RefCell<Object>>>,
         field_pool: Vec<String>,
         info: ScopeInfo,
-        global_count: usize
+        global_count: usize,
     ) -> Self {
         Self {
             instructions,
@@ -315,7 +316,7 @@ impl Compiler {
 
                 if let Err(msg) = result {
                     return Err(CompileError::from_none_token(format!(
-                        "error compile assignment value: {msg}"
+                        "error compile assignment value: \n{msg}"
                     )));
                 }
 
@@ -345,13 +346,13 @@ impl Compiler {
                     Expression::IndexExpression(index_expr) => {
                         if let Err(msg) = self.compile_expr(*index_expr.index) {
                             return Err(CompileError::from_none_token(format!(
-                                "error compile index: {msg}"
+                                "error compile index: \n{msg}"
                             )));
                         }
 
                         if let Err(msg) = self.compile_expr(*index_expr.expr) {
                             return Err(CompileError::from_none_token(format!(
-                                "error compile target: {msg}"
+                                "error compile target: \n{msg}"
                             )));
                         }
 
@@ -364,7 +365,7 @@ impl Compiler {
 
                             if let Err(msg) = self.compile_expr(*obj_member.left) {
                                 return Err(CompileError::from_none_token(format!(
-                                    "error compile object: {msg}"
+                                    "error compile object: \n{msg}"
                                 )));
                             }
 
@@ -407,7 +408,7 @@ impl Compiler {
                     let compile_result = self.compile_expr(*expr);
                     if let Err(msg) = compile_result {
                         return Err(CompileError::from_none_token(format!(
-                            "error compile array item: {msg}"
+                            "error compile array item: \n{msg}"
                         )));
                     }
                 }
@@ -420,13 +421,13 @@ impl Compiler {
             Expression::IndexExpression(index_expr) => {
                 if let Err(msg) = self.compile_expr(*index_expr.expr) {
                     return Err(CompileError::from_none_token(format!(
-                        "error compile left expression: {msg}"
+                        "error compile left expression: \n{msg}"
                     )));
                 }
 
                 if let Err(msg) = self.compile_expr(*index_expr.index) {
                     return Err(CompileError::from_none_token(format!(
-                        "error compile index: {msg}"
+                        "error compile index: \n{msg}"
                     )));
                 }
 
@@ -459,93 +460,7 @@ impl Compiler {
             }
 
             Expression::Decorator(decorator) => {
-                if let &Expression::Identifier(_) = &*decorator.decorator {
-                    if let Err(msg) = self.compile_expr(*decorator.decorator) {
-                        return Err(CompileError::from_none_token(format!(
-                            "error compile decorator: {msg}"
-                        )));
-                    }
-
-                    if let Statement::LetStatement(let_stmt) = decorator.to_decorate {
-                        let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
-
-                        if let Err(msg) = self.compile_expr(*let_stmt.value) {
-                            return Err(CompileError::from_none_token(format!(
-                                "error compile decorate expression: {msg}"
-                            )));
-                        }
-
-                        self.emit(OP_CALL, vec![1u16]);
-
-                        self.emit(
-                            if symbol.scope == SymbolScope::Global {
-                                OP_SET_GLOBAL
-                            } else {
-                                OP_SET_LOCAL
-                            },
-                            vec![symbol.index as u16],
-                        );
-
-                        return Ok(());
-                    }
-
-                    if let Err(msg) = self.compile_stmt(decorator.to_decorate) {
-                        return Err(CompileError::from_none_token(format!(
-                            "error compile decorate expression: {msg}"
-                        )));
-                    }
-
-                    self.emit(OP_CALL, vec![1u16]);
-                } else if let Expression::CallExpression(mut it) = *decorator.decorator {
-                    if let Statement::LetStatement(ref let_stmt) = decorator.to_decorate {
-                        it.args.insert(
-                            0,
-                            match decorator.to_decorate {
-                                Statement::ExpressionStatement(expr_stmt) => expr_stmt,
-                                _ => panic!(),
-                            }
-                            .expression
-                            .unwrap(),
-                        );
-
-                        if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
-                            return Err(CompileError::from_none_token(format!(
-                                "error compile decorator: {msg}"
-                            )));
-                        }
-
-                        let symbol = self.symbol_table.borrow_mut().define(&let_stmt.name.value);
-
-                        self.emit(
-                            if symbol.scope == SymbolScope::Global {
-                                OP_SET_GLOBAL
-                            } else {
-                                OP_SET_LOCAL
-                            },
-                            vec![symbol.index as u16],
-                        );
-
-                        return Ok(());
-                    }
-
-                    it.args.insert(
-                        0,
-                        match decorator.to_decorate {
-                            Statement::ExpressionStatement(expr_stmt) => expr_stmt,
-                            _ => panic!(),
-                        }
-                        .expression
-                        .unwrap(),
-                    );
-
-                    if let Err(msg) = self.compile_expr(Expression::CallExpression(it)) {
-                        return Err(CompileError::from_none_token(format!(
-                            "error compile decorator: {msg}"
-                        )));
-                    }
-                }
-
-                Ok(())
+                compile_decorator(self, Node::Expression(Expression::Decorator(decorator)))
             }
 
             Expression::CallExpression(expr) => {
@@ -797,7 +712,7 @@ impl Compiler {
         self.scopes[self.scope_index].last_instruction.op == op
     }
 
-    pub fn remove_last_pop(&mut self) {
+    pub fn remove_last_instruction(&mut self) {
         let last_instruction = self.scopes[self.scope_index].last_instruction;
         let previous_instruction = self.scopes[self.scope_index].previous_instruction;
 

@@ -1,3 +1,4 @@
+pub mod compile_decorator;
 pub mod compile_call_expression;
 pub mod compile_function_expression;
 pub mod compile_if_expression;
