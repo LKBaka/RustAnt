@@ -55,4 +55,16 @@ impl IAntObject for AntString {
     }
 }
 
+impl From<&str> for AntString {
+    fn from(value: &str) -> Self {
+        Self::new(value.to_string())
+    }
+}
+
+impl From<String> for AntString {
+    fn from(value: String) -> Self {
+        Self::new(value)
+    }
+}
+
 impl_object!(AntString);
