@@ -20,10 +20,10 @@ use crate::{
 pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let clazz = match match node {
         Node::Statement(stmt) => stmt,
-        _ => panic!(),
+        _ => unreachable!(),
     } {
         Statement::ClassStatement(it) => it,
-        _ => panic!(),
+        _ => unreachable!(),
     };
 
     let symbol = compiler.symbol_table.borrow_mut().define(&clazz.name.value);
@@ -39,7 +39,7 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
 
     if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(clazz.block)) {
         return Err(CompileError::from_none_token(format!(
-            "error compile class: {msg}"
+            "error compile class: \n{msg}"
         )));
     }
 

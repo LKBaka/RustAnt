@@ -1,5 +1,3 @@
-use core::panic;
-
 use crate::{
     ast::{
         ast::{INode, Node}, expr::Expression
@@ -14,16 +12,16 @@ use crate::{
 pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let if_expr = match match node {
         Node::Expression(expr) => expr,
-        _ => panic!()
+        _ => unreachable!()
     } {
         Expression::IfExpression(it) => it,
-        _ => panic!()
+        _ => unreachable!()
     };
 
     let condition_result = compiler.compile_expr(*if_expr.condition);
     if let Err(msg) = condition_result {
         return Err(CompileError::from_none_token(
-            format!("error compile condition: {}", msg)
+            format!("error compile condition: \n{}", msg)
         ));
     }
 
@@ -33,12 +31,12 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
     let consequence_result = compiler.compile_stmt(if_expr.consequence);
     if let Err(msg) = consequence_result {
         return Err(CompileError::from_none_token(
-            format!("error compile consequence: {}", msg)
+            format!("error compile consequence: \n{}", msg)
         ));
     }
 
     if compiler.last_instruction_is(OP_POP) {
-        compiler.remove_last_pop();
+        compiler.remove_last_instruction();
     }
 
     if compiler.last_instruction_is(OP_SET_FIELD) {
@@ -87,7 +85,7 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
             let cond_result = compiler.compile_expr(*else_if.condition);
             if let Err(msg) = cond_result {
                 return Err(CompileError::from_none_token(
-                    format!("error compile else-if condition: {}", msg)
+                    format!("error compile else-if condition: \n{}", msg)
                 ));
             }
 
@@ -98,13 +96,13 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
             let block_result = compiler.compile_stmt(else_if.consequence);
             if let Err(msg) = block_result {
                 return Err(CompileError::from_none_token(
-                    format!("error compile else-if block: {}", msg)
+                    format!("error compile else-if block: \n{}", msg)
                 ));
             }
 
             // 移除最后的pop指令（如果有）
             if compiler.last_instruction_is(OP_POP) {
-                compiler.remove_last_pop();
+                compiler.remove_last_instruction();
             }
 
             if compiler.last_instruction_is(OP_SET_FIELD) {
@@ -133,12 +131,12 @@ pub fn compile_if_expression(compiler: &mut Compiler, node: Node) -> Result<(), 
         let alternative_result = compiler.compile_stmt(alternative);
         if let Err(msg) = alternative_result {
             return Err(CompileError::from_none_token(
-                format!("error compile alternative: {}", msg)
+                format!("error compile alternative: \n{}", msg)
             ));
         }
 
         if compiler.last_instruction_is(OP_POP) {
-            compiler.remove_last_pop();
+            compiler.remove_last_instruction();
         }
 
         if compiler.last_instruction_is(OP_SET_FIELD) {

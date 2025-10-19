@@ -17,13 +17,13 @@ pub fn compile_hash_literal(compiler: &mut Compiler, node: Node) -> Result<(), C
     for (k, v) in hash_literal.pairs {
         if let Err(msg) = compiler.compile_expr(*k) {
             return Err(CompileError::from_none_token(
-                format!("error compile key: {msg}")
+                format!("error compile key: \n{msg}")
             ))
         }
 
         if let Err(msg) = compiler.compile_expr(*v) {
             return Err(CompileError::from_none_token(
-                format!("error compile value: {msg}")
+                format!("error compile value: \n{msg}")
             ))
         }
     }

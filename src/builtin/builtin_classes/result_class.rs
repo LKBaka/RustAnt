@@ -45,8 +45,8 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             Err(format!("unwrap failed: {}", err.inspect()))
         };
 
-        let when_ok_func = |vm: &mut Vm,
-                            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
+        let when_ok_func = 
+        |vm: &mut Vm, args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
          -> Result<Option<Object>, String> {
             let o = args[0].borrow();
 

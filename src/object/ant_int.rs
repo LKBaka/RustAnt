@@ -53,6 +53,7 @@ impl IAntObject for AntInt {
 impl_object!(AntInt);
 
 impl From<i32> for AntInt {
+    #[inline(always)]
     fn from(value: i32) -> Self {
         AntInt {
             id: next_id(),
@@ -62,6 +63,7 @@ impl From<i32> for AntInt {
 }
 
 impl From<i64> for AntInt {
+    #[inline(always)]
     fn from(value: i64) -> Self {
         AntInt {
             id: next_id(),
@@ -71,6 +73,7 @@ impl From<i64> for AntInt {
 }
 
 impl From<usize> for AntInt {
+    #[inline(always)]
     fn from(value: usize) -> Self {
         AntInt {
             id: next_id(),
@@ -80,6 +83,7 @@ impl From<usize> for AntInt {
 }
 
 impl From<BigDecimal> for AntInt {
+    #[inline(always)]
     fn from(value: BigDecimal) -> Self {
         AntInt {
             id: next_id(),

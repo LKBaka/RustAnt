@@ -12,15 +12,15 @@ pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<()
 
     let while_stmt = match match node {
         Node::Statement(stmt) => stmt,
-        _ => panic!()
+        _ => unreachable!()
     } {
         Statement::WhileStatement(it) => it,
-        _ => panic!()
+        _ => unreachable!()
     };
 
     if let Err(msg) = compiler.compile_expr(*while_stmt.condition) {
         return Err(CompileError::from_none_token(
-            format!("error compile while loop condition: {msg}")
+            format!("error compile while loop condition: \n{msg}")
         ));
     }
     let jump_not_truthy_command_pos = compiler.emit(OP_JUMP_NOT_TRUTHY, vec![FAKE_OFFSET_JUMP]);
@@ -30,7 +30,7 @@ pub fn compile_while_statement(compiler: &mut Compiler, node: Node) -> Result<()
 
     if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(while_stmt.block)) {
         return Err(CompileError::from_none_token(
-            format!("error compile while loop body: {msg}")
+            format!("error compile while loop body: \n{msg}")
         ));
     }
 

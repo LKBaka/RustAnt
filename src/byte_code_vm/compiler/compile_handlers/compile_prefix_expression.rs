@@ -9,10 +9,10 @@ pub fn compile_prefix_expression(
 ) -> Result<(), CompileError> {
     let prefix_expr = match match node {
         Node::Expression(expr) => expr,
-        _ => panic!()
+        _ => unreachable!()
     } {
         Expression::PrefixExpression(it) => it,
-        _ => panic!()
+        _ => unreachable!()
     };
 
     let result = compiler.compile_expr(*prefix_expr.expression);
@@ -24,7 +24,7 @@ pub fn compile_prefix_expression(
         *op
     } else {
         return Err(CompileError::from(
-            format!("unknown prefix operator: {}", &prefix_expr.operator.value),
+            format!("unknown prefix operator: \n{}", &prefix_expr.operator.value),
             Some(prefix_expr.operator)
         ));
     };

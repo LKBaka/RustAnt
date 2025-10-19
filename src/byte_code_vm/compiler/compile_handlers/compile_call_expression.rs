@@ -6,15 +6,15 @@ use crate::{
 pub fn compile_call_expression(compiler: &mut Compiler, node: Node) -> Result<(), CompileError> {
     let call_expr = match match node {
         Node::Expression(expr) => expr,
-        _ => panic!()
+        _ => unreachable!()
     } {
         Expression::CallExpression(it) => it,
-        _ => panic!()
+        _ => unreachable!()
     };
 
     if let Err(msg) = compiler.compile_expr(*call_expr.func) {
         return Err(CompileError::from_none_token(
-            format!("error compile call expresion: {msg}")
+            format!("error compile call expresion: \n{msg}")
         ));
     }
 
@@ -23,7 +23,7 @@ pub fn compile_call_expression(compiler: &mut Compiler, node: Node) -> Result<()
     for arg in call_expr.args {
         if let Err(msg) = compiler.compile_expr(*arg) {
             return Err(CompileError::from_none_token(
-                format!("error compile args: {msg}")
+                format!("error compile args: \n{msg}")
             ));
         }
     }

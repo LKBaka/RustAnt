@@ -23,10 +23,10 @@ pub fn compile_function_expression(
 
     let func_expr = match match node {
         Node::Expression(expr) => expr,
-        _ => panic!(),
+        _ => unreachable!(),
     } {
         Expression::FunctionExpression(it) => it,
-        _ => panic!(),
+        _ => unreachable!(),
     };
 
     let func_token = func_expr.token();
@@ -80,7 +80,7 @@ pub fn compile_function_expression(
 
     if let Err(msg) = compile_body_result {
         return Err(CompileError::from_none_token(format!(
-            "error compile function body: {msg}"
+            "error compile function body: \n{msg}"
         )));
     }
 

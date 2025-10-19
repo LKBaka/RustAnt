@@ -12,22 +12,22 @@ pub fn compile_infix_expression(
 ) -> Result<(), CompileError> {
     let infix_expr = match match node {
         Node::Expression(expr) => expr,
-        _ => panic!()
+        _ => unreachable!()
     } {
         Expression::InfixExpression(it) => it,
-        _ => panic!()
+        _ => unreachable!()
     };
 
     if infix_expr.operator.value == "<" {
         if let Err(right_err) = compiler.compile_expr(*infix_expr.right) {
             return Err(CompileError::from_none_token(
-                format!("error compiling right expression: {}", right_err)
+                format!("error compiling right expression: \n{}", right_err)
             ));
         };
 
         if let Err(left_err) = compiler.compile_expr(*infix_expr.left) {
             return Err(CompileError::from_none_token(
-                format!("error compiling left expression: {}", left_err)
+                format!("error compiling left expression: \n{}", left_err)
             ));
         };
 
@@ -38,13 +38,13 @@ pub fn compile_infix_expression(
 
     if let Err(left_err) = compiler.compile_expr(*infix_expr.left) {
         return Err(CompileError::from_none_token(
-            format!("error compiling left expression: {}", left_err)
+            format!("error compiling left expression: \n{}", left_err)
         ));
     };
 
     if let Err(right_err) = compiler.compile_expr(*infix_expr.right) {
         return Err(CompileError::from_none_token(
-            format!("error compiling right expression: {}", right_err)
+            format!("error compiling right expression: \n{}", right_err)
         ));
     };
 

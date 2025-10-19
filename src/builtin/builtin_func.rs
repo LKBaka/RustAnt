@@ -320,7 +320,7 @@ pub fn builtin_sorted(
     let mut err = None;
 
     arr.items.sort_by(
-        // 调换 l, r 实现小于
+        // swap l, r to implement 'l less than r'
         |l, r| match gt_native_ref(r, l) {
             Ok(less_than) => {
                 if less_than {
