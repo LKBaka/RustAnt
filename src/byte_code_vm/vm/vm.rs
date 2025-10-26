@@ -6,12 +6,11 @@ use crate::{
     builtin::builtin_map::{BUILTIN_MAP, BUILTIN_MAP_INDEX},
     byte_code_vm::{
         code::code::{
-            OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE,
-            OP_CONSTANTS, OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE,
-            OP_GET_GLOBAL, OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY,
-            OP_LOAD_MODULE, OP_MINUS, OP_NONE, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN,
-            OP_RETURN_VALUE, OP_SET_FIELD, OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL,
-            OP_TEST_PRINT, OP_TRUE, OpCode, read_uint16,
+            OP_ADD, OP_AND, OP_ARRAY, OP_BANG, OP_CALL, OP_CLASS, OP_CLOSURE, OP_CONSTANTS,
+            OP_CURRENT_CLOSURE, OP_FALSE, OP_GET_BUILTIN, OP_GET_FIELD, OP_GET_FREE, OP_GET_GLOBAL,
+            OP_GET_LOCAL, OP_HASH, OP_INDEX, OP_JUMP, OP_JUMP_NOT_TRUTHY, OP_LOAD_MODULE, OP_MINUS,
+            OP_NONE, OP_NOTEQ, OP_OR, OP_POP, OP_RETURN, OP_RETURN_VALUE, OP_SET_FIELD,
+            OP_SET_GLOBAL, OP_SET_INDEX, OP_SET_LOCAL, OP_TEST_PRINT, OP_TRUE, OpCode, read_uint16,
         },
         compiler::compiler::ByteCode,
         constants::{FALSE_OBJ, NONE_OBJ, TRUE_OBJ, UNINIT_OBJECT},
@@ -53,7 +52,7 @@ pub struct Vm<'a> {
 
     pub sp: usize, // stack next pos
 
-    pub global_count: usize
+    pub global_count: usize,
 }
 
 impl<'a> Vm<'a> {
@@ -84,14 +83,11 @@ impl<'a> Vm<'a> {
             frames: vec![main_frame],
             frame_index: 1,
             sp: 0,
-            global_count: bytecode.global_count
+            global_count: bytecode.global_count,
         }
     }
 
-    pub fn with_globals(
-        bytecode: ByteCode,
-        globals: &'a mut Vec<Rc<RefCell<Object>>>,
-    ) -> Self {
+    pub fn with_globals(bytecode: ByteCode, globals: &'a mut Vec<Rc<RefCell<Object>>>) -> Self {
         let main_func = CompiledFunction {
             #[cfg(feature = "debug")]
             id: next_id(),
@@ -143,12 +139,7 @@ impl<'a> Vm<'a> {
     }
 
     #[inline(always)]
-    pub fn next(
-        &mut self,
-        op: OpCode,
-        ip: usize,
-        instructions: Rc<[u8]>,
-    ) -> Result<(), String> {
+    pub fn next(&mut self, op: OpCode, ip: usize, instructions: Rc<[u8]>) -> Result<(), String> {
         match op {
             OP_CONSTANTS => {
                 let const_index = read_uint16(&instructions[(ip + 1)..]);
@@ -288,8 +279,7 @@ impl<'a> Vm<'a> {
                 let global_index = read_uint16(&instructions[(ip + 1)..]);
                 self.current_frame().ip += 2;
 
-                let obj_clone = 
-                    self.globals[global_index as usize].clone();
+                let obj_clone = self.globals[global_index as usize].clone();
 
                 if let Err(msg) = self.push(obj_clone) {
                     return Err(format!("error push global variable: {}", msg));
@@ -510,9 +500,14 @@ impl<'a> Vm<'a> {
 
             OP_CLASS => {
                 let symbols_len = read_uint16(&instructions[(ip + 1)..]);
-                self.current_frame().ip += 2;
+                let name_index = read_uint16(&instructions[(ip + 3)..]) as usize;
 
-                let clazz = build_class(&self.stack, self.sp - symbols_len as usize, self.sp)?;
+                let name = self.constants[name_index].borrow().inspect();
+
+                self.current_frame().ip += 4;
+
+                let clazz =
+                    build_class(&self.stack, &name, self.sp - symbols_len as usize, self.sp)?;
 
                 self.sp -= symbols_len as usize;
 
@@ -590,11 +585,11 @@ impl<'a> Vm<'a> {
                 let module = {
                     let mut importer = ModuleImporter { vm: self };
                     let m = importer.import(vec![&mod_name]);
-                    
+
                     if m.is_empty() {
                         return Err(format!("cannot found module '{}'", mod_name));
                     }
-                    
+
                     match &m[0] {
                         Ok(it) => it.clone(),
                         Err(msg) => return Err(format!("error importing module: {msg}")),

@@ -8,7 +8,7 @@ use crate::object::ant_double::AntDouble;
 use crate::object::id_counter::next_id;
 use crate::object::object::{IAntObject, ObjectType, I64};
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct AntI64 {
     pub id: usize,
     pub value: i64,

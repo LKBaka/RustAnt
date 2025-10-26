@@ -37,16 +37,20 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
         .into(),
     });
 
+    // 编译类中的代码
     if let Err(msg) = compiler.compile_stmt(Statement::BlockStatement(clazz.block)) {
         return Err(CompileError::from_none_token(format!(
             "error compile class: \n{msg}"
         )));
     }
 
+    // 拿到当前类作用域所有的符号
     let symbols = compiler.symbol_table.borrow().store.clone();
 
+    // (name, symbol) k, v
     let symbols_len = symbols.len() * 2;
 
+    // 将字段名 (原 name) 压栈, 之后将符号所代表的值压栈
     for (name, symbol) in symbols {
         let field = Object::AntString(AntString::new(name));
         let field_index = compiler.add_constant(field) as u16;
@@ -56,7 +60,14 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
         compiler.load_symbol(&symbol);
     }
 
-    compiler.emit(OP_CLASS, vec![symbols_len as u16]);
+    // 构造 class
+    let name_constant_index =
+        compiler.add_constant(Object::AntString(clazz.name.value.clone().into()));
+
+    compiler.emit(
+        OP_CLASS,
+        vec![symbols_len as u16, name_constant_index as u16],
+    );
 
     if compiler.last_instruction_is(OP_POP) {
         compiler.remove_last_pop_to(OP_RETURN_VALUE, &vec![]);
@@ -66,6 +77,7 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
         compiler.emit(OP_RETURN_VALUE, vec![]);
     }
 
+    // 离开作用域
     let ins = compiler.leave_scope();
 
     let compiled_function = CompiledFunction {
@@ -84,12 +96,15 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
         },
     };
 
+    // 将类构造函数 (并非 new) 压栈 
     let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;
 
     compiler.emit(OP_CLOSURE, vec![constant_index, 0u16]);
 
+    // 立即调用
     compiler.emit(OP_CALL, vec![0u16]);
 
+    // 设置 Global / Local
     compiler.emit(
         if symbol.scope == SymbolScope::Global {
             OP_SET_GLOBAL

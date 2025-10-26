@@ -1,15 +1,13 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, ffi::OsStr, fs, path::Path};
 
 use crate::{
     byte_code_vm::{
-        compiler::{
-            compiler::Compiler,
-            symbol_table::symbol_table::{SymbolScope, SymbolTable},
-        },
+        compiler::{compiler::Compiler, symbol_table::symbol_table::SymbolTable},
         constants::UNINIT_OBJECT,
-        vm::vm::{Vm, GLOBALS_SIZE},
+        vm::vm::{GLOBALS_SIZE, Vm},
     },
-    object::ant_class::AntClass,
+    obj_enum::object::Object,
+    object::{ant_class::AntClass, object::IAntObject},
     parser::utils::parse,
     rc_ref_cell,
 };
@@ -26,7 +24,15 @@ impl<'a, 'b> AntModuleImporter<'a, 'b> {
             return Err(format!("{err}"));
         }
 
-        let program = parse(code.unwrap(), self.file.clone());
+        let class_name = Path::new(&self.file)
+            .file_stem()
+            .unwrap_or(OsStr::new(""))
+            .to_str()
+            .unwrap_or("");
+
+        let code = format!("class {class_name} {{{}}} {class_name}", code.unwrap());
+
+        let program = parse(code, self.file.clone());
 
         if let Ok(it) = program {
             #[cfg(feature = "debug")]
@@ -38,38 +44,16 @@ impl<'a, 'b> AntModuleImporter<'a, 'b> {
                 println!("AST: {}", it.to_string().yellow());
             }
 
-            // 考虑在再次出现 bug 时尝试启用他
-            // let table_num_def_cnt =
-            //     self
-            //         .vm
-            //         .globals
-            //         .borrow()
-            //         .iter()
-            //         .filter(|global| &*global.borrow() != &*UNINIT_OBJECT)
-            //         .count() + 1;
-
-            let table_num_def_cnt = self.vm.global_count + 1;
-
             let mut compiler = Compiler::with_state(
                 {
-                    let table = SymbolTable::new();
+                    let t = rc_ref_cell!(SymbolTable::new());
+                    
+                    Compiler::init_builtin_map(t.clone());
 
-                    let table = rc_ref_cell!(table);
-
-                    Compiler::init_builtin_map(table.clone());
-
-                    table.borrow_mut().num_definitions += table_num_def_cnt;
-
-                    table
+                    t
                 },
-                rc_ref_cell!(vec![
-                    rc_ref_cell!(UNINIT_OBJECT.clone());
-                    self.vm.constants.len()
-                ]),
-                rc_ref_cell!(vec![
-                    String::from("invaild string");
-                    self.vm.field_pool.len()
-                ]),
+                rc_ref_cell!(vec![]),
+                rc_ref_cell!(vec![]),
                 self.file.clone().into(),
             );
 
@@ -100,39 +84,25 @@ impl<'a, 'b> AntModuleImporter<'a, 'b> {
                 Err(msg) => return Err(format!("error running module: {msg}")),
             };
 
-            let vm_globals = &mut vm.globals;
+            let globals = HashMap::new();
 
-            let vm_field_pool = &vm.field_pool[self.vm.field_pool.len()..];
-            let vm_constants = &vm.constants[self.vm.constants.len()..];
-
-            let symbol_table = compiler.symbol_table.borrow();
-
-            let mut globals = HashMap::new();
-
-            symbol_table.store.iter().for_each(|(name, symbol)| {
-                if symbol.scope == SymbolScope::Builtin {
-                    return;
+            // 回收闭包变量
+            let o = match vm.last_popped_stack_elem() {
+                None => {
+                    return Ok(AntClass::from((class_name, globals)));
                 }
 
-                let global = vm_globals[symbol.index].borrow().clone();
+                Some(it) => it,
+            };
 
-                globals.insert(name.clone(), global);
-            });
+            let o_binding = o.borrow();
 
-            self.vm.constants.append(&mut vm_constants.to_vec());
-            self.vm.field_pool.append(&mut vm_field_pool.to_vec());
+            let clazz = match &*o_binding {
+                Object::AntClass(clazz) => clazz.clone(),
+                it => return Err(format!("expected class, got: {}", it.inspect())),
+            };
 
-            // 将子 VM 的新全局按符号索引写回主 VM，保持原有语义
-            for (_name, symbol) in symbol_table.store.iter() {
-                if symbol.scope == SymbolScope::Builtin {
-                    continue;
-                }
-
-                self.vm.globals[symbol.index] = 
-                    vm_globals[symbol.index].clone();
-            }
-
-            return Ok(AntClass::from(globals));
+            return Ok(clazz);
         }
 
         Err(String::from("parse failed!"))

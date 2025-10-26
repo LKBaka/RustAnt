@@ -7,16 +7,18 @@ use crate::{
     function_caller::native_to_call_api::native_to_call,
     obj_enum::object::Object,
     object::{
-        ant_class::AntClass, ant_method::{Method, MethodType}, ant_native_function::create_ant_native_function, ant_string::AntString, object::IAntObject
+        ant_class::AntClass,
+        ant_method::{Method, MethodType},
+        ant_native_function::create_ant_native_function,
+        ant_string::AntString,
+        object::IAntObject,
     },
     rc_ref_cell,
 };
 
 pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
-    AntClass::from({
-        let unwrap_func = |
-            _vm: &mut Vm, args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
-        | {
+    AntClass::from(("Option", {
+        let unwrap_func = |_vm: &mut Vm, args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>| {
             let o = args[0].borrow();
 
             let me = match &*o {
@@ -48,10 +50,9 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
             return Ok(Some(value.clone()));
         };
 
-        let when_some_func = |
-            vm: &mut Vm,
-            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
-        | -> Result<Option<Object>, String> {
+        let when_some_func = |vm: &mut Vm,
+                              args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
+         -> Result<Option<Object>, String> {
             let o = args[0].borrow();
 
             let me = match &*o {
@@ -94,10 +95,9 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
             Ok(None)
         };
 
-        let when_null_func = |
-            vm: &mut Vm,
-            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
-        | -> Result<Option<Object>, String> {
+        let when_null_func = |vm: &mut Vm,
+                              args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
+         -> Result<Option<Object>, String> {
             let o = args[0].borrow();
 
             let me = match &*o {
@@ -135,10 +135,9 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
             Ok(None)
         };
 
-        let to_string = |
-            _vm: &mut Vm,
-            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
-        | -> Result<Option<Object>, String> {
+        let to_string = |_vm: &mut Vm,
+                         args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
+         -> Result<Option<Object>, String> {
             let o = args[0].borrow();
 
             let me = match &*o {
@@ -159,7 +158,9 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
             };
 
             if is_null {
-                return Ok(Some(Object::AntString(AntString::new(String::from("Null")))));
+                return Ok(Some(Object::AntString(AntString::new(String::from(
+                    "Null",
+                )))));
             }
 
             let value = me
@@ -167,7 +168,10 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
                 .get("value")
                 .ok_or_else(|| format!("object '{}' has no field 'value'", me.inspect()))?;
 
-            return Ok(Some(Object::AntString(AntString::new(format!("Some({})", value.inspect())))));
+            return Ok(Some(Object::AntString(AntString::new(format!(
+                "Some({})",
+                value.inspect()
+            )))));
         };
 
         let mut m = HashMap::new();
@@ -187,9 +191,7 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
             "when_some".into(),
             Object::Method(Method {
                 me: None,
-                func: MethodType::NativeFunction(create_ant_native_function(
-                    None, when_some_func
-                )),
+                func: MethodType::NativeFunction(create_ant_native_function(None, when_some_func)),
             }),
         );
 
@@ -197,9 +199,7 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
             "when_null".into(),
             Object::Method(Method {
                 me: None,
-                func: MethodType::NativeFunction(create_ant_native_function(
-                    None, when_null_func
-                )),
+                func: MethodType::NativeFunction(create_ant_native_function(None, when_null_func)),
             }),
         );
 
@@ -212,5 +212,5 @@ pub static OPTION: Lazy<AntClass> = Lazy::new(|| {
         );
 
         m
-    })
+    }))
 });

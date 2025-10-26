@@ -4,6 +4,7 @@ use crate::{obj_enum::object::Object, object::ant_class::AntClass};
 
 pub fn build_class(
     stack: &Vec<Rc<RefCell<Object>>>,
+    name: &str,
     start_index: usize,
     end_index: usize,
 ) -> Result<AntClass, String> {
@@ -22,5 +23,5 @@ pub fn build_class(
         m.insert(key, v);
     }
 
-    Ok(AntClass::from(m))
+    Ok(AntClass::from((name, m)))
 }

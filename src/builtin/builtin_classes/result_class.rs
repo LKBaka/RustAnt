@@ -16,11 +16,8 @@ use crate::{
 };
 
 pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
-    AntClass::from({
-        let unwrap_func = |
-            _vm: &mut Vm, 
-            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
-        | {
+    AntClass::from(("Result", {
+        let unwrap_func = |_vm: &mut Vm, args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>| {
             let o = args[0].borrow();
 
             let me = match &*o {
@@ -45,8 +42,8 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             Err(format!("unwrap failed: {}", err.inspect()))
         };
 
-        let when_ok_func = 
-        |vm: &mut Vm, args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
+        let when_ok_func = |vm: &mut Vm,
+                            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
          -> Result<Option<Object>, String> {
             let o = args[0].borrow();
 
@@ -81,10 +78,9 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
             Ok(None)
         };
 
-        let when_err_func = |
-            vm: &mut Vm,
-            args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>
-        | -> Result<Option<Object>, String> {
+        let when_err_func = |vm: &mut Vm,
+                             args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>|
+         -> Result<Option<Object>, String> {
             let o = args[0].borrow();
 
             let me = match &*o {
@@ -143,5 +139,5 @@ pub static RESULT: Lazy<AntClass> = Lazy::new(|| {
         );
 
         m
-    })
+    }))
 });

@@ -16,7 +16,7 @@ use crate::{
 };
 
 pub static MATH: Lazy<AntClass> = Lazy::new(|| {
-    AntClass::from({
+    AntClass::from(("math", {
         let sqrt =
             |_vm: &mut Vm, args: Vec<Rc<RefCell<Object>>>| -> Result<Option<Object>, String> {
                 let n = args[0].borrow();
@@ -40,7 +40,7 @@ pub static MATH: Lazy<AntClass> = Lazy::new(|| {
                     ))),
 
                     it => Err(format!(
-                        "expected type {:#?}, got: {}",
+                        "expected types {:#?}, got: {}",
                         expected_types,
                         it.inspect()
                     )),
@@ -51,9 +51,9 @@ pub static MATH: Lazy<AntClass> = Lazy::new(|| {
 
         m.insert(
             "sqrt".into(),
-            Object::AntNativeFunction(create_ant_native_function(None, sqrt))
+            Object::AntNativeFunction(create_ant_native_function(None, sqrt)),
         );
 
         m
-    })
+    }))
 });

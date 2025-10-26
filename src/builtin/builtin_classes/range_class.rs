@@ -16,7 +16,7 @@ use crate::{
 };
 
 pub static RANGE: Lazy<AntClass> = Lazy::new(|| {
-    AntClass::from({
+    AntClass::from(("Range", {
         let next = |_vm: &mut Vm, args: Vec<std::rc::Rc<std::cell::RefCell<Object>>>| {
             let mut o = args[0].borrow_mut();
 
@@ -67,5 +67,5 @@ pub static RANGE: Lazy<AntClass> = Lazy::new(|| {
         );
 
         m
-    })
+    }))
 });

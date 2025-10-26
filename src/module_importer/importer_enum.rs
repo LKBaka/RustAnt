@@ -1,8 +1,5 @@
 use std::{
-    collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
-    str::FromStr,
+    collections::HashMap, ffi::OsStr, fs, path::{Path, PathBuf}, str::FromStr
 };
 
 use crate::{
@@ -120,7 +117,14 @@ impl<'a, 'b> ModuleImporter<'a, 'b> {
                     // 递归子目录
                     walk(importer, &path, &mut dir_map)?;
 
-                    let dir_obj = AntClass::from(dir_map);
+                    let dir_obj = AntClass::from((
+                        path
+                            .file_stem()
+                            .unwrap_or(OsStr::new(""))
+                            .to_str()
+                            .unwrap_or(""),
+                        dir_map
+                    ));
 
                     map.insert(file_name, Object::AntClass(dir_obj));
                 } else if path
@@ -158,6 +162,13 @@ impl<'a, 'b> ModuleImporter<'a, 'b> {
 
         walk(self, path, &mut m)?;
 
-        Ok(AntClass::from(m))
+        Ok(AntClass::from((
+            path
+                .file_stem()
+                .unwrap_or(OsStr::new(""))
+                .to_str()
+                .unwrap_or(""),
+            m
+        )))
     }
 }

@@ -148,5 +148,5 @@ pub static PARSE_INT_ERROR: Lazy<AntClass> = Lazy::new(|| {
         }),
     );
 
-    AntClass::from(m)
+    AntClass::from(("Int", m))
 });
