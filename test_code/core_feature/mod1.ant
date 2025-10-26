@@ -1,2 +1,6 @@
 print("bro i am a test mod");
-let bro_give_you = "bro give you"
+let bro_give_you = "bro give you";
+
+func man() {
+    bro_give_you
+}

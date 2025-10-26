@@ -54,8 +54,7 @@ pub fn compile_function_expression(
         compiler
             .symbol_table
             .borrow_mut()
-            .define_function_name(name)
-            .index as u16;
+            .define_function_name(name);
     }
 
     let mut param_vec = vec![];

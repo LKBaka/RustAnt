@@ -1,0 +1,3 @@
+use a;
+
+a.A.create();

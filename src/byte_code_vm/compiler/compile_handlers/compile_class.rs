@@ -96,7 +96,7 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
         },
     };
 
-    // 将类构造函数 (并非 new) 压栈 
+    // 将类构造函数 (并非 new) 压栈
     let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;
 
     compiler.emit(OP_CLOSURE, vec![constant_index, 0u16]);
