@@ -77,9 +77,17 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
         compiler.emit(OP_RETURN_VALUE, vec![]);
     }
 
+    // 捕获自由变量
+    let free_symbols = compiler.symbol_table.borrow().free_symbols.clone();  
+    
     // 离开作用域
     let ins = compiler.leave_scope();
-
+    
+    // 加载自由变量
+    for symbol in &free_symbols {  
+        compiler.load_symbol(symbol);  
+    }
+  
     let compiled_function = CompiledFunction {
         #[cfg(feature = "debug")]
         id: next_id(),
@@ -99,7 +107,7 @@ pub fn compile_class(compiler: &mut Compiler, node: Node) -> Result<(), CompileE
     // 将类构造函数 (并非 new) 压栈
     let constant_index = compiler.add_constant(Object::CompiledFunction(compiled_function)) as u16;
 
-    compiler.emit(OP_CLOSURE, vec![constant_index, 0u16]);
+    compiler.emit(OP_CLOSURE, vec![constant_index, free_symbols.len() as u16]);
 
     // 立即调用
     compiler.emit(OP_CALL, vec![0u16]);
