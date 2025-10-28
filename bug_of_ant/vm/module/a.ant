@@ -1,5 +1,6 @@
 class A {
     func create() {
+        print(copy(A))
         copy(A)
     }
 }
