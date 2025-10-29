@@ -7,8 +7,9 @@ class Lexer {
 	let pos = 0;
 	let next_pos = 0;
 
-	func create(code) {
-		let l = copy(Lexer);
+	#[method]
+	func create(self, code) {
+		let l = copy(self);
 
 		l.code = code;
 

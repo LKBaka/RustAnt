@@ -1,4 +1,4 @@
-use io;
+// use io;
 
 use lexer;
 use token;
@@ -6,7 +6,7 @@ use token;
 let Lexer = lexer.Lexer;
 
 //while true {
-	let code = io.console.input(">>> ");
+	let code = "aaa!321";
 
 	let l = Lexer.create(code);
 
