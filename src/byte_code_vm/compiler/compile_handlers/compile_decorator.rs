@@ -83,14 +83,20 @@ fn compile_decorator_call(
             compiler.remove_last_instruction();
 
             func_name.and_then(|it| {
-                symbol_and_mode = (Some(compiler.symbol_table.borrow_mut().define(&it).index), OP_SET_GLOBAL);
+                if let Some(symbol) = compiler.symbol_table.borrow_mut().resolve(&it) {  
+                    symbol_and_mode = (Some(symbol.index), OP_SET_GLOBAL);  
+                }
+
                 Some(())
             });
         } else if compiler.last_instruction_is(OP_SET_LOCAL) {
             compiler.remove_last_instruction();
 
             func_name.and_then(|it| {
-                symbol_and_mode = (Some(compiler.symbol_table.borrow_mut().define(&it).index), OP_SET_LOCAL);
+                if let Some(symbol) = compiler.symbol_table.borrow_mut().resolve(&it) {  
+                    symbol_and_mode = (Some(symbol.index), OP_SET_LOCAL);  
+                }
+
                 Some(())
             });
         }
@@ -180,14 +186,20 @@ fn compile_decorator_ident(
             compiler.remove_last_instruction();
 
             func_name.and_then(|it| {
-                symbol_and_mode = (Some(compiler.symbol_table.borrow_mut().define(&it).index), OP_SET_GLOBAL);
+                if let Some(symbol) = compiler.symbol_table.borrow_mut().resolve(&it) {  
+                    symbol_and_mode = (Some(symbol.index), OP_SET_GLOBAL);  
+                }
+
                 Some(())
             });
         } else if compiler.last_instruction_is(OP_SET_LOCAL) {
             compiler.remove_last_instruction();
 
             func_name.and_then(|it| {
-                symbol_and_mode = (Some(compiler.symbol_table.borrow_mut().define(&it).index), OP_SET_LOCAL);
+                if let Some(symbol) = compiler.symbol_table.borrow_mut().resolve(&it) {  
+                    symbol_and_mode = (Some(symbol.index), OP_SET_LOCAL);  
+                }
+                
                 Some(())
             });
         }

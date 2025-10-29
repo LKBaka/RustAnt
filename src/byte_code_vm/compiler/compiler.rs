@@ -672,8 +672,11 @@ impl Compiler {
     }
 
     pub fn add_field(&self, field: &str) -> usize {
-        if let Ok(i) = self.field_pool.borrow().binary_search(&field.to_owned()) {
-            return i;
+        // 线性搜索而不是 binary_search  
+        for (i, existing_field) in self.field_pool.borrow().iter().enumerate() {  
+            if existing_field == field {  
+                return i;  
+            }  
         }
 
         self.field_pool.borrow_mut().push(field.into());

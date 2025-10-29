@@ -1,6 +1,12 @@
 class A {
-    func create() {
-        print(copy(A))
-        copy(A)
+    let val = 1
+    
+    #[method]
+    func create(self, val) {
+        let o = copy(self)
+
+        o.val = val;
+
+        o
     }
 }

@@ -1,3 +1,4 @@
 use a;
 
-a.A.create();
+print(a.A)
+print(a.A.create(-1))
