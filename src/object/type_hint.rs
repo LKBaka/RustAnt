@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::object::ObjectType;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,7 +39,7 @@ impl TypeHint {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeHintMap {
-    pub map: std::collections::HashMap<String, TypeHint>,
+    pub map: std::collections::HashMap<Rc<str>, TypeHint>,
 }
 
 impl TypeHintMap {
@@ -47,11 +49,11 @@ impl TypeHintMap {
         }
     }
 
-    pub fn from_map(map: std::collections::HashMap<String, TypeHint>) -> Self {
+    pub fn from_map(map: std::collections::HashMap<Rc<str>, TypeHint>) -> Self {
         Self { map }
     }
 
-    pub fn push_hint(&self, key: String, hint: TypeHint) -> Self {
+    pub fn push_hint(&self, key: Rc<str>, hint: TypeHint) -> Self {
         let mut map = self.map.clone();
 
         map.insert(key, hint);
@@ -59,7 +61,7 @@ impl TypeHintMap {
         Self { map }
     }
 
-    pub fn add_hint(&mut self, key: String, hint: TypeHint) {
+    pub fn add_hint(&mut self, key: Rc<str>, hint: TypeHint) {
         self.map.insert(key, hint);
     }
 
@@ -73,7 +75,7 @@ impl TypeHintMap {
 }
 
 impl IntoIterator for &'static TypeHintMap {
-    type Item = (&'static String, &'static TypeHint);
+    type Item = (&'static Rc<str>, &'static TypeHint);
     type IntoIter = TypeHintIterator;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -82,7 +84,7 @@ impl IntoIterator for &'static TypeHintMap {
 }
 
 pub struct TypeHintIterator {
-    inner: std::collections::hash_map::Iter<'static, String, TypeHint>,
+    inner: std::collections::hash_map::Iter<'static, Rc<str>, TypeHint>,
 }
 
 impl TypeHintIterator {
@@ -94,7 +96,7 @@ impl TypeHintIterator {
 }
 
 impl Iterator for TypeHintIterator {
-    type Item = (&'static String, &'static TypeHint);
+    type Item = (&'static Rc<str>, &'static TypeHint);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.next().map(|(k, v)| (k, v))
@@ -104,7 +106,7 @@ impl Iterator for TypeHintIterator {
 #[macro_export]
 macro_rules! type_hint {
     ($($type:expr),*) => {
-        TypeHint::new(vec![$($type.to_string()),*])
+        TypeHint::new(vec![$($type.into()),*])
     };
 }
 
@@ -112,7 +114,7 @@ macro_rules! type_hint {
 macro_rules! type_hint_map {
     ($($key:expr => $value:expr),*) => {
         TypeHintMap::from_map(std::collections::HashMap::from([
-            $(($key.to_string(), $value)),*
+            $(($key.into(), $value)),*
         ]))
     };
 }
