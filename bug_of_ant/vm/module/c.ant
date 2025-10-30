@@ -1,1 +1,4 @@
 use b;
+
+print(b.do)
+print(b.do())

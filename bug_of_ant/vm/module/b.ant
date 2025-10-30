@@ -1,4 +1,8 @@
 use a;
 
-print(a.A)
-print(a.A.create(-1))
+func do() {
+    print(a.A)
+
+    // crash here
+    print(a.A.create(-1))
+}
