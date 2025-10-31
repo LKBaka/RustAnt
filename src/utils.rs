@@ -67,3 +67,19 @@ macro_rules! rc_ref_cell {
         std::rc::Rc::new(std::cell::RefCell::new($value))
     };
 }
+
+#[macro_export]
+macro_rules! ant_assert {
+    ($expr:expr) => {
+        if !($expr) {
+            Err(format!("assertion failed: {}", stringify!($expr)))?
+        }
+    };
+}
+
+#[test]
+fn test_ant_assert() -> Result<(), String> {
+    ant_assert!(1 == 1);
+
+    Ok(())
+}
