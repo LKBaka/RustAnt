@@ -53,7 +53,6 @@ impl<'a, 'b> AntModuleImporter<'a, 'b> {
                     t
                 },
                 rc_ref_cell!(vec![]),
-                rc_ref_cell!(vec![]),
                 self.file.clone().into(),
             );
 

@@ -106,7 +106,6 @@ impl EmittedInstruction {
 pub struct ByteCode {
     pub instructions: Instructions,
     pub constants: Vec<Rc<RefCell<Object>>>,
-    pub field_pool: Vec<String>,
     pub main_info: ScopeInfo,
 
     pub global_count: usize,
@@ -116,14 +115,12 @@ impl ByteCode {
     pub fn new(
         instructions: Instructions,
         constants: Vec<Rc<RefCell<Object>>>,
-        field_pool: Vec<String>,
         info: ScopeInfo,
         global_count: usize,
     ) -> Self {
         Self {
             instructions,
             constants,
-            field_pool,
             main_info: info,
             global_count,
         }
@@ -165,7 +162,6 @@ impl Display for CompileError {
 
 pub struct Compiler {
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-    field_pool: Rc<RefCell<Vec<String>>>,
 
     pub break_command_pos: Vec<usize>,
     pub continue_command_pos: Vec<usize>,
@@ -199,7 +195,6 @@ impl Compiler {
 
         Self {
             constants: rc_ref_cell!(vec![]),
-            field_pool: rc_ref_cell!(vec![]),
             break_command_pos: vec![],
             continue_command_pos: vec![],
             symbol_table,
@@ -212,7 +207,6 @@ impl Compiler {
     pub fn with_state(
         symbol_table: Rc<RefCell<SymbolTable>>,
         constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-        field_pool: Rc<RefCell<Vec<String>>>,
         file_name: Rc<str>,
     ) -> Self {
         let main_scope = CompilationScopeBuilder::default().build(ScopeInfo {
@@ -222,7 +216,6 @@ impl Compiler {
 
         Self {
             constants,
-            field_pool,
             break_command_pos: vec![],
             continue_command_pos: vec![],
             symbol_table,
@@ -361,7 +354,7 @@ impl Compiler {
 
                     Expression::ObjectMemberExpression(obj_member) => {
                         if let Expression::Identifier(field) = *obj_member.right {
-                            let field_index = self.add_field(&field.value) as u16;
+                            self.emit_field(&field.value);
 
                             if let Err(msg) = self.compile_expr(*obj_member.left) {
                                 return Err(CompileError::from_none_token(format!(
@@ -369,7 +362,7 @@ impl Compiler {
                                 )));
                             }
 
-                            self.emit(OP_SET_FIELD, vec![field_index]);
+                            self.emit(OP_SET_FIELD, vec![]);
                         }
                     }
 
@@ -452,9 +445,9 @@ impl Compiler {
                     ));
                 };
 
-                let field_index = self.add_field(&field.value) as u16;
+                self.emit_field(&field.value);
 
-                self.emit(OP_GET_FIELD, vec![field_index]);
+                self.emit(OP_GET_FIELD, vec![]);
 
                 Ok(())
             }
@@ -671,17 +664,12 @@ impl Compiler {
         instructions
     }
 
-    pub fn add_field(&self, field: &str) -> usize {
-        // 线性搜索而不是 binary_search  
-        for (i, existing_field) in self.field_pool.borrow().iter().enumerate() {  
-            if existing_field == field {  
-                return i;  
-            }  
-        }
-
-        self.field_pool.borrow_mut().push(field.into());
-
-        self.field_pool.borrow_mut().len() - 1
+    pub fn emit_field(&mut self, field: &str) {
+        // 不在函数作用域内，使用常量池
+        let field_obj = Object::AntString(AntString::new(field.into()));
+        let constant_index = self.add_constant(field_obj);
+        
+        self.emit(OP_CONSTANTS, vec![constant_index as u16]);
     }
 
     pub fn current_instructions(&self) -> Rc<RefCell<Instructions>> {
@@ -779,7 +767,6 @@ impl Compiler {
         ByteCode::new(
             self.current_instructions().borrow().clone(),
             self.constants.borrow().clone(),
-            self.field_pool.borrow().clone(),
             ScopeInfo {
                 file_name: self.file_name.clone(),
                 scope_name: Rc::from("__main__"),

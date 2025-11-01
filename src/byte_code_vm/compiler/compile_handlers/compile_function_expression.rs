@@ -7,12 +7,12 @@ use crate::{
         stmt::Statement,
     },
     byte_code_vm::{
-        code::code::{OP_CLOSURE, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
+        code::code::{OP_CLOSURE, OP_CONSTANTS, OP_POP, OP_RETURN_VALUE, OP_SET_GLOBAL, OP_SET_LOCAL},
         compiler::compiler::{CompileError, Compiler},
         scope_info::ScopeInfo,
     },
     obj_enum::object::Object,
-    object::ant_compiled_function::CompiledFunction,
+    object::{ant_compiled_function::CompiledFunction, ant_string::AntString},
 };
 
 pub fn compile_function_expression(

@@ -24,7 +24,6 @@ pub fn run(
     file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-    field_pool: Rc<RefCell<Vec<String>>>,
     globals: &mut Vec<Rc<RefCell<Object>>>,
 ) -> Result<Option<Object>, RunError> {
     #[cfg(feature = "debug")]
@@ -35,7 +34,7 @@ pub fn run(
 
     let bytecode = {
         let compile_result = compile_with_state(
-            code, file, symbol_table, constants, field_pool
+            code, file, symbol_table, constants
         );
 
         match compile_result {
@@ -125,7 +124,6 @@ pub fn run_pop(
     file: String,
     symbol_table: Rc<RefCell<SymbolTable>>,
     constants: Rc<RefCell<Vec<Rc<RefCell<Object>>>>>,
-    field_pool: Rc<RefCell<Vec<String>>>,
     globals: &mut Vec<Rc<RefCell<Object>>>,
 ) -> Result<Option<Object>, RunError> {
     #[cfg(feature = "debug")]
@@ -136,7 +134,7 @@ pub fn run_pop(
 
     let bytecode = {
         let compile_result = compile_with_state(
-            code, file, symbol_table, constants, field_pool
+            code, file, symbol_table, constants
         );
 
         match compile_result {

@@ -47,7 +47,6 @@ impl FileRunner {
                     self.file_path.clone(),
                     symbol_table,
                     constants,
-                    rc_ref_cell!(vec![]),
                     &mut globals,
                 );
 

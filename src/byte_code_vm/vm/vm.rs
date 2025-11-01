@@ -42,7 +42,6 @@ pub const GLOBALS_SIZE: usize = 65535;
 #[derive(Debug)]
 pub struct Vm<'a> {
     pub constants: Vec<Rc<RefCell<Object>>>,
-    pub field_pool: Vec<String>,
 
     pub stack: Vec<Rc<RefCell<Object>>>,
     pub globals: &'a mut Vec<Rc<RefCell<Object>>>,
@@ -77,7 +76,6 @@ impl<'a> Vm<'a> {
 
         Vm {
             constants: bytecode.constants,
-            field_pool: bytecode.field_pool,
             stack: vec![uninit.clone(); STACK_SIZE],
             globals,
             frames: vec![main_frame],
@@ -106,7 +104,6 @@ impl<'a> Vm<'a> {
 
         Vm {
             constants: bytecode.constants,
-            field_pool: bytecode.field_pool,
             global_count: bytecode.global_count,
             stack: vec![rc_ref_cell!(UNINIT_OBJECT.clone()); STACK_SIZE as usize],
             globals,
@@ -518,29 +515,39 @@ impl<'a> Vm<'a> {
             }
 
             OP_GET_FIELD => {
-                let field_obj_index = read_uint16(&instructions[ip + 1..]);
-                self.current_frame().ip += 2;
-
-                let field = self.field_pool[field_obj_index as usize].clone();
+                let field = match &*match self.pop() {
+                    Some(it) => it,
+                    None => return Err(format!("expected an field to get value")),
+                }
+                .borrow()
+                {
+                    Object::AntString(s) => s.value.clone(),
+                    it => Err(format!("expected a string field, got: {}", it.inspect()))?,
+                };
 
                 let obj = match self.pop() {
                     Some(it) => it,
                     None => Err(format!("expected an object to get field"))?,
                 };
 
-                return eval_obj_member(self, obj, field);
+                return eval_obj_member(self, obj, &field);
             }
 
             OP_SET_FIELD => {
-                let field_index = read_uint16(&instructions[ip + 1..]);
-                self.current_frame().ip += 2;
-
                 let target = match self.pop() {
                     Some(it) => it,
                     None => return Err(format!("expected an object to set field value")),
                 };
 
-                let ident = self.field_pool[field_index as usize].clone();
+                let ident = match &*match self.pop() {
+                    Some(it) => it,
+                    None => return Err(format!("expected an field to set value")),
+                }
+                .borrow()
+                {
+                    Object::AntString(s) => s.value.clone(),
+                    it => Err(format!("expected a string field, got: {}", it.inspect()))?,
+                };
 
                 let value = match self.pop() {
                     Some(it) => it,

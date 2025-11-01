@@ -35,7 +35,6 @@ impl REPLRunner {
         let symbol_table = rc_ref_cell!(SymbolTable::new());
         let constants = rc_ref_cell!(vec![]);
         let mut globals = vec![uninit.clone(); GLOBALS_SIZE as usize];
-        let field_pool = rc_ref_cell!(vec![]);
 
         Compiler::init_builtin_map(symbol_table.clone());
 
@@ -83,7 +82,6 @@ impl REPLRunner {
                 REPL_FILE_NAME.to_string(),
                 symbol_table.clone(),
                 constants.clone(),
-                field_pool.clone(),
                 &mut globals,
             );
 

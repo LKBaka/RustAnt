@@ -61,7 +61,7 @@ pub fn eval_native_obj_member(
     }
 }
 
-pub fn eval_obj_member(vm: &mut Vm, obj: Rc<RefCell<Object>>, field: String) -> Result<(), String> {
+pub fn eval_obj_member(vm: &mut Vm, obj: Rc<RefCell<Object>>, field: &str) -> Result<(), String> {
     // 天哪那么多缩进我不会被拉去皮豆吧
     let o_borrow = obj.borrow();
 
@@ -78,7 +78,7 @@ pub fn eval_obj_member(vm: &mut Vm, obj: Rc<RefCell<Object>>, field: String) -> 
                     native_to_call(
                         vm,
                         o.clone(),
-                        vec![rc_ref_cell!(Object::AntString(AntString::new(field)))],
+                        vec![rc_ref_cell!(Object::AntString(AntString::new(field.to_string())))],
                     )?;
 
                     return Ok(());
@@ -88,7 +88,7 @@ pub fn eval_obj_member(vm: &mut Vm, obj: Rc<RefCell<Object>>, field: String) -> 
             }
         }
 
-        let value = match match clazz.map.get(&field) {
+        let value = match match clazz.map.get(field) {
             Some(it) => it,
             None => Err(format!(
                 "object '{}' has no field '{}'",
@@ -114,7 +114,7 @@ pub fn eval_obj_member(vm: &mut Vm, obj: Rc<RefCell<Object>>, field: String) -> 
     }
 
     if let Some(m) = BUILTIN_TYPE_MAP.get(&o_borrow.get_type()) {
-        return eval_native_obj_member(vm, obj.clone(), m, field);
+        return eval_native_obj_member(vm, obj.clone(), m, field.to_owned());
     }
 
     return Err(format!(

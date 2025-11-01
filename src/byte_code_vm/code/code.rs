@@ -134,8 +134,8 @@ lazy_static! {
         m.insert(OP_AND, Definition::new("OpAnd".into(), vec![]));
         m.insert(OP_OR, Definition::new("OpOr".into(), vec![]));
         m.insert(OP_HASH, Definition::new("OpHash".into(), vec![2]));
-        m.insert(OP_GET_FIELD, Definition::new("OpGetField".into(), vec![2]));
-        m.insert(OP_SET_FIELD, Definition::new("OpSetField".into(), vec![2]));
+        m.insert(OP_GET_FIELD, Definition::new("OpGetField".into(), vec![]));
+        m.insert(OP_SET_FIELD, Definition::new("OpSetField".into(), vec![]));
         m.insert(OP_CLASS, Definition::new("OpClass".into(), vec![2, 2]));
         m.insert(OP_LOAD_MODULE, Definition::new("OpLoadModule".into(), vec![2]));
         m.insert(OP_TEST_PRINT, Definition::new("OpTestPrint".into(), vec![]));

@@ -93,7 +93,6 @@ impl SymbolTable {
         None
     }
 
-    // this function has bug
     pub fn define_free(&mut self, original: Symbol) -> Symbol {
         self.free_symbols.push(original.clone());
 
