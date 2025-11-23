@@ -57,7 +57,7 @@ impl Lexer {
     }
 
     fn is_valid_char(&self, c: char) -> bool {
-        (c.is_alphabetic() || c == '_' || c.is_emoji_char()) && c != '#'
+        (c.is_alphabetic() || c == '_' || c.is_emoji_char()) && c != '#' && c != '*'
     }
 
     fn read_char(&mut self) -> char {
@@ -131,6 +131,7 @@ impl Lexer {
     fn read_string(&mut self) -> String {
         let start_line = self.line;
         let start_column = self.column;
+        
         let mut result = String::new();
 
         // 跳过起始双引号
@@ -402,6 +403,33 @@ fn test_lexer() {
         TokenType::Slash,
         TokenType::IntegerBig,
         TokenType::RBrace,
+    ];
+
+    // 验证词法单元
+    for i in 0..tokens.len() - 1 {
+        assert_eq(
+            tokens[i].token_type,
+            expected_token_types[i],
+            on_failure_function,
+        );
+    }
+}
+
+#[test]
+fn test_lexe_mul() {
+    use crate::utils::assert_eq;
+
+    let mut l = Lexer::new(
+        "1*1".to_string(),
+        String::from("__test_lexer__"),
+    );
+    let tokens = l.get_tokens();
+
+    let on_failure_function = || println!("{:#?}", tokens);
+    let expected_token_types = vec![
+        TokenType::IntegerBig,
+        TokenType::Asterisk,
+        TokenType::IntegerBig,
     ];
 
     // 验证词法单元
