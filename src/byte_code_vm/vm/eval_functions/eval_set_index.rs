@@ -52,7 +52,7 @@ fn eval_set_index_array(
             return Ok(());
         }
 
-        _ => panic!("expected an array, but got: {:?}", target),
+        _ => return Err(format!("expected an array, but got: {}", target.borrow().get_type())),
     }
 }
 
@@ -73,7 +73,7 @@ fn eval_set_value_hash_map(
             Ok(())
         }
 
-        _ => panic!("expected an hash map, but got: {:?}", target),
+        _ => return Err(format!("expected a hash map, but got: {}", target.borrow().get_type())),
     }
 }
 

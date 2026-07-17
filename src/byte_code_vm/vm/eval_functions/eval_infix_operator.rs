@@ -292,7 +292,7 @@ pub fn eq_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
     }
 
     if left.get_type() == NULL && right.get_type() == NULL {
-        return Ok(false);
+        return Ok(true);
     }
 
     match (left, right) {
