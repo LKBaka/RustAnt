@@ -1,13 +1,14 @@
 use bigdecimal::BigDecimal;
 
 use crate::{
-    byte_code_vm::{code::code::{OpCode, OP_BANG, OP_MINUS}, utils::native_boolean_to_object}, obj_enum::object::Object, object::{ant_double::AntDouble, ant_int::AntInt}
+    byte_code_vm::{code::code::{OpCode, OP_BANG, OP_MINUS}, utils::native_boolean_to_object}, obj_enum::object::Object, object::{ant_double::AntDouble, ant_i64::AntI64, ant_int::AntInt}
 };
 
 pub fn bang(right: Object) -> Result<Object, String> {
     match right {
         Object::AntBoolean(right) => Ok(native_boolean_to_object(!right.value)),
         Object::AntInt(right) => Ok(native_boolean_to_object(right.value == BigDecimal::from(0))),
+        Object::AntI64(right) => Ok(native_boolean_to_object(right.value == 0)),
         Object::AntDouble(right) => Ok(native_boolean_to_object(right.value == BigDecimal::from(0))),
 
         _ => Err(format!(
@@ -21,6 +22,7 @@ pub fn minus(right: Object) -> Result<Object, String> {
     match right {
         Object::AntBoolean(right) => Ok(Object::AntInt(AntInt::from(-(right.value as i32)))),
         Object::AntInt(right) => Ok(Object::AntInt(AntInt::from(-&right.value))),
+        Object::AntI64(right) => Ok(Object::AntI64(AntI64::from(-right.value))),
         Object::AntDouble(right) => Ok(Object::AntDouble(AntDouble::from(-&right.value))),
 
         _ => Err(format!(

@@ -35,6 +35,18 @@ fn add_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Result<O
         (Object::AntDouble(l), Object::AntInt(r)) => {
             Ok(Object::AntDouble(AntDouble::from(&l.value + &r.value)))
         }
+        (Object::AntI64(l), Object::AntInt(r)) => {
+            Ok(Object::AntInt(AntInt::from(BigDecimal::from(l.value) + &r.value)))
+        }
+        (Object::AntI64(l), Object::AntDouble(r)) => {
+            Ok(Object::AntDouble(AntDouble::from(BigDecimal::from(l.value) + &r.value)))
+        }
+        (Object::AntInt(l), Object::AntI64(r)) => {
+            Ok(Object::AntInt(AntInt::from(&l.value + BigDecimal::from(r.value))))
+        }
+        (Object::AntDouble(l), Object::AntI64(r)) => {
+            Ok(Object::AntDouble(AntDouble::from(&l.value + BigDecimal::from(r.value))))
+        }
         (Object::AntString(l), Object::AntString(r)) => Ok(Object::AntString(AntString::new(
             l.value.clone() + &r.value,
         ))),
@@ -76,6 +88,18 @@ fn subtract_native(
         (Object::AntDouble(l), Object::AntInt(r)) => {
             Ok(Object::AntDouble(AntDouble::from(&l.value - &r.value)))
         }
+        (Object::AntI64(l), Object::AntInt(r)) => {
+            Ok(Object::AntInt(AntInt::from(BigDecimal::from(l.value) - &r.value)))
+        }
+        (Object::AntI64(l), Object::AntDouble(r)) => {
+            Ok(Object::AntDouble(AntDouble::from(BigDecimal::from(l.value) - &r.value)))
+        }
+        (Object::AntInt(l), Object::AntI64(r)) => {
+            Ok(Object::AntInt(AntInt::from(&l.value - BigDecimal::from(r.value))))
+        }
+        (Object::AntDouble(l), Object::AntI64(r)) => {
+            Ok(Object::AntDouble(AntDouble::from(&l.value - BigDecimal::from(r.value))))
+        }
 
         (l, r) => Err(format!(
             "unimplemented for types: {} and {}",
@@ -107,6 +131,18 @@ fn multiply_native(
         }
         (Object::AntDouble(l), Object::AntInt(r)) => {
             Ok(Object::AntDouble(AntDouble::from(&l.value * &r.value)))
+        }
+        (Object::AntI64(l), Object::AntInt(r)) => {
+            Ok(Object::AntInt(AntInt::from(BigDecimal::from(l.value) * &r.value)))
+        }
+        (Object::AntI64(l), Object::AntDouble(r)) => {
+            Ok(Object::AntDouble(AntDouble::from(BigDecimal::from(l.value) * &r.value)))
+        }
+        (Object::AntInt(l), Object::AntI64(r)) => {
+            Ok(Object::AntInt(AntInt::from(&l.value * BigDecimal::from(r.value))))
+        }
+        (Object::AntDouble(l), Object::AntI64(r)) => {
+            Ok(Object::AntDouble(AntDouble::from(&l.value * BigDecimal::from(r.value))))
         }
         (Object::AntString(l), Object::AntInt(r)) => {
             if l.value == "" {
@@ -245,6 +281,50 @@ fn divide_native(left: Rc<RefCell<Object>>, right: Rc<RefCell<Object>>) -> Resul
             Ok(Object::AntDouble(AntDouble::from(result)))
         }
 
+        (Object::AntI64(l), Object::AntInt(r)) => {
+            if r.value == BigDecimal::from(0) {
+                return Err("division by zero".to_string());
+            }
+
+            let result = BigDecimal::from(l.value) / &r.value;
+            if result.is_integer() {
+                Ok(Object::AntInt(AntInt::from(result)))
+            } else {
+                Ok(Object::AntDouble(AntDouble::from(result)))
+            }
+        }
+
+        (Object::AntI64(l), Object::AntDouble(r)) => {
+            if r.value == BigDecimal::from(0) {
+                return Err("division by zero".to_string());
+            }
+
+            let result = BigDecimal::from(l.value) / &r.value;
+            Ok(Object::AntDouble(AntDouble::from(result)))
+        }
+
+        (Object::AntInt(l), Object::AntI64(r)) => {
+            if r.value == 0 {
+                return Err("division by zero".to_string());
+            }
+
+            let result = &l.value / BigDecimal::from(r.value);
+            if result.is_integer() {
+                Ok(Object::AntInt(AntInt::from(result)))
+            } else {
+                Ok(Object::AntDouble(AntDouble::from(result)))
+            }
+        }
+
+        (Object::AntDouble(l), Object::AntI64(r)) => {
+            if r.value == 0 {
+                return Err("division by zero".to_string());
+            }
+
+            let result = &l.value / BigDecimal::from(r.value);
+            Ok(Object::AntDouble(AntDouble::from(result)))
+        }
+
         (l, r) => Err(format!(
             "unimplemented for types: {} and {}",
             l.get_type(),
@@ -273,6 +353,18 @@ pub fn gt_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
         }
         (Object::AntDouble(l), Object::AntInt(r)) => {
             Ok(&l.value > &r.value)
+        }
+        (Object::AntI64(l), Object::AntInt(r)) => {
+            Ok(BigDecimal::from(l.value) > r.value)
+        }
+        (Object::AntI64(l), Object::AntDouble(r)) => {
+            Ok(BigDecimal::from(l.value) > r.value)
+        }
+        (Object::AntInt(l), Object::AntI64(r)) => {
+            Ok(l.value > BigDecimal::from(r.value))
+        }
+        (Object::AntDouble(l), Object::AntI64(r)) => {
+            Ok(l.value > BigDecimal::from(r.value))
         }
 
         (l, r) => Err(format!(
@@ -310,6 +402,18 @@ pub fn eq_native_ref(left: &Object, right: &Object) -> Result<bool, String> {
         }
         (Object::AntDouble(l), Object::AntInt(r)) => {
             Ok(&l.value == &r.value)
+        }
+        (Object::AntI64(l), Object::AntInt(r)) => {
+            Ok(BigDecimal::from(l.value) == r.value)
+        }
+        (Object::AntI64(l), Object::AntDouble(r)) => {
+            Ok(BigDecimal::from(l.value) == r.value)
+        }
+        (Object::AntInt(l), Object::AntI64(r)) => {
+            Ok(l.value == BigDecimal::from(r.value))
+        }
+        (Object::AntDouble(l), Object::AntI64(r)) => {
+            Ok(l.value == BigDecimal::from(r.value))
         }
         (Object::AntBoolean(l), Object::AntBoolean(r)) => {
             Ok(l.value == r.value)
